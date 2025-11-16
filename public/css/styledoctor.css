@@ -1,0 +1,41 @@
+
+        /* Thiết lập font chữ Inter */
+        html { font-family: 'Inter', sans-serif; }
+        /* Cuộn màn hình mượt mà */
+        html { scroll-behavior: smooth; }
+        /* Tùy chỉnh màu sắc theo chủ đề y tế */
+        .primary-color { background-color: #10B981; } /* Emerald Green */
+        .primary-text { color: #10B981; }
+        .secondary-color { background-color: #ECFDF5; }
+        .border-primary { border-color: #10B981; }
+        /* Style cho nút active trong Sidebar */
+        .nav-link.active {
+            background-color: #059669; /* Darker green */
+            color: #fff;
+            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.5), 0 2px 4px -2px rgba(16, 185, 129, 0.5);
+        }
+        /* Tùy chỉnh thanh cuộn cho bảng */
+        .scrollable-table::-webkit-scrollbar {
+            height: 6px;
+        }
+        .scrollable-table::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 3px;
+        }
+        .scrollable-table {
+            overflow-x: auto;
+        }
+ .table-hover tbody tr:hover {
+    background-color: #f8f9fa;
+}
+.badge {
+    font-size: 0.8rem;
+    border-radius: 8px;
+}
+.btn {
+    transition: all 0.2s ease-in-out;
+}
+.btn:hover {
+    transform: scale(1.05);
+}
+

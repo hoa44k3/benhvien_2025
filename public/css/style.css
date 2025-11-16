@@ -1,0 +1,130 @@
+
+        /* CSS tùy chỉnh nhỏ cho hiệu ứng hover và ảnh nền */
+        .hero-section {
+            background-image: url('https://placehold.co/1920x450/1e40af/ffffff?text=Smart+Hospital');
+            background-repeat: no-repeat;
+        }
+        .service-card img {
+            transition: transform 0.5s;
+        }
+        .service-card:hover img {
+            transform: scale(1.05);
+        }
+
+
+        /* dịch vụ */
+         /* Thiết lập font Inter cho giao diện */
+        body {
+            font-family: 'Inter', sans-serif;
+            color: #2D3748; /* text-gray-800 */
+            background-color: #F7FAFC; /* bg-gray-50 */
+        }
+        
+        /* Đảm bảo thanh cuộn (scrollbar) trên mobile cho category không gây lỗi */
+        .service-categories {
+            scrollbar-width: none; /* Firefox */
+        }
+        .service-categories::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Opera */
+        }
+
+        /* Hiệu ứng focus cho category items */
+        .category-item:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5); /* ring-blue-500/50 */
+        }
+   /* đăth lịch khám */
+    /* Thiết lập font Inter cho giao diện */
+        body {
+            font-family: 'Inter', sans-serif;
+            /* @apply text-gray-800 bg-gray-50; -> Đã sửa lỗi, dùng CSS Native */
+            color: #2D3748; /* text-gray-800 */
+            background-color: #F7FAFC; /* bg-gray-50 */
+        }
+
+        /* Tùy chỉnh thanh cuộn cho khu vực chọn giờ */
+        .time-slot-grid::-webkit-scrollbar {
+            width: 8px;
+        }
+        .time-slot-grid::-webkit-scrollbar-thumb {
+            /* @apply bg-gray-300 rounded-full; -> Đã sửa lỗi, dùng CSS Native */
+            background-color: #D1D5DB; /* bg-gray-300 */
+            border-radius: 9999px; /* rounded-full */
+        }
+    /* hồ sơ bệnh án */
+/* CSS tuỳ chỉnh (rất ít, chủ yếu cho font và responsive table) */
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* Logic Responsive cho Table trên Mobile */
+        @media screen and (max-width: 768px) {
+             .responsive-table thead { display: none; }
+             .responsive-table tr { 
+                display: block; width: 100%; margin-bottom: 15px; border: 1px solid #e5e7eb; border-radius: 8px; background-color: white; 
+             }
+             .responsive-table td {
+                text-align: right; padding-left: 50%; position: relative; border: none; border-bottom: 1px dashed #e5e7eb;
+             }
+             .responsive-table td::before {
+                content: attr(data-label); position: absolute; left: 12px; width: 45%; font-weight: 600; color: #0d9488; text-align: left;
+             }
+        }
+    /* thanh toán viện phí */
+     /* CSS TUỲ CHỈNH NGẮN GỌN (THEO YÊU CẦU) */
+        
+        /* 1. Font và Biến màu (giúp code HTML ngắn hơn) */
+        body { font-family: 'Inter', sans-serif; background-color: #f9fafb; }
+        :root {
+            --primary-color: #0d9488; /* Teal-600 */
+            --danger-color: #ef4444; /* Red-500 */
+        }
+        
+        /* 2. Logic Responsive cho Table trên Mobile (Giữ nguyên logic tùy chỉnh) */
+        @media screen and (max-width: 768px) {
+            .responsive-table thead { display: none; }
+            .responsive-table tr { 
+                display: block; width: 100%; margin-bottom: 15px; border: 1px solid #e5e7eb; border-radius: 8px; background-color: white; 
+            }
+            .responsive-table td {
+                text-align: right; padding-left: 50%; position: relative; border: none; border-bottom: 1px dashed #e5e7eb;
+            }
+            .responsive-table td::before {
+                content: attr(data-label); position: absolute; left: 12px; width: 45%; font-weight: 600; color: #0d9488; text-align: left;
+            }
+        }
+    /* liên hệ */
+     /* CSS TUỲ CHỈNH NGẮN GỌN (THEO YÊU CẦU) */
+        
+        /* 1. Font và Biến màu */
+        body { font-family: 'Inter', sans-serif; background-color: #f9fafb; }
+        :root {
+            --primary-color: #0d9488; /* Teal-600 */
+        }
+        
+        /* 2. Logic Responsive cho Table trên Mobile (Giữ nguyên logic tùy chỉnh) */
+        @media screen and (max-width: 768px) {
+            .responsive-table thead { display: none; }
+            .responsive-table tr { 
+                display: block; width: 100%; margin-bottom: 15px; border: 1px solid #e5e7eb; border-radius: 8px; background-color: white; 
+            }
+            .responsive-table td {
+                text-align: right; padding-left: 50%; position: relative; border: none; border-bottom: 1px dashed #e5e7eb;
+            }
+            .responsive-table td::before {
+                content: attr(data-label); position: absolute; left: 12px; width: 45%; font-weight: 600; color: #0d9488; text-align: left;
+            }
+        }
+
+        /* Tùy chỉnh cho select và textarea */
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db; /* gray-300 */
+            border-radius: 0.5rem;
+            margin-top: 0.25rem;
+            transition: border-color 0.3s;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 1px var(--primary-color);
+        }
