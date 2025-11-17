@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
@@ -24,6 +25,8 @@ class UserController extends Controller
     }
      public function store(Request $request)
     {
+        
+
         try {
             $request->validate([
                 'patient_code' => 'nullable|string|max:20|unique:users,patient_code',
@@ -64,7 +67,21 @@ class UserController extends Controller
             }
 
             $user->save();
+            // Gắn role cho user
+                    $user->roles()->sync($request->role_ids ?? []);
 
+                    // Nếu user là bác sĩ, tạo record trong doctor_sites
+                    if(in_array('doctor', $request->role_ids ?? [])) { // hoặc kiểm tra bằng role name
+                        \App\Models\DoctorSite::create([
+                            'user_id' => $user->id,
+                            'department_id' => null,
+                            'specialty' => null,
+                            'bio' => null,
+                            'rating' => 0,
+                            'reviews_count' => 0,
+                            'status' => 1
+                        ]);
+                    }
             // 🔹 Ghi log thành công
             AuditHelper::log('Tạo tài khoản mới', $user->name, 'Thành công');
 

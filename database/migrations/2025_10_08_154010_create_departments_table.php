@@ -16,7 +16,8 @@ return new class extends Migration
               $table->string('code', 20)->unique()->comment('Mã chuyên khoa, VD: SK001');
             $table->string('name', 100)->comment('Tên chuyên khoa hoặc dịch vụ');
             $table->text('description')->nullable()->comment('Mô tả chi tiết chuyên khoa');
-            $table->string('head_name', 100)->nullable()->comment('Tên trưởng khoa');
+            $table->unsignedBigInteger('user_id')->nullable()->comment('Trưởng khoa');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
             $table->integer('num_doctors')->default(0)->comment('Số lượng bác sĩ');
             $table->integer('num_nurses')->default(0)->comment('Số lượng y tá');
             $table->integer('num_rooms')->default(0)->comment('Số lượng phòng');

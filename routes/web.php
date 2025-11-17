@@ -139,7 +139,9 @@ Route::prefix('admin/services')->group(function () {
     Route::get('/create', [ServiceController::class, 'create'])->name('services.create');
     Route::post('/store', [ServiceController::class, 'store'])->name('services.store');
     Route::get('/edit/{service}', [ServiceController::class, 'edit'])->name('services.edit');
-    Route::get('/{service}', [ServiceController::class, 'show'])->name('services.show');
+    Route::get('/{service}/show', [ServiceController::class, 'show'])
+    ->name('services.show');
+
     Route::put('/update/{service}', [ServiceController::class, 'update'])->name('services.update');
     Route::delete('/destroy/{service}', [ServiceController::class, 'destroy'])->name('services.destroy');
 });

@@ -48,20 +48,16 @@ protected $fillable = [
     public function roles() {
         return $this->belongsToMany(Role::class, 'user_roles', 'user_id', 'role_id');
     }
- 
-// public function room()
-//     {
-//         return $this->belongsTo(HospitalRoom::class, 'room_id');
-//     }
-    public function hospitalRooms()
-{
-    return $this->belongsToMany(HospitalRoom::class, 'hospital_room_user', 'user_id', 'hospital_room_id');
-}
+
+        public function hospitalRooms()
+    {
+        return $this->belongsToMany(HospitalRoom::class, 'hospital_room_user', 'user_id', 'hospital_room_id');
+    }   
 // app/Models/User.php
-public function appointments()
-{
-    return $this->hasMany(\App\Models\Appointment::class);
-}
+    public function appointments()
+    {
+        return $this->hasMany(\App\Models\Appointment::class);
+    }
 
     /**
      * The attributes that should be hidden for serialization.
@@ -100,14 +96,10 @@ public function appointments()
             AuditHelper::log('Xóa tài khoản', $user->name, 'Thành công');
         });
     }
-
-    // public function doctorSite()
-    // {
-    //     return $this->hasOne(DoctorSite::class, 'user_id');
-    // }
-    public function isDoctor()
-{
-    return $this->roles()->where('name', 'doctor')->exists();
+            public function isDoctor()
+        {
+            return $this->roles()->where('name', 'doctor')->exists();
+        }
+   
 }
 
-}

@@ -4,28 +4,29 @@ namespace App\Http\Controllers;
 use App\Models\DoctorSite;
 use App\Models\User;
 use App\Models\Department;
+use App\Models\Role;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class DoctorSiteController extends Controller
 {
+
     public function index()
 {
-    $doctors = DoctorSite::with('user')
-    ->whereHas('user.roles', function ($q) {
-        $q->where('name', 'doctor');
-    })
-    ->paginate(10);
-
+    // Lấy danh sách bác sĩ, eager load user và department
+    $doctors = DoctorSite::with('user', 'department')
+        ->paginate(10);
 
     return view('doctorsite.index', compact('doctors'));
 }
 
-
     public function create()
     {
-        $users = User::where('role', 'doctor')->get();
-        $departments = Department::all();
-        return view('doctorsite.create', compact('users', 'departments'));
+    $doctorRole = Role::where('name', 'doctor')->first();
+    $users = $doctorRole ? $doctorRole->users : collect();
+    $departments = Department::all();
+
+    return view('doctorsite.create', compact('users', 'departments'));
     }
 
     public function store(Request $request)
@@ -52,13 +53,17 @@ class DoctorSiteController extends Controller
 
     public function edit(DoctorSite $doctor)
     {
-        $users = User::where('role', 'doctor')->get();
+         $doctorRole = Role::where('name', 'doctor')->first();
+        $users = $doctorRole ? $doctorRole->users : collect();
         $departments = Department::all();
-        return view('doctorsite.edit', compact('doctor', 'users', 'departments'));
+
+    return view('doctorsite.edit', compact('doctor', 'users', 'departments'));
     }
 
     public function update(Request $request, DoctorSite $doctor)
     {
+        Log::info('Doctorsite Data:', $request->all());
+
         $data = $request->validate([
             'user_id' => 'required|exists:users,id',
             'department_id' => 'nullable|exists:departments,id',

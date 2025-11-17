@@ -32,12 +32,6 @@
             </select>
         </div>
 
-        {{-- Specialty --}}
-        <div>
-            <label class="block font-semibold mb-1">Chuyên ngành</label>
-            <input type="text" name="specialty" value="{{ $doctor->specialty }}" class="border w-full p-2 rounded" required>
-        </div>
-
         {{-- Bio --}}
         <div>
             <label class="block font-semibold mb-1">Giới thiệu</label>

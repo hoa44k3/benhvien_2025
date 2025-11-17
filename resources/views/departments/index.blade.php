@@ -62,7 +62,13 @@
                         <tr>
                             <td class="text-center fw-bold">{{ $item->code }}</td>
                             <td class="fw-bold text-primary">{{ $item->name }}</td>
-                            <td class="text-center">{{ $item->head_name ?? '-' }}</td>
+                            <td>
+                                <strong>Trưởng khoa:</strong>
+                                {{ $item->user->name ?? 'Đang cập nhật' }}
+                            </td>
+
+
+
                             <td class="text-center text-nowrap">
                                 <i class="fas fa-user-md me-1 text-primary"></i> {{ $item->num_doctors }} Bác sĩ <br>
                                 <i class="fas fa-user-nurse me-1 text-info"></i> {{ $item->num_nurses }} Y tá

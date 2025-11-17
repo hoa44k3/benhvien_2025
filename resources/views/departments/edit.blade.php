@@ -50,16 +50,24 @@
                     </div>
                     
                     {{-- Trưởng khoa --}}
+                  
                     <div class="col-md-6">
-                        <label for="headName" class="form-label fw-semibold">Trưởng khoa</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="fas fa-user-tie"></i></span>
-                            <input type="text" name="head_name" id="headName" 
-                                   class="form-control" 
-                                   value="{{ old('head_name', $department->head_name) }}" 
-                                   placeholder="Tên trưởng khoa">
-                        </div>
-                    </div>
+    <label for="headDoctor" class="form-label fw-semibold">Trưởng khoa</label>
+    <div class="input-group">
+        <span class="input-group-text"><i class="fas fa-user-tie"></i></span>
+        <select name="user_id" id="headDoctor" class="form-control">
+            <option value="">-- Chọn bác sĩ --</option>
+            @foreach($doctors as $doctor)
+                <option value="{{ $doctor->id }}" 
+                    {{ old('user_id', $department->user_id ?? '') == $doctor->id ? 'selected' : '' }}>
+                    {{ $doctor->name }}
+                </option>
+            @endforeach
+        </select>
+    </div>
+</div>
+
+
 
                     {{-- Phí khám --}}
                     <div class="col-md-6">

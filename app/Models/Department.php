@@ -13,7 +13,7 @@ class Department extends Model
         'code',
         'name',
         'description',
-        'head_name',
+        'user_id',
         'num_doctors',
         'num_nurses',
         'num_rooms',
@@ -35,9 +35,13 @@ class Department extends Model
     {
         return $this->hasMany(Staff::class, 'department_id');
     }
-    public function services()
-{
-    return $this->hasMany(Service::class);
-}
+        public function services()
+    {
+        return $this->hasMany(Service::class);
+    }
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 
 }

@@ -6,6 +6,7 @@ use App\Helpers\AuditHelper;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Department;
+use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Log;
@@ -13,6 +14,10 @@ class DepartmentController extends Controller
 {
     public function index(Request $request)
     {
+            $doctors = User::whereHas('roles', function($q){
+            $q->where('name', 'doctor');
+        })->get();
+
         // $departments = Department::all();
          $query = Department::query();
 
@@ -31,21 +36,29 @@ class DepartmentController extends Controller
 
         // sắp xếp mặc định theo created_at desc
         $departments = $query->orderBy('created_at', 'desc')->paginate(15)->withQueryString();
-        return view('departments.index', compact('departments'));
+        return view('departments.index', compact('departments','doctors'));
     }
-
+    private function getDoctors()
+    {
+        return User::whereHas('roles', function($q){
+            $q->where('name', 'doctor');
+        })->get();
+    }
     public function create()
     {
-        return view('departments.create');
+        $doctors = $this->getDoctors();
+        return view('departments.create', compact('doctors'));
     }
-
+ 
     public function store(Request $request)
     {
+        // dd($request->all());
+
          $request->validate([
             'code' => 'required|string|max:20|unique:departments,code',
             'name' => 'required|string|max:100',
             'description' => 'nullable|string',
-            'head_name' => 'nullable|string|max:100',
+             'user_id' => 'nullable|exists:users,id',
             'num_doctors' => 'nullable|integer|min:0',
             'num_nurses' => 'nullable|integer|min:0',
             'num_rooms' => 'nullable|integer|min:0',
@@ -56,7 +69,7 @@ class DepartmentController extends Controller
 
         try {
             $data = $request->only([
-                'code','name','description','head_name',
+                'code','name','description','user_id',
                 'num_doctors','num_nurses','num_rooms',
                 'fee','status'
             ]);
@@ -91,18 +104,22 @@ class DepartmentController extends Controller
         return view('departments.show', compact('department'));
     }
 
+
     public function edit(Department $department)
     {
-        return view('departments.edit', compact('department'));
+        $doctors = $this->getDoctors();
+        return view('departments.edit', compact('department','doctors'));
     }
 
     public function update(Request $request, Department $department)
     {
+        // dd($request->all());
+
         $request->validate([
             'code' => ['required','string','max:20', Rule::unique('departments','code')->ignore($department->id)],
             'name' => 'required|string|max:100',
             'description' => 'nullable|string',
-            'head_name' => 'nullable|string|max:100',
+             'user_id' => 'nullable|exists:users,id',
             'num_doctors' => 'nullable|integer|min:0',
             'num_nurses' => 'nullable|integer|min:0',
             'num_rooms' => 'nullable|integer|min:0',
@@ -113,7 +130,7 @@ class DepartmentController extends Controller
 
         try {
             $data = $request->only([
-                'code','name','description','head_name',
+                'code','name','description','user_id',
                 'num_doctors','num_nurses','num_rooms',
                 'fee','status'
             ]);
@@ -147,11 +164,6 @@ class DepartmentController extends Controller
 
     public function destroy(Department $department)
     {
-        // if ($department->image) {
-        //     Storage::disk('public')->delete($department->image);
-        // }
-        // $department->delete();
-        // return redirect()->route('departments.index')->with('success', 'Xóa chuyên khoa thành công!');
         try {
             if ($department->image) {
                 Storage::disk('public')->delete($department->image);

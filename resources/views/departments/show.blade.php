@@ -21,8 +21,17 @@
                         <dt class="col-sm-3 text-muted">Mã chuyên khoa:</dt>
                         <dd class="col-sm-9 fw-bold">{{ $department->code }}</dd>
 
-                        <dt class="col-sm-3 text-muted">Trưởng khoa:</dt>
-                        <dd class="col-sm-9">{{ $department->head_name ?? 'Chưa chỉ định' }}</dd>
+                         <dt class="col-sm-3 text-muted">Trưởng khoa:</dt>
+                        {{-- <dd class="col-sm-9">{{ $department->head_name ?? 'Chưa chỉ định' }}</dd>  --}}
+                        <dd class="col-sm-9">
+                            @if($department->user)
+                                <i class="fas fa-user-md text-primary me-1"></i> 
+                                {{ $department->user->name }}
+                            @else
+                                <span class="text-muted">Chưa chỉ định</span>
+                            @endif
+                        </dd>
+
 
                         <dt class="col-sm-3 text-muted">Trạng thái:</dt>
                         <dd class="col-sm-9">

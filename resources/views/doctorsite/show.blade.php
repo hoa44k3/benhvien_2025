@@ -20,7 +20,7 @@
                 <!-- Thông tin chi tiết -->
                 <div class="col-md-8">
                     <h4 class="mb-2">{{ $doctor->user->name ?? 'Không rõ' }}</h4>
-                    <p class="text-primary mb-2"><strong>Chuyên khoa chính:</strong> {{ $doctor->specialty ?? '-' }}</p>
+                    {{-- <p class="text-primary mb-2"><strong>Chuyên khoa chính:</strong> {{ $doctor->specialty ?? '-' }}</p> --}}
                     <p class="mb-2"><strong>Khoa:</strong> {{ $doctor->department->name ?? '-' }}</p>
                     <p class="mb-2"><strong>Giới thiệu:</strong> {{ $doctor->bio ?? '-' }}</p>
                     <p class="mb-2"><strong>Điểm đánh giá:</strong> ⭐ {{ $doctor->rating }}/5</p>
