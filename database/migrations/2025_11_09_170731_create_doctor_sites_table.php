@@ -15,7 +15,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('department_id')->nullable()->constrained('departments')->nullOnDelete();
-            $table->string('specialty')->nullable()->comment('Chuyên khoa chính');
+            $table->string('specialization')->nullable()->comment('Chuyên khoa chính');
+             // Số năm kinh nghiệm
+            $table->integer('experience_years')->default(0)->comment('Số năm kinh nghiệm');
             $table->text('bio')->nullable()->comment('Giới thiệu ngắn');
             $table->decimal('rating', 2, 1)->default(0)->comment('Điểm trung bình đánh giá');
             $table->integer('reviews_count')->default(0)->comment('Số lượt đánh giá');

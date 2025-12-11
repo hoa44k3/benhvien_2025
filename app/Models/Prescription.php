@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Prescription extends Model
 {
   use HasFactory;
-
+ protected $dates = ['date'];
     protected $fillable = [
         'code',
         'appointment_id',
@@ -16,6 +16,7 @@ class Prescription extends Model
         'diagnosis',
         'note',
         'status',
+        'medical_record_id',
     ];
 
     // 🔹 Mối quan hệ
@@ -24,6 +25,10 @@ class Prescription extends Model
         return $this->belongsTo(Appointment::class);
     }
 
+    public function medicalRecord()
+    {
+        return $this->belongsTo(MedicalRecord::class, 'medical_record_id');
+    }
     public function doctor()
     {
         return $this->belongsTo(User::class, 'doctor_id');

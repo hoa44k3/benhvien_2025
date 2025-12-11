@@ -18,41 +18,105 @@ class AuthController extends Controller
         return view('auth.login');
     }
 
-   public function login(Request $request)
+//    public function login(Request $request)
+// {
+//     $request->validate([
+//         'email' => 'required|email',
+//         'password' => 'required|string',
+//     ]);
+
+//     $email = $request->input('email');
+//     $password = $request->input('password');
+
+//     $user = User::where('email', $email)->first();
+
+//     if (! $user) {
+//         return back()->withErrors(['email' => 'Thông tin đăng nhập không chính xác.']);
+//     }
+
+//     $stored = $user->password ?? '';
+
+//     // Kiểm tra password có đúng chuẩn hash hợp lệ không
+//     $looksHashed = preg_match('/^\$2[ayb]\$.{56}$/', $stored) 
+//                  || str_starts_with($stored, '$argon2i$')
+//                  || str_starts_with($stored, '$argon2id$');
+
+//     if ($looksHashed) {
+//         // Nếu password trong DB đúng chuẩn hash → dùng Auth::attempt
+//         if (! Auth::attempt(['email' => $email, 'password' => $password])) {
+//             return back()->withErrors(['email' => 'Thông tin đăng nhập không chính xác.']);
+//         }
+//     } else {
+//         // Nếu password trong DB là text thường
+//         if (! hash_equals($stored, $password)) {
+//             return back()->withErrors(['email' => 'Thông tin đăng nhập không chính xác.']);
+//         }
+
+//         // Nếu đúng → cập nhật lại hash chuẩn
+//         $user->password = Hash::make($password);
+//         $user->save();
+
+//         Auth::login($user);
+//     }
+
+//     $user = Auth::user();
+
+//     // Lấy role
+//     $role = DB::table('user_roles')
+//         ->join('roles', 'user_roles.role_id', '=', 'roles.id')
+//         ->where('user_roles.user_id', $user->id)
+//         ->value('roles.name');
+
+//     if (! $role) {
+//         Auth::logout();
+//         return back()->withErrors(['email' => 'Tài khoản chưa được gán vai trò.']);
+//     }
+
+//     // Điều hướng theo role
+//     return match ($role) {
+//         'admin'        => redirect()->route('admin.index'),
+//         'doctor'       => redirect()->route('doctor.index'),
+//         'nurse'        => redirect()->route('nurse.index'),
+//         'pharmacist'   => redirect()->route('pharmacist.index'),
+//         'receptionist' => redirect()->route('receptionist.index'),
+//         default        => redirect()->route('home'),
+//     };
+// }
+public function login(Request $request)
 {
     $request->validate([
         'email' => 'required|email',
         'password' => 'required|string',
     ]);
 
-    $email = $request->input('email');
-    $password = $request->input('password');
+    $email = $request->email;
+    $password = $request->password;
 
     $user = User::where('email', $email)->first();
 
-    if (! $user) {
-        return back()->withErrors(['email' => 'Thông tin đăng nhập không chính xác.']);
+    if (!$user) {
+        return back()->withErrors(['email' => 'Email hoặc mật khẩu không đúng']);
     }
 
-    $stored = $user->password ?? '';
+    $storedPassword = $user->password;
 
-    // Kiểm tra password có đúng chuẩn hash hợp lệ không
-    $looksHashed = preg_match('/^\$2[ayb]\$.{56}$/', $stored) 
-                 || str_starts_with($stored, '$argon2i$')
-                 || str_starts_with($stored, '$argon2id$');
+    // Kiểm tra password đã hash hay chưa
+    $isHashed = preg_match('/^\$2[ayb]\$.{56}$/', $storedPassword) 
+              || str_starts_with($storedPassword, '$argon2i$')
+              || str_starts_with($storedPassword, '$argon2id$');
 
-    if ($looksHashed) {
-        // Nếu password trong DB đúng chuẩn hash → dùng Auth::attempt
-        if (! Auth::attempt(['email' => $email, 'password' => $password])) {
-            return back()->withErrors(['email' => 'Thông tin đăng nhập không chính xác.']);
+    if ($isHashed) {
+        // Nếu đã hash chuẩn → dùng Auth::attempt
+        if (!Auth::attempt(['email' => $email, 'password' => $password])) {
+            return back()->withErrors(['email' => 'Email hoặc mật khẩu không đúng']);
         }
     } else {
-        // Nếu password trong DB là text thường
-        if (! hash_equals($stored, $password)) {
-            return back()->withErrors(['email' => 'Thông tin đăng nhập không chính xác.']);
+        // Nếu password cũ chưa hash → so sánh trực tiếp
+        if (!hash_equals($storedPassword, $password)) {
+            return back()->withErrors(['email' => 'Email hoặc mật khẩu không đúng']);
         }
 
-        // Nếu đúng → cập nhật lại hash chuẩn
+        // Nếu đúng → hash lại password chuẩn
         $user->password = Hash::make($password);
         $user->save();
 
@@ -67,7 +131,7 @@ class AuthController extends Controller
         ->where('user_roles.user_id', $user->id)
         ->value('roles.name');
 
-    if (! $role) {
+    if (!$role) {
         Auth::logout();
         return back()->withErrors(['email' => 'Tài khoản chưa được gán vai trò.']);
     }
@@ -82,6 +146,9 @@ class AuthController extends Controller
         default        => redirect()->route('home'),
     };
 }
+
+
+
 
 
     // Form đăng ký
@@ -116,7 +183,6 @@ class AuthController extends Controller
                 'role_id' => $role->id,
             ]);
         }
-
         // Đăng nhập ngay sau khi đăng ký
         Auth::login($user);
 

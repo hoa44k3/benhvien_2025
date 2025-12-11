@@ -31,7 +31,7 @@
 </head>
 <body class="font-sans bg-gray-50 text-gray-800 leading-relaxed">
 
-   <!-- Header -->
+   {{-- <!-- Header -->
     <header class="bg-white shadow-sm sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center flex-wrap">
             <div class="text-2xl font-bold text-primary">
@@ -53,7 +53,42 @@
                 <a href="{{ route('register') }}" class="py-2 px-4 bg-primary text-white font-semibold rounded-lg hover:bg-blue-600 shadow-md transition-colors duration-200">Đăng ký</a>
             </div>
         </div>
-    </header>
+    </header> --}}
+    <!-- Header -->
+<header class="bg-white shadow-sm sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center flex-wrap">
+        <div class="text-2xl font-bold text-primary">
+            <i class="fas fa-hospital-alt mr-2"></i> SmartHospital
+        </div>
+        
+        <nav class="hidden lg:flex flex-grow justify-center space-x-8">
+            <a href="{{ route('home') }}" class="text-gray-700 hover:text-primary font-medium pb-1 border-b-2 border-primary">Trang chủ</a>
+            <a href="{{ route('services') }}" class="text-gray-700 hover:text-primary font-medium pb-1 border-b-2 border-transparent hover:border-primary transition-colors duration-200">Dịch vụ</a>
+            <a href="{{ route('schedule') }}" class="text-gray-700 hover:text-primary font-medium pb-1 border-b-2 border-transparent hover:border-primary transition-colors duration-200">Đặt lịch khám</a>
+            <a href="{{ route('medical_records') }}" class="text-gray-700 hover:text-primary font-medium pb-1 border-b-2 border-transparent hover:border-primary transition-colors duration-200">Hồ sơ bệnh án</a>
+            <a href="{{ route('payment') }}" class="text-gray-700 hover:text-primary font-medium pb-1 border-b-2 border-transparent hover:border-primary transition-colors duration-200">Thanh toán</a>
+            <a href="{{ route('contact') }}" class="text-gray-700 hover:text-primary font-medium pb-1 border-b-2 border-transparent hover:border-primary transition-colors duration-200">Liên hệ</a>
+        </nav>
+        
+        <div class="flex items-center space-x-3 mt-4 lg:mt-0">
+            @guest
+                <a href="{{ route('login') }}" class="py-2 px-4 font-semibold text-primary hover:bg-blue-50 rounded-lg transition-colors duration-200">Đăng nhập</a>
+                <a href="{{ route('register') }}" class="py-2 px-4 bg-primary text-white font-semibold rounded-lg hover:bg-blue-600 shadow-md transition-colors duration-200">Đăng ký</a>
+            @endguest
+
+            @auth
+                <span class="text-gray-700 font-medium">Xin chào, {{ auth()->user()->name }}</span>
+                <form action="{{ route('logout') }}" method="POST" class="inline">
+                    @csrf
+                    <button type="submit" class="py-2 px-4 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-200">
+                        Đăng xuất
+                    </button>
+                </form>
+            @endauth
+        </div>
+    </div>
+</header>
+
 
    @yield('body')
 

@@ -82,6 +82,24 @@
                         <i class="fas fa-robot"></i> Quản lý Chatbot AI (UC37)
                     </a>
                 </li>
+                 <li class="nav-item">
+                    <a href="{{ route('medical_records.index') }}" class="nav-link" data-tab="chatbot" data-title="Chi tiết khám bệnh
+                    " data-subtitle="Cấu hình, đào tạo và theo dõi hiệu suất Chatbot tư vấn (UC37).">
+                        <i class="fas fa-robot"></i> Quản lý khám bệnh(UC37)
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('prescriptions.index') }}" class="nav-link" data-tab="chatbot" data-title="Chi tiết khám bệnh
+                    " data-subtitle="Cấu hình, đào tạo và theo dõi hiệu suất Chatbot tư vấn (UC37).">
+                        <i class="fas fa-robot"></i> Quản lý đơn thuốc - chi tiết đơn thuốc(UC37)
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('test_results.index') }}" class="nav-link" data-tab="chatbot" data-title="Chi tiết khám bệnh
+                    " data-subtitle="thông tin xét nghiệm của bệnh nhân (UC37).">
+                        <i class="fas fa-robot"></i> Thông tin xét nghiệm (UC37)
+                    </a>
+                </li>
                 <li class="nav-item">
                     <a href="{{ route('audit_log.index') }}" class="nav-link" data-tab="auditlog" data-title="Nhật ký hệ thống (Audit Log)" data-subtitle="Ghi lại mọi hoạt động của người dùng trong hệ thống (UC41).">
                         <i class="fas fa-clipboard-list"></i> Nhật ký hệ thống (UC41)

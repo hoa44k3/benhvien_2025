@@ -8,26 +8,22 @@ class DoctorSite extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
+  protected $fillable = [
         'user_id',
         'department_id',
-        'bio',
-        'rating_count',
-        'average_rating',
-        'experience_years',
         'specialization',
+        'bio',
+        'rating',
+        'reviews_count',
+        'image',
         'status',
+        'experience_years',
     ];
 
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
     }
-
-// public function user()
-// {
-//     return $this->belongsTo(User::class);
-// }
 
     public function department()
     {

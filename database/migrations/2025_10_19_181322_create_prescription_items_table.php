@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
              $table->foreignId('prescription_id')->constrained('prescriptions')->cascadeOnDelete();
             $table->foreignId('medicine_id')->nullable()->constrained('medicines')->nullOnDelete();
-
             $table->string('medicine_name', 100)->comment('Tên thuốc được kê');
             $table->string('dosage', 100)->nullable()->comment('Liều dùng, ví dụ: 2 viên/lần');
             $table->string('frequency', 100)->nullable()->comment('Số lần dùng trong ngày, ví dụ: 3 lần/ngày');

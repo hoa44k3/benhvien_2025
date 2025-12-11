@@ -16,33 +16,150 @@ use App\Http\Controllers\StaffController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ClinicalExamController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\DoctorScheduleController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DoctorDiagnosisController;
 use App\Http\Controllers\DoctorPatientController;
-
+use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\MedicalRecordController;
 use App\Http\Controllers\DoctorSiteController;
-
+use App\Http\Controllers\PrescriptionController;
+use App\Http\Controllers\PrescriptionItemController;
+use App\Http\Controllers\TestResultController;
+use App\Http\Controllers\InvoiceController;
 Route::group(['prefix' => ''], function() {
     Route::get('/', [HomeController::class, 'index'])->name('home');
     Route::get('/services', [HomeController::class, 'services'])->name('services');
     Route::get('/services/{service}', [HomeController::class, 'serviceShow'])->name('services.show');
     Route::get('/schedule', [HomeController::class, 'schedule'])->name('schedule');
-    Route::get('/medical_records', [HomeController::class, 'medical_records'])->name('medical_records');
+Route::post('/schedule', [HomeController::class, 'storeFromSite'])->name('site.schedule.store');
+    Route::get('/my-appointments', [HomeController::class, 'myAppointments'])->name('site.my_appointments');
     Route::get('/payment', [HomeController::class, 'payment'])->name('payment');
     Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
+    Route::get('/medical_records', [HomeController::class, 'medical_records'])
+    ->name('medical_records')
+    ->middleware('auth');
+
 });
+
+
+Route::prefix('appointments')->group(function () {
+    Route::get('/', [AppointmentController::class, 'index'])->name('appointments.index');
+    Route::get('/create', [AppointmentController::class, 'create'])->name('appointments.create');
+    Route::post('/store', [AppointmentController::class, 'store'])->name('appointments.store');
+    Route::get('/{appointment}/edit', [AppointmentController::class, 'edit'])->name('appointments.edit');
+    Route::put('/{appointment}', [AppointmentController::class, 'update'])->name('appointments.update');
+    Route::delete('/{appointment}', [AppointmentController::class, 'destroy'])->name('appointments.destroy');
+  Route::post('/{id}/approve', [AppointmentController::class, 'approve'])
+        ->name('appointments.approve')
+        ->middleware('auth');
+Route::post('/appointments/{id}/check-in', 
+    [AppointmentController::class, 'checkIn'])
+    ->name('appointments.checkin');
+
+
+});
+
+// Route::prefix('admin/medical_records')->group(function () {
+//     Route::get('/', [MedicalRecordController::class, 'index'])->name('medical_records.index');
+//     Route::get('/create', [MedicalRecordController::class, 'create'])->name('medical_records.create');
+//     Route::post('/store', [MedicalRecordController::class, 'store'])->name('medical_records.store');
+//     Route::get('/{medical_record}', [MedicalRecordController::class, 'show'])->name('medical_records.show'); // đây là show
+//     Route::get('/{medical_record}/edit', [MedicalRecordController::class, 'edit'])->name('medical_records.edit');
+//     Route::put('/{medical_record}', [MedicalRecordController::class, 'update'])->name('medical_records.update');
+//     Route::delete('/{medical_record}', [MedicalRecordController::class, 'destroy'])->name('medical_records.destroy');
+//     Route::post('/{medical_record}/complete', [MedicalRecordController::class, 'complete'])
+// ->name('medical_records.complete');
+// Route::get('/download/{id}', [MedicalRecordController::class, 'download'])->name('medical_records.download');
+// });
+
+Route::prefix('admin/medical_records')->group(function () {
+    Route::get('/', [MedicalRecordController::class, 'index'])->name('medical_records.index');
+    Route::get('/create', [MedicalRecordController::class, 'create'])->name('medical_records.create');
+    Route::post('/store', [MedicalRecordController::class, 'store'])->name('medical_records.store');
+    Route::get('/{medical_record}', [MedicalRecordController::class, 'show'])->name('medical_records.show');
+    Route::get('/{medical_record}/edit', [MedicalRecordController::class, 'edit'])->name('medical_records.edit');
+    Route::put('/{medical_record}', [MedicalRecordController::class, 'update'])->name('medical_records.update');
+    Route::delete('/{medical_record}', [MedicalRecordController::class, 'destroy'])->name('medical_records.destroy');
+    Route::post('/{medical_record}/complete', [MedicalRecordController::class, 'complete'])->name('medical_records.complete');
+    Route::get('/download/{id}', [MedicalRecordController::class, 'download'])->name('medical_records.download');
+});
+
+
+Route::prefix('invoices')->group(function () {
+    Route::get('/', [InvoiceController::class, 'index'])->name('invoices.index');
+    Route::get('/create', [InvoiceController::class, 'create'])->name('invoices.create');
+    Route::post('/store', [InvoiceController::class, 'store'])->name('invoices.store');
+    Route::get('/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
+    Route::get('/{invoice}/edit', [InvoiceController::class, 'edit'])->name('invoices.edit');
+    Route::put('/{invoice}', [InvoiceController::class, 'update'])->name('invoices.update');
+    Route::delete('/{invoice}', [InvoiceController::class, 'destroy'])->name('invoices.destroy');
+});
+
+Route::prefix('prescriptions')->group(function () {
+
+    // LIST + CREATE + STORE
+    Route::get('/', [PrescriptionController::class, 'index'])->name('prescriptions.index');
+    Route::get('/create', [PrescriptionController::class, 'create'])->name('prescriptions.create');
+    Route::post('/store', [PrescriptionController::class, 'store'])->name('prescriptions.store');
+
+    // SHOW + EDIT + UPDATE
+    Route::get('/{prescription}', [PrescriptionController::class, 'show'])->name('prescriptions.show');
+    Route::get('/{prescription}/edit', [PrescriptionController::class, 'edit'])->name('prescriptions.edit');
+    Route::put('/{prescription}', [PrescriptionController::class, 'update'])->name('prescriptions.update');
+
+    // DELETE
+    Route::delete('/{prescription}', [PrescriptionController::class, 'destroy'])->name('prescriptions.destroy');
+    // Export Excel
+    Route::get('/export/excel', [PrescriptionController::class, 'exportExcel'])
+        ->name('prescriptions.export');
+});
+// ITEMS trong đơn thuốc
+Route::prefix('prescription-items')->group(function () {
+
+    Route::get('/create/{prescription}', 
+        [PrescriptionItemController::class, 'create'])
+        ->name('prescription_items.create');
+
+    Route::post('/store/{prescription}', 
+        [PrescriptionItemController::class, 'store'])
+        ->name('prescription_items.store');
+
+    Route::get('/{item}/edit', 
+        [PrescriptionItemController::class, 'edit'])
+        ->name('prescription_items.edit');
+
+    Route::put('/{item}', 
+        [PrescriptionItemController::class, 'update'])
+        ->name('prescription_items.update');
+
+    Route::delete('/{item}', 
+        [PrescriptionItemController::class, 'destroy'])
+        ->name('prescription_items.destroy');
+});
+
+Route::prefix('test-results')->group(function () {
+    Route::get('/', [TestResultController::class, 'index'])->name('test_results.index');
+    Route::get('/create', [TestResultController::class, 'create'])->name('test_results.create');
+    Route::post('/store', [TestResultController::class, 'store'])->name('test_results.store');
+
+    Route::get('/{testResult}', [TestResultController::class, 'show'])->name('test_results.show');
+    Route::get('/{testResult}/edit', [TestResultController::class, 'edit'])->name('test_results.edit');
+    Route::put('/{testResult}', [TestResultController::class, 'update'])->name('test_results.update');
+
+    Route::delete('/{testResult}', [TestResultController::class, 'destroy'])->name('test_results.destroy');
+});
+Route::resource('medical_record_files', App\Http\Controllers\MedicalRecordFileController::class);
+
 
 
 Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/', [Admincontroller::class, 'index'])->name('admin.index');
 });
 
-// Route::middleware(['auth', 'doctor'])->group(function () {
-//     Route::get('/doctor', [DoctorController::class, 'index'])->name('doctor.index');
-// });
 Route::middleware(['auth', 'nurse'])->group(function () {
     Route::get('/nurse', [NurseController::class, 'index'])->name('nurse.index');
 });
@@ -71,9 +188,13 @@ Route::post('/logout', function () {
 })->name('logout');
 
 
+// Route::middleware(['auth'])->group(function () {
+//     Route::resource('users', UserController::class);
+// });
 Route::middleware(['auth'])->group(function () {
-    Route::resource('users', UserController::class);
+    Route::get('/home', [UserController::class, 'home'])->name('home');
 });
+
 
 
  // Quản lý người dùng
@@ -123,17 +244,7 @@ Route::prefix('admin/doctorsite')->group(function () {
     Route::put('/update/{doctor}', [DoctorSiteController::class, 'update'])->name('doctorsite.update');
     Route::delete('/destroy/{doctor}', [DoctorSiteController::class, 'destroy'])->name('doctorsite.destroy');
 });
-use App\Http\Controllers\ServiceController;
 
-// Route::prefix('services')->group(function () {
-//     Route::get('/', [ServiceController::class, 'index'])->name('services.index');
-//     Route::get('/create', [ServiceController::class, 'create'])->name('services.create');
-//     Route::post('/store', [ServiceController::class, 'store'])->name('services.store');
-//     Route::get('/edit/{service}', [ServiceController::class, 'edit'])->name('services.edit');
-//         Route::get('/{service}', [ServiceController::class, 'show'])->name('services.show');
-//     Route::put('/update/{service}', [ServiceController::class, 'update'])->name('services.update');
-//     Route::delete('/destroy/{service}', [ServiceController::class, 'destroy'])->name('services.destroy');
-// });
 Route::prefix('admin/services')->group(function () {
     Route::get('/', [ServiceController::class, 'index'])->name('services.index');
     Route::get('/create', [ServiceController::class, 'create'])->name('services.create');
@@ -151,8 +262,6 @@ Route::prefix('admin/services')->group(function () {
 Route::prefix('hospital_rooms')->group(function () {
     Route::get('/', [HospitalRoomController::class, 'index'])->name('hospital_rooms.index');
     Route::get('/create', [HospitalRoomController::class, 'create'])->name('hospital_rooms.create');
-    
-
     Route::post('/store', [HospitalRoomController::class, 'store'])->name('hospital_rooms.store');
     Route::get('/{hospital_room}/edit', [HospitalRoomController::class, 'edit'])->name('hospital_rooms.edit');
     Route::put('/{hospital_room}', [HospitalRoomController::class, 'update'])->name('hospital_rooms.update');
@@ -168,24 +277,13 @@ Route::prefix('staff')->name('staff.')->group(function () {
     Route::delete('/{staff}', [StaffController::class, 'destroy'])->name('destroy'); // Xóa nhân viên
 });
 
-Route::prefix('appointments')->group(function () {
-    Route::get('/', [AppointmentController::class, 'index'])->name('appointments.index');
-    Route::get('/create', [AppointmentController::class, 'create'])->name('appointments.create');
-    Route::post('/store', [AppointmentController::class, 'store'])->name('appointments.store');
-    Route::get('/{appointment}/edit', [AppointmentController::class, 'edit'])->name('appointments.edit');
-    Route::put('/{appointment}', [AppointmentController::class, 'update'])->name('appointments.update');
-    Route::delete('/{appointment}', [AppointmentController::class, 'destroy'])->name('appointments.destroy');
-});
+
 
 Route::prefix('audit-log')->name('audit_log.')->group(function () {
     Route::get('/', [AuditLogController::class, 'index'])->name('index');
     
 });
 
-
-// Route::middleware(['auth', 'is_admin'])->group(function () {
-//     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
-// });
 Route::prefix('dashboard')->name('dashboard.')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('index');
     
@@ -223,3 +321,24 @@ Route::middleware(['auth'])->prefix('doctor')->group(function () {
     Route::get('/video-call/{id}', [DoctorDiagnosisController::class, 'videoCall'])->name('videoCall');
     Route::get('/diagnosis/{appointment}/prescription', [DoctorDiagnosisController::class, 'viewPrescription'])->name('diagnosis.prescription');
 });
+
+
+Route::prefix('clinical-exams')->name('clinical_exams.')->group(function() {
+    Route::get('/', [ClinicalExamController::class,'index'])->name('index');
+    Route::get('/create', [ClinicalExamController::class,'create'])->name('create');
+    Route::post('/', [ClinicalExamController::class,'store'])->name('store');
+    Route::get('/{clinicalExam}/edit', [ClinicalExamController::class,'edit'])->name('edit');
+    Route::put('/{clinicalExam}', [ClinicalExamController::class,'update'])->name('update');
+    Route::delete('/{clinicalExam}', [ClinicalExamController::class,'destroy'])->name('destroy');
+    Route::get('/{clinicalExam}', [ClinicalExamController::class,'show'])->name('show');
+});
+
+// Clinical exams
+Route::resource('clinical_exams', \App\Http\Controllers\ClinicalExamController::class);
+
+// Invoices
+Route::resource('invoices', \App\Http\Controllers\InvoiceController::class);
+
+// Follow ups
+Route::resource('follow_ups', \App\Http\Controllers\FollowUpController::class);
+

@@ -9,86 +9,87 @@
             </h4>
             <small>Cập nhật thông tin và trạng thái cuộc hẹn.</small>
         </div>
+
         <div class="card-body p-4">
 
             <form action="{{ route('appointments.update', $appointment->id) }}" method="POST">
                 @csrf
                 @method('PUT')
-                
+
+                {{-- ====================== THÔNG TIN CƠ BẢN ====================== --}}
                 <h5 class="mb-3 text-secondary">Thông tin cơ bản</h5>
                 <hr>
+
                 <div class="row g-3">
-                    
-                    {{-- Mã lịch hẹn (Readonly) --}}
+
+                    {{-- Mã lịch hẹn --}}
                     <div class="col-md-6">
-                        <label for="appointmentCode" class="form-label fw-semibold">
-                            Mã lịch hẹn
-                        </label>
+                        <label class="form-label fw-semibold">Mã lịch hẹn</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="fas fa-barcode"></i></span>
-                            <input type="text" name="code" id="appointmentCode" 
-                                   value="{{ $appointment->code }}" 
-                                   class="form-control" readonly title="Mã lịch hẹn không thể thay đổi">
+                            <input type="text" class="form-control" value="{{ $appointment->code }}" readonly>
                         </div>
                     </div>
 
                     {{-- Tên bệnh nhân --}}
                     <div class="col-md-6">
-                        <label for="patientName" class="form-label fw-semibold">
-                            Tên bệnh nhân <span class="text-danger">*</span>
-                        </label>
+                        <label class="form-label fw-semibold">Tên bệnh nhân <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="fas fa-user-injured"></i></span>
-                            <input type="text" name="patient_name" id="patientName" 
-                                   value="{{ $appointment->patient_name }}" 
+                            <input type="text" name="patient_name" value="{{ $appointment->patient_name }}"
                                    class="form-control" required>
                         </div>
                     </div>
 
                 </div>
-                
+
+                {{-- ====================== CHI TIẾT CUỘC HẸN ====================== --}}
                 <h5 class="mt-4 mb-3 text-secondary">Chi tiết cuộc hẹn</h5>
                 <hr>
+
                 <div class="row g-3">
-                    
-                    {{-- Thời gian hẹn --}}
+
+                    {{-- Ngày hẹn --}}
                     <div class="col-md-6">
-                        <label for="appointmentTime" class="form-label fw-semibold">
-                            Thời gian hẹn <span class="text-danger">*</span>
-                        </label>
+                        <label class="form-label fw-semibold">Ngày hẹn <span class="text-danger">*</span></label>
                         <div class="input-group">
-                            <span class="input-group-text"><i class="fas fa-calendar-check"></i></span>
-                            <input type="datetime-local" name="time" id="appointmentTime" 
-                                   value="{{ date('Y-m-d\TH:i', strtotime($appointment->time)) }}" 
-                                   class="form-control" required>
+                            <span class="input-group-text"><i class="fas fa-calendar-day"></i></span>
+                            <input type="date" name="date" class="form-control"
+                                   value="{{ $appointment->date }}" required>
                         </div>
-                        <div class="form-text">Cập nhật ngày và giờ khám mới (nếu cần).</div>
+                    </div>
+
+                    {{-- Giờ hẹn --}}
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Giờ hẹn <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-clock"></i></span>
+                            <input type="time" name="time" class="form-control"
+                                   value="{{ $appointment->time }}" required>
+                        </div>
                     </div>
 
                     {{-- Trạng thái --}}
                     <div class="col-md-6">
-                        <label for="appointmentStatus" class="form-label fw-semibold">
-                            Trạng thái <span class="text-danger">*</span>
-                        </label>
+                        <label class="form-label fw-semibold">Trạng thái <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="fas fa-info-circle"></i></span>
-                            <select name="status" id="appointmentStatus" class="form-select" required>
-                                <option value="Đang chờ" {{ $appointment->status == 'Đang chờ' ? 'selected' : '' }}>Đang chờ</option>
-                                <option value="Đã xác nhận" {{ $appointment->status == 'Đã xác nhận' ? 'selected' : '' }}>Đã xác nhận</option>
-                                <option value="Hoàn thành" {{ $appointment->status == 'Hoàn thành' ? 'selected' : '' }}>Hoàn thành</option>
-                                <option value="Đã hủy" {{ $appointment->status == 'Đã hủy' ? 'selected' : '' }}>Đã hủy</option>
+                            <select name="status" class="form-select" required>
+                                @foreach(['Đang chờ','Đã xác nhận','Đang khám','Hoàn thành','Đã hẹn','Hủy'] as $st)
+                                    <option value="{{ $st }}" {{ $appointment->status == $st ? 'selected' : '' }}>
+                                        {{ $st }}
+                                    </option>
+                                @endforeach
                             </select>
                         </div>
                     </div>
 
                     {{-- Bác sĩ --}}
                     <div class="col-md-6">
-                        <label for="doctorId" class="form-label fw-semibold">
-                            Bác sĩ phụ trách <span class="text-danger">*</span>
-                        </label>
+                        <label class="form-label fw-semibold">Bác sĩ phụ trách <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="fas fa-user-md"></i></span>
-                            <select name="doctor_id" id="doctorId" class="form-select" required>
+                            <select name="doctor_id" class="form-select" required>
                                 <option value="">-- Chọn bác sĩ --</option>
                                 @foreach($doctors as $doctor)
                                     <option value="{{ $doctor->id }}" {{ $appointment->doctor_id == $doctor->id ? 'selected' : '' }}>
@@ -98,79 +99,60 @@
                             </select>
                         </div>
                     </div>
-{{-- trong form chỉnh sửa --}}
-<div class="row g-3">
-    {{-- Người đặt lịch --}}
-    <div class="col-md-6">
-        <label class="form-label fw-semibold">Người đặt lịch</label>
-        <div class="input-group">
-            <span class="input-group-text"><i class="fas fa-user"></i></span>
-            <select name="user_id" class="form-select" required>
-                @foreach($users as $user)
-                    <option value="{{ $user->id }}" {{ $appointment->user_id == $user->id ? 'selected' : '' }}>
-                        {{ $user->name }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-    </div>
-{{-- Mã bệnh nhân --}}
-<div class="col-md-6">
-    <label class="form-label fw-semibold">Mã bệnh nhân</label>
-    <input type="text" name="patient_code" value="{{ $appointment->patient_code }}" class="form-control">
-</div>
 
-{{-- Số điện thoại --}}
-<div class="col-md-6">
-    <label class="form-label fw-semibold">Số điện thoại</label>
-    <input type="text" name="patient_phone" value="{{ $appointment->patient_phone }}" class="form-control">
-</div>
+                    {{-- Người đặt lịch --}}
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Người đặt lịch</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-user"></i></span>
+                            <select name="user_id" class="form-select" required>
+                                @foreach($users as $user)
+                                    <option value="{{ $user->id }}" {{ $appointment->user_id == $user->id ? 'selected' : '' }}>
+                                        {{ $user->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
 
-{{-- Lý do khám --}}
-<div class="col-md-12">
-    <label class="form-label fw-semibold">Lý do khám / Triệu chứng</label>
-    <textarea name="reason" class="form-control" rows="3">{{ $appointment->reason }}</textarea>
-</div>
+                    {{-- Mã bệnh nhân --}}
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Mã bệnh nhân</label>
+                        <input type="text" name="patient_code" class="form-control"
+                               value="{{ $appointment->patient_code }}">
+                    </div>
 
-{{-- Chuẩn đoán của bác sĩ --}}
-<div class="col-md-12">
-    <label class="form-label fw-semibold">Chuẩn đoán của bác sĩ</label>
-    <textarea name="diagnosis" class="form-control" rows="3">{{ $appointment->diagnosis }}</textarea>
-</div>
+                    {{-- Số điện thoại --}}
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Số điện thoại</label>
+                        <input type="text" name="patient_phone" class="form-control"
+                               value="{{ $appointment->patient_phone }}">
+                    </div>
 
-{{-- Ghi chú --}}
-<div class="col-md-12">
-    <label class="form-label fw-semibold">Ghi chú thêm</label>
-    <textarea name="notes" class="form-control" rows="2">{{ $appointment->notes }}</textarea>
-</div>
+                    {{-- Lý do khám --}}
+                    <div class="col-md-12">
+                        <label class="form-label fw-semibold">Lý do khám / Triệu chứng</label>
+                        <textarea name="reason" class="form-control" rows="3">{{ $appointment->reason }}</textarea>
+                    </div>
 
-    {{-- Ngày hẹn --}}
-    <div class="col-md-6">
-        <label class="form-label fw-semibold">Ngày hẹn <span class="text-danger">*</span></label>
-        <div class="input-group">
-            <span class="input-group-text"><i class="fas fa-calendar-day"></i></span>
-            <input type="date" name="date" value="{{ $appointment->date }}" class="form-control" required>
-        </div>
-    </div>
+                    {{-- Chuẩn đoán --}}
+                    <div class="col-md-12">
+                        <label class="form-label fw-semibold">Chuẩn đoán của bác sĩ</label>
+                        <textarea name="diagnosis" class="form-control" rows="3">{{ $appointment->diagnosis }}</textarea>
+                    </div>
 
-    {{-- Giờ hẹn --}}
-    <div class="col-md-6">
-        <label class="form-label fw-semibold">Giờ hẹn <span class="text-danger">*</span></label>
-        <div class="input-group">
-            <span class="input-group-text"><i class="fas fa-clock"></i></span>
-            <input type="time" name="time" value="{{ $appointment->time }}" class="form-control" required>
-        </div>
-    </div>
-</div>
+                    {{-- Ghi chú --}}
+                    <div class="col-md-12">
+                        <label class="form-label fw-semibold">Ghi chú thêm</label>
+                        <textarea name="notes" class="form-control" rows="2">{{ $appointment->notes }}</textarea>
+                    </div>
 
                     {{-- Chuyên khoa --}}
                     <div class="col-md-6">
-                        <label for="departmentId" class="form-label fw-semibold">
-                            Chuyên khoa <span class="text-danger">*</span>
-                        </label>
+                        <label class="form-label fw-semibold">Chuyên khoa <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="fas fa-stethoscope"></i></span>
-                            <select name="department_id" id="departmentId" class="form-select" required>
+                            <select name="department_id" class="form-select" required>
                                 <option value="">-- Chọn chuyên khoa --</option>
                                 @foreach($departments as $department)
                                     <option value="{{ $department->id }}" {{ $appointment->department_id == $department->id ? 'selected' : '' }}>
@@ -181,8 +163,41 @@
                         </div>
                     </div>
 
+                    {{-- Người Check-in --}}
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Người Check-in</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-user-check"></i></span>
+                            <select name="checked_in_by" class="form-select">
+                                <option value="">-- Chưa xác nhận --</option>
+                                @foreach($users as $user)
+                                    <option value="{{ $user->id }}" {{ $appointment->checked_in_by == $user->id ? 'selected' : '' }}>
+                                        {{ $user->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    {{-- Người duyệt lịch --}}
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Người Duyệt lịch</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-user-shield"></i></span>
+                            <select name="approved_by" class="form-select">
+                                <option value="">-- Chưa duyệt --</option>
+                                @foreach($users as $user)
+                                    <option value="{{ $user->id }}" {{ $appointment->approved_by == $user->id ? 'selected' : '' }}>
+                                        {{ $user->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
                 </div>
 
+                {{-- ====================== BUTTON ====================== --}}
                 <div class="mt-4 pt-3 border-top text-end">
                     <a href="{{ route('appointments.index') }}" class="btn btn-outline-secondary me-2">
                         <i class="fas fa-arrow-left me-1"></i> Quay lại
@@ -191,7 +206,9 @@
                         <i class="fas fa-sync-alt me-1"></i> Cập nhật Lịch hẹn
                     </button>
                 </div>
+
             </form>
+
         </div>
     </div>
 </div>

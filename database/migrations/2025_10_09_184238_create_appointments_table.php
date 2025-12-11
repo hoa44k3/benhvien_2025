@@ -22,12 +22,11 @@ return new class extends Migration
         ->constrained('users')
         ->onDelete('cascade')
         ->comment('Người đặt lịch (bệnh nhân)');
-
-    // 🔹 Khóa ngoại bác sĩ phụ trách
-    $table->foreignId('doctor_id')
-        ->constrained('staff')
-        ->onDelete('cascade')
-        ->comment('Bác sĩ phụ trách');
+         // 🔹 Bác sĩ -> users.id (chính là user có role doctor)
+            $table->foreignId('doctor_id')
+                ->constrained('users')
+                ->onDelete('cascade')
+                ->comment('Bác sĩ phụ trách');
 
     // 🔹 Thông tin bệnh nhân
     $table->string('patient_code', 20)->nullable()->comment('Mã bệnh nhân');
@@ -62,6 +61,17 @@ return new class extends Migration
         'Hủy'
     ])->default('Đang chờ')->comment('Trạng thái lịch hẹn');
 
+    // ai duyệt
+    $table->foreignId('approved_by')
+        ->nullable()
+        ->constrained('users')
+        ->nullOnDelete();
+
+    // ai check-in
+    $table->foreignId('checked_in_by')
+        ->nullable()
+        ->constrained('users')
+        ->nullOnDelete();
     $table->timestamps();
 });
 

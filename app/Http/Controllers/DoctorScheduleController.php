@@ -10,24 +10,6 @@ use Carbon\Carbon;
 
 class DoctorScheduleController extends Controller
 {
-    // public function index()
-    // {
-    //     $user = Auth::user(); // Bác sĩ hiện tại
-    //     $today = Carbon::today()->toDateString();
-
-    //     // Lấy lịch hẹn hôm nay của bác sĩ
-    //     $appointments = Appointment::where('doctor_id', $user->id)
-    //         ->whereDate('date', $today)
-    //         ->orderBy('time', 'asc')
-    //         ->get();
-
-    //     // Lấy ca làm việc hôm nay
-    //     $shifts = Shift::where('user_id', $user->id)
-    //         ->whereDate('date', $today)
-    //         ->get();
-
-    //     return view('doctor.schedule.index', compact('appointments', 'shifts', 'today'));
-    // }
 public function index()
 {
     $user = Auth::user();
@@ -134,4 +116,8 @@ public function index()
 
         return back()->with('success', '✅ Cập nhật ca làm việc thành công!');
     }
+    //   public function destroy(DoctorSchedule $doctorSchedule){
+    //     $doctorSchedule->delete();
+    //     return response()->json(['success'=>true]);
+    // }
 }

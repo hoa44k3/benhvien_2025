@@ -9,61 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\Role;
 class DatabaseSeeder extends Seeder
 {
-    /**
-     * Seed the application's database.
-     */
-//     public function run(): void
-//     {
-//         // Tạo roles mặc định
-//         $roles = ['admin', 'doctor', 'nurse', 'pharmacist', 'receptionist', 'user'];
-
-//         foreach ($roles as $roleName) {
-//             Role::firstOrCreate(['name' => $roleName]);
-//         }
-
-//         // Tạo tài khoản admin
-//         $admin = User::firstOrCreate(
-//             ['email' => 'admin@example.com'],
-//             [
-//                 'name' => 'Administrator',
-//                 'password' => Hash::make('123456'),
-//             ]
-//         );
-
-//         // Gán role admin cho user
-//         $adminRole = Role::where('name', 'admin')->first();
-//         if ($adminRole && !$admin->roles()->where('role_id', $adminRole->id)->exists()) {
-//             $admin->roles()->attach($adminRole->id);
-//         }
-
-//          // Tạo doctor bác sĩ
-//         $doctor = User::firstOrCreate(
-//             ['email' => 'doctor@example.com'],
-//             ['name' => 'Doctor John', 'password' => bcrypt('123456')]
-//         );
-//         $doctor->roles()->sync([Role::where('name', 'doctor')->first()->id]);
-// //  y tá
-//         $nurse = User::firstOrCreate(
-//             ['email' => 'nurse@example.com'],
-//             ['name' => 'nurse John', 'password' => bcrypt('123456')]
-//         );
-//         $nurse->roles()->sync([Role::where('name', 'nurse')->first()->id]);
-
-// //  dượt sĩ
-//          $pharmacist = User::firstOrCreate(
-//             ['email' => 'pharmacist@example.com'],
-//             ['name' => 'pharmacist John', 'password' => bcrypt('123456')]
-//         );
-//         $pharmacist->roles()->sync([Role::where('name', 'pharmacist')->first()->id]);
-// // lễ tân
-//         $receptionist = User::firstOrCreate(
-//             ['email' => 'receptionist@example.com'],
-//             ['name' => 'receptionist John', 'password' => bcrypt('123456')]
-//         );
-//         $receptionist->roles()->sync([Role::where('name', 'receptionist')->first()->id]);
-// $this->call(RevenueSeeder::class);
-
-//         }
+ 
        public function run(): void
 {
     // ✅ Gộp tất cả roles đúng theo hệ thống

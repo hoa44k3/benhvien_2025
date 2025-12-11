@@ -16,7 +16,7 @@
                 <i class="fas fa-user"></i>
             </div>
             <div>
-                <h2 class="text-2xl font-bold text-gray-900 mb-1">Nguyễn Văn Nam</h2>
+                <h2 class="text-2xl font-bold text-gray-900 mb-1">{{ $user->name }}</h2>
                 <div class="text-sm text-gray-500 space-y-1">
                     <span class="block"><i class="fas fa-birthday-cake mr-2 text-teal-600"></i> Sinh: 15/03/1985</span>
                     <span class="block"><i class="fas fa-map-marker-alt mr-2 text-teal-600"></i> Hà Nội | **Mã HS:** HS850315</span>
@@ -27,7 +27,8 @@
         <div class="tab-nav flex border-b-2 border-gray-200 mb-6">
             <button class="tab-item active py-3 px-6 font-semibold text-teal-600 border-b-3 border-teal-600 hover:text-teal-700 transition duration-200 focus:outline-none" 
                     data-tab="medical-records" style="border-bottom-width: 3px;">
-                <i class="fas fa-book-medical mr-2"></i> Bệnh án (4)
+                <i class="fas fa-book-medical mr-2"></i> Bệnh án ({{ $medicalRecords->count() }})
+
             </button>
             <button class="tab-item py-3 px-6 font-semibold text-gray-600 border-b-3 border-transparent hover:text-teal-600 hover:border-teal-600 transition duration-200 focus:outline-none" 
                     data-tab="prescriptions" style="border-bottom-width: 3px;">
@@ -38,179 +39,109 @@
                 <i class="fas fa-vial mr-2"></i> Xét nghiệm (5)
             </button>
         </div>
-        
+ 
         <div id="medical-records" class="tab-content active space-y-6">
-            
+            @foreach($medicalRecords as $record)
             <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-teal-600">
                 <div class="flex justify-between items-center pb-4 border-b border-gray-200 mb-4">
-                    <div class="text-xl font-bold text-gray-900">Khám tổng quát - 15/1/2024</div>
-                    <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-semibold">Hoàn thành</span>
+                    <div class="text-xl font-bold text-gray-900">{{ $record->title }} - {{ \Carbon\Carbon::parse($record->date)->format('d/m/Y') }}</div>
+                    <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-semibold">{{ $record->status }}</span>
                 </div>
 
                 <div class="text-sm text-gray-600 mb-5">
-                    <i class="fas fa-user-md mr-1 text-blue-500"></i> **BS. Nguyễn Văn An** | 
-                    <i class="fas fa-stethoscope mr-1 text-blue-500"></i> Chuyên khoa: Tim mạch
+                    <i class="fas fa-user-md mr-1 text-blue-500"></i> {{ $record->doctor_name }} | 
+                    <i class="fas fa-stethoscope mr-1 text-blue-500"></i> Chuyên khoa: {{ is_array($record->department) ? $record->department['name'] : json_decode($record->department)->name }}
+
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                     <div>
                         <h4 class="font-semibold text-teal-600 mb-1">Chẩn đoán</h4>
-                        <p class="text-gray-700">Tăng huyết áp nhẹ</p>
+                        <p class="text-gray-700">{{ $record->diagnosis }}</p>
                     </div>
                     <div>
                         <h4 class="font-semibold text-teal-600 mb-1">Điều trị</h4>
-                        <p class="text-gray-700">Thuốc hạ huyết áp, chế độ ăn ít muối</p>
+                        <p class="text-gray-700">{{ $record->treatment }}</p>
                     </div>
                     <div>
                         <h4 class="font-semibold text-teal-600 mb-1">Lịch tái khám</h4>
-                        <p class="text-gray-700"><i class="far fa-calendar-alt mr-1"></i> 15/2/2024</p>
+                        <p class="text-gray-700"><i class="far fa-calendar-alt mr-1"></i> {{ $record->next_checkup }}</p>
                     </div>
                 </div>
-                
-                <a href="#" class="inline-flex items-center border border-teal-600 text-teal-600 font-medium px-4 py-2 rounded-lg hover:bg-teal-600 hover:text-white transition duration-300">
+
+                <a href="{{ route('medical_records.download', $record->id) }}" 
+                class="inline-flex items-center border border-teal-600 text-teal-600 font-medium px-4 py-2 rounded-lg hover:bg-teal-600 hover:text-white transition duration-300">
                     <i class="fas fa-download mr-2"></i> Tải hồ sơ
                 </a>
             </div>
-
-            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-600">
-                <div class="flex justify-between items-center pb-4 border-b border-gray-200 mb-4">
-                    <div class="text-xl font-bold text-gray-900">Khám Tai Mũi Họng - 20/11/2023</div>
-                    <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-semibold">Hoàn thành</span>
-                </div>
-
-                <div class="text-sm text-gray-600 mb-5">
-                    <i class="fas fa-user-md mr-1 text-blue-500"></i> **BS. Trần Thị Mai** | 
-                    <i class="fas fa-stethoscope mr-1 text-blue-500"></i> Chuyên khoa: Tai Mũi Họng
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                    <div>
-                        <h4 class="font-semibold text-blue-600 mb-1">Chẩn đoán</h4>
-                        <p class="text-gray-700">Viêm xoang cấp</p>
-                    </div>
-                    <div>
-                        <h4 class="font-semibold text-blue-600 mb-1">Điều trị</h4>
-                        <p class="text-gray-700">Kháng sinh, thuốc chống viêm, rửa mũi</p>
-                    </div>
-                    <div>
-                        <h4 class="font-semibold text-blue-600 mb-1">Tái khám</h4>
-                        <p class="text-gray-700"><i class="far fa-calendar-alt mr-1"></i> 30/11/2023</p>
-                    </div>
-                </div>
-                
-                <a href="#" class="inline-flex items-center border border-blue-600 text-blue-600 font-medium px-4 py-2 rounded-lg hover:bg-blue-600 hover:text-white transition duration-300">
-                    <i class="fas fa-download mr-2"></i> Tải hồ sơ
-                </a>
-            </div>
-
-            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-yellow-600">
-                <div class="flex justify-between items-center pb-4 border-b border-gray-200 mb-4">
-                    <div class="text-xl font-bold text-gray-900">Nội soi dạ dày - 05/09/2023</div>
-                    <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-semibold">Hoàn thành</span>
-                </div>
-
-                <div class="text-sm text-gray-600 mb-5">
-                    <i class="fas fa-user-md mr-1 text-blue-500"></i> **BS. Lê Văn Hùng** | 
-                    <i class="fas fa-stethoscope mr-1 text-blue-500"></i> Chuyên khoa: Tiêu hóa
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                    <div>
-                        <h4 class="font-semibold text-yellow-600 mb-1">Chẩn đoán</h4>
-                        <p class="text-gray-700">Viêm loét dạ dày tá tràng nhẹ</p>
-                    </div>
-                    <div>
-                        <h4 class="font-semibold text-yellow-600 mb-1">Điều trị</h4>
-                        <p class="text-gray-700">Thuốc ức chế bơm proton</p>
-                    </div>
-                    <div>
-                        <h4 class="font-semibold text-yellow-600 mb-1">Tái khám</h4>
-                        <p class="text-gray-700">Theo dõi định kỳ</p>
-                    </div>
-                </div>
-                
-                <a href="#" class="inline-flex items-center border border-yellow-600 text-yellow-600 font-medium px-4 py-2 rounded-lg hover:bg-yellow-600 hover:text-white transition duration-300">
-                    <i class="fas fa-download mr-2"></i> Tải hồ sơ
-                </a>
-            </div>
-            
+            @endforeach
         </div>
+       {{-- <div id="prescriptions" class="tab-content hidden space-y-6">
 
-        <div id="prescriptions" class="tab-content hidden space-y-6">
-            
-            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-teal-600">
-                 <div class="flex justify-between items-center pb-4 border-b border-gray-200 mb-4">
-                    <div class="text-xl font-bold text-gray-900">Đơn thuốc ngày 15/1/2024</div>
-                    <a href="#" class="text-sm text-blue-600 font-medium hover:text-blue-700"><i class="fas fa-print mr-1"></i> In đơn thuốc</a>
+    {{-- Nếu không có đơn thuốc --}}
+    @if ($prescriptions->count() === 0)
+        <div class="text-center py-10 text-gray-500">
+            <i class="fas fa-prescription-bottle-alt text-4xl mb-3 text-gray-400"></i>
+            <p class="text-lg">Bạn chưa có đơn thuốc nào</p>
+        </div>
+    @endif
+
+    @foreach ($prescriptions as $prescription)
+        <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-teal-600">
+
+            <!-- Header -->
+            <div class="flex justify-between items-center pb-4 border-b border-gray-200 mb-4">
+                <div class="text-xl font-bold text-gray-900">
+                    Đơn thuốc ngày {{ $prescription->created_at->format('d/m/Y') }}
                 </div>
 
-                <div class="text-sm text-gray-600 mb-3"><i class="fas fa-user-md mr-1 text-blue-500"></i> **Bác sĩ BS. Nguyễn Văn An**</div>
+                <a href="{{ route('prescriptions.show', $prescription->id) }}"
+                   class="text-sm text-blue-600 font-medium hover:text-blue-700">
+                    <i class="fas fa-eye mr-1"></i> Xem chi tiết
+                </a>
+            </div>
 
-                <table class="responsive-table w-full border-collapse mb-5">
-                    <thead>
-                        <tr class="bg-teal-50 text-teal-700 uppercase text-sm leading-normal">
-                            <th class="py-3 px-6 text-left">Tên thuốc</th>
-                            <th class="py-3 px-6 text-left">Liều dùng</th>
-                            <th class="py-3 px-6 text-left">Thời gian</th>
-                            <th class="py-3 px-6 text-left">Hướng dẫn</th>
-                        </tr>
-                    </thead>
-                    <tbody class="text-gray-600 text-sm font-light">
+            <!-- Doctor -->
+            <div class="text-sm text-gray-600 mb-3">
+                <i class="fas fa-user-md mr-1 text-blue-500"></i>
+                Bác sĩ: <b>{{ $prescription->doctor->name ?? 'Không xác định' }}</b>
+            </div>
+
+            <!-- Table -->
+            <table class="responsive-table w-full border-collapse mb-5">
+                <thead>
+                    <tr class="bg-teal-50 text-teal-700 uppercase text-sm leading-normal">
+                        <th class="py-3 px-6 text-left">Tên thuốc</th>
+                        <th class="py-3 px-6 text-left">Liều dùng</th>
+                        <th class="py-3 px-6 text-left">Thời gian</th>
+                        <th class="py-3 px-6 text-left">Hướng dẫn</th>
+                    </tr>
+                </thead>
+
+                <tbody class="text-gray-600 text-sm font-light">
+                    @foreach ($prescription->items as $item)
                         <tr class="border-b border-gray-200 hover:bg-gray-50">
-                            <td data-label="Tên thuốc" class="py-3 px-6 text-left whitespace-nowrap font-medium">Amlodipine 5mg</td>
-                            <td data-label="Liều dùng" class="py-3 px-6 text-left">1 viên/ngày</td>
-                            <td data-label="Thời gian" class="py-3 px-6 text-left">30 ngày</td>
-                            <td data-label="Hướng dẫn" class="py-3 px-6 text-left">Uống sau ăn sáng</td>
+                            <td class="py-3 px-6 font-medium">{{ $item->medicine_name }}</td>
+                            <td class="py-3 px-6">{{ $item->dosage }}</td>
+                            <td class="py-3 px-6">{{ $item->duration }}</td>
+                            <td class="py-3 px-6">{{ $item->instruction }}</td>
                         </tr>
-                        <tr class="border-b border-gray-200 hover:bg-gray-50">
-                            <td data-label="Tên thuốc" class="py-3 px-6 text-left whitespace-nowrap font-medium">Losartan 50mg</td>
-                            <td data-label="Liều dùng" class="py-3 px-6 text-left">1 viên/ngày</td>
-                            <td data-label="Thời gian" class="py-3 px-6 text-left">30 ngày</td>
-                            <td data-label="Hướng dẫn" class="py-3 px-6 text-left">Uống trước ăn tối</td>
-                        </tr>
-                    </tbody>
-                </table>
-                
+                    @endforeach
+                </tbody>
+            </table>
+
+            <!-- Note -->
+            @if ($prescription->note)
                 <div class="p-4 bg-yellow-50 border-l-4 border-yellow-500 text-yellow-700 rounded-md text-sm">
-                    **Lưu ý:** Theo dõi huyết áp hàng ngày, tái khám sau 1 tháng.
+                    <b>Lưu ý:</b> {{ $prescription->note }}
                 </div>
-            </div>
-
-            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-600">
-                 <div class="flex justify-between items-center pb-4 border-b border-gray-200 mb-4">
-                    <div class="text-xl font-bold text-gray-900">Đơn thuốc ngày 20/11/2023</div>
-                    <a href="#" class="text-sm text-blue-600 font-medium hover:text-blue-700"><i class="fas fa-print mr-1"></i> In đơn thuốc</a>
-                </div>
-
-                <div class="text-sm text-gray-600 mb-3"><i class="fas fa-user-md mr-1 text-blue-500"></i> **Bác sĩ BS. Trần Thị Mai**</div>
-
-                <table class="responsive-table w-full border-collapse mb-5">
-                    <thead>
-                        <tr class="bg-blue-50 text-blue-700 uppercase text-sm leading-normal">
-                            <th class="py-3 px-6 text-left">Tên thuốc</th>
-                            <th class="py-3 px-6 text-left">Liều dùng</th>
-                            <th class="py-3 px-6 text-left">Thời gian</th>
-                            <th class="py-3 px-6 text-left">Hướng dẫn</th>
-                        </tr>
-                    </thead>
-                    <tbody class="text-gray-600 text-sm font-light">
-                        <tr class="border-b border-gray-200 hover:bg-gray-50">
-                            <td data-label="Tên thuốc" class="py-3 px-6 text-left whitespace-nowrap font-medium">Amoxicillin 500mg</td>
-                            <td data-label="Liều dùng" class="py-3 px-6 text-left">2 viên/ngày</td>
-                            <td data-label="Thời gian" class="py-3 px-6 text-left">7 ngày</td>
-                            <td data-label="Hướng dẫn" class="py-3 px-6 text-left">Uống sau ăn</td>
-                        </tr>
-                        <tr class="border-b border-gray-200 hover:bg-gray-50">
-                            <td data-label="Tên thuốc" class="py-3 px-6 text-left whitespace-nowrap font-medium">Fexofenadine 60mg</td>
-                            <td data-label="Liều dùng" class="py-3 px-6 text-left">1 viên/ngày</td>
-                            <td data-label="Thời gian" class="py-3 px-6 text-left">7 ngày</td>
-                            <td data-label="Hướng dẫn" class="py-3 px-6 text-left">Uống buổi tối</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
+            @endif
         </div>
+    @endforeach
+
+</div> 
+
+
 
         <div id="test-results" class="tab-content hidden space-y-6">
 

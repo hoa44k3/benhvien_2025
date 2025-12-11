@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
            $table->string('code', 20)->unique()->comment('Mã đơn thuốc, ví dụ: PRES001');
             $table->foreignId('appointment_id')->nullable()->constrained('appointments')->nullOnDelete();
+            $table->foreignId('medical_record_id')->nullable()->constrained('medical_records')->nullOnDelete();
             $table->foreignId('doctor_id')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('patient_id')->nullable()->constrained('users')->cascadeOnDelete();
             $table->text('diagnosis')->nullable()->comment('Chẩn đoán bệnh');
