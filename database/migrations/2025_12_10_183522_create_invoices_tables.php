@@ -14,12 +14,15 @@ return new class extends Migration
         Schema::create('invoices', function (Blueprint $table) {
             $table->id();
            $table->string('code', 50)->unique();
-
+// Thêm cột prescription_id
+        $table->foreignId('prescription_id')->nullable()->after('appointment_id')
+              ->constrained('prescriptions')->onDelete('set null');
     // Liên kết
     $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
     $table->foreignId('appointment_id')->nullable()->constrained('appointments')->nullOnDelete();
     $table->foreignId('medical_record_id')->nullable()->constrained('medical_records')->nullOnDelete();
-
+// 🔥 BỔ SUNG: Cột này cần thiết để truy xuất ngược đơn thuốc
+            $table->foreignId('prescription_id')->nullable()->constrained('prescriptions')->nullOnDelete();
     // Thanh toán
     $table->decimal('total', 12, 2)->default(0);
     $table->enum('status', ['unpaid', 'paid', 'refunded'])->default('unpaid');

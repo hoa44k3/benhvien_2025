@@ -20,11 +20,21 @@ return new class extends Migration
     $table->enum('item_type', ['service','medicine','package','other'])->default('service');
     $table->unsignedBigInteger('item_id')->nullable();
 
-    // Thông tin mục tính tiền
-    $table->string('description'); 
-    $table->integer('quantity')->default(1);
-    $table->decimal('unit_price', 12, 2)->default(0);
-    $table->decimal('total_price', 12, 2)->default(0);
+    // // Thông tin mục tính tiền
+    // $table->string('description'); 
+    // $table->integer('quantity')->default(1);
+    // $table->decimal('unit_price', 12, 2)->default(0);
+    // $table->decimal('total_price', 12, 2)->default(0);
+    // 🔥 SỬA: Đổi 'description' -> 'item_name' để khớp với Controller
+            $table->string('item_name'); 
+            
+            $table->integer('quantity')->default(1);
+            
+            // 🔥 SỬA: Đổi 'unit_price' -> 'price' cho gọn
+            $table->decimal('price', 15, 2)->default(0);
+            
+            // 🔥 SỬA: Đổi 'total_price' -> 'total' cho gọn
+            $table->decimal('total', 15, 2)->default(0);
             $table->timestamps();
         });
     }

@@ -28,6 +28,9 @@ class PrescriptionItemController extends Controller
             'quantity' => 'required|integer|min:1',
             'price' => 'nullable|numeric',
             'instruction' => 'nullable|string',
+            'strength' => 'nullable|string',
+        'unit' => 'nullable|string',
+        'times_per_day' => 'nullable|integer',
         ]);
 
         // Auto fill nếu có medicine_id
@@ -38,6 +41,7 @@ class PrescriptionItemController extends Controller
                 $data['price'] = $med->price;
             }
         }
+
 
         $prescription->items()->create($data);
 
@@ -65,6 +69,9 @@ class PrescriptionItemController extends Controller
             'quantity' => 'required|integer|min:1',
             'price' => 'nullable|numeric',
             'instruction' => 'nullable|string',
+            'strength' => 'nullable|string',
+        'unit' => 'nullable|string',
+        'times_per_day' => 'nullable|integer',
         ]);
 
         // Nếu chọn thuốc có sẵn

@@ -30,12 +30,13 @@ use App\Http\Controllers\PrescriptionController;
 use App\Http\Controllers\PrescriptionItemController;
 use App\Http\Controllers\TestResultController;
 use App\Http\Controllers\InvoiceController;
+
 Route::group(['prefix' => ''], function() {
     Route::get('/', [HomeController::class, 'index'])->name('home');
     Route::get('/services', [HomeController::class, 'services'])->name('services');
     Route::get('/services/{service}', [HomeController::class, 'serviceShow'])->name('services.show');
     Route::get('/schedule', [HomeController::class, 'schedule'])->name('schedule');
-Route::post('/schedule', [HomeController::class, 'storeFromSite'])->name('site.schedule.store');
+    Route::post('/schedule', [HomeController::class, 'storeFromSite'])->name('site.schedule.store');
     Route::get('/my-appointments', [HomeController::class, 'myAppointments'])->name('site.my_appointments');
     Route::get('/payment', [HomeController::class, 'payment'])->name('payment');
     Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
@@ -86,6 +87,11 @@ Route::prefix('admin/medical_records')->group(function () {
     Route::delete('/{medical_record}', [MedicalRecordController::class, 'destroy'])->name('medical_records.destroy');
     Route::post('/{medical_record}/complete', [MedicalRecordController::class, 'complete'])->name('medical_records.complete');
     Route::get('/download/{id}', [MedicalRecordController::class, 'download'])->name('medical_records.download');
+    // Route Bắt đầu khám
+    Route::post('/{medical_record}/start', [MedicalRecordController::class, 'startExam'])->name('medical_records.start');
+    
+    // Route Hủy khám
+    Route::post('/{medical_record}/cancel', [MedicalRecordController::class, 'cancel'])->name('medical_records.cancel');
 });
 
 
@@ -141,7 +147,7 @@ Route::prefix('prescription-items')->group(function () {
         ->name('prescription_items.destroy');
 });
 
-Route::prefix('test-results')->group(function () {
+Route::prefix('test_results')->group(function () {
     Route::get('/', [TestResultController::class, 'index'])->name('test_results.index');
     Route::get('/create', [TestResultController::class, 'create'])->name('test_results.create');
     Route::post('/store', [TestResultController::class, 'store'])->name('test_results.store');
@@ -332,13 +338,16 @@ Route::prefix('clinical-exams')->name('clinical_exams.')->group(function() {
     Route::delete('/{clinicalExam}', [ClinicalExamController::class,'destroy'])->name('destroy');
     Route::get('/{clinicalExam}', [ClinicalExamController::class,'show'])->name('show');
 });
-
+// Quản lý Kết quả Khám lâm sàng
+    Route::resource('clinical_exams', ClinicalExamController::class);
 // Clinical exams
-Route::resource('clinical_exams', \App\Http\Controllers\ClinicalExamController::class);
+// Route::resource('clinical_exams', \App\Http\Controllers\ClinicalExamController::class);
 
 // Invoices
 Route::resource('invoices', \App\Http\Controllers\InvoiceController::class);
 
 // Follow ups
 Route::resource('follow_ups', \App\Http\Controllers\FollowUpController::class);
-
+// Route tạo hóa đơn từ đơn thuốc
+    Route::post('/invoices/create-from-prescription/{id}', [App\Http\Controllers\InvoiceController::class, 'createFromPrescription'])
+        ->name('invoices.createFromPrescription');

@@ -1,4 +1,4 @@
-@extends('site.master')
+@extends('admin.master')
 @section('title','Chỉnh sửa hóa đơn')
 
 @section('body')

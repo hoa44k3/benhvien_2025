@@ -24,6 +24,13 @@
                 }
             }
         }
+
+        window.addEventListener('error', function(e) {
+        if(e.message.includes('innerHTML')) {
+            e.stopImmediatePropagation();
+            console.warn('Đã chặn lỗi JS giao diện cũ.');
+        }
+    });
     </script>
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
 
@@ -149,6 +156,6 @@
         </div>
     </footer>
 <script src="{{ asset('js/app.js') }}"></script>
-
+@yield('scripts')
 </body>
 </html>

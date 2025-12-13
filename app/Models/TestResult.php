@@ -19,10 +19,10 @@ protected $dates = ['date'];
     // {
     //     return $this->belongsTo(User::class);
     // }
-    // public function patient()
-    // {
-    //     return $this->belongsTo(User::class, 'user_id');
-    // }
+    public function patient()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 
     // public function doctor()
     // {
@@ -34,12 +34,12 @@ protected $dates = ['date'];
     //     return $this->belongsTo(Department::class, 'department_id');
     // }
 
-    // public function medicalRecord()
-    // {
-    //     return $this->belongsTo(MedicalRecord::class, 'medical_record_id');
-    // }
+    public function medicalRecord()
+    {
+        return $this->belongsTo(MedicalRecord::class, 'medical_record_id');
+    }
     // Bệnh nhân
-    public function patient()
+    public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
     }

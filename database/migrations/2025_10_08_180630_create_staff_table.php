@@ -22,8 +22,7 @@ return new class extends Migration
             $table->string('email', 100)->nullable();
             $table->integer('experience_years')->default(0);
             $table->decimal('rating', 2, 1)->nullable();
-             $table->dropForeign(['role_id']);
-           $table->foreignId('role_id')->nullable()->constrained('roles')->nullOnDelete();
+$table->foreignId('role_id')->nullable()->constrained('roles')->nullOnDelete();
             $table->enum('status', ['Hoạt động', 'Nghỉ phép', 'Nghỉ việc'])->default('Hoạt động');
             $table->timestamps();
         });

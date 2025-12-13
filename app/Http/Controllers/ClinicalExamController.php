@@ -5,12 +5,12 @@ use App\Models\ClinicalExam;
 use App\Models\MedicalRecord;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Auth;
 class ClinicalExamController extends Controller
 {
     public function index()
     {
-        $exams = ClinicalExam::with('medicalRecord', 'enteredBy')->get();
+        $exams = ClinicalExam::with('medicalRecord.user', 'enteredBy')->latest()->paginate(10);
         return view('clinical_exams.index', compact('exams'));
     }
 
@@ -37,16 +37,22 @@ class ClinicalExamController extends Controller
             'notes' => 'nullable|string',
             'measurements' => 'nullable|array',
         ]);
+// Map dữ liệu từ form (heart_rate) sang DB (pulse) nếu tên khác nhau
+        if($request->has('heart_rate')) {
+            $data['pulse'] = $request->heart_rate;
+        }
 
+        $data['entered_by'] = Auth::id();
         ClinicalExam::create($data);
-
-        return redirect()->route('clinical_exams.index')->with('success', 'Clinical Exam created successfully.');
+return redirect()->route('medical_records.show', $request->medical_record_id)
+                         ->with('success', 'Đã lưu chỉ số sinh tồn thành công!');
+        // return redirect()->route('clinical_exams.index')->with('success', 'Clinical Exam created successfully.');
     }
 
-    public function show(ClinicalExam $clinicalExam)
-    {
-        return view('clinical_exams.show', compact('clinicalExam'));
-    }
+    // public function show(ClinicalExam $clinicalExam)
+    // {
+    //     return view('clinical_exams.show', compact('clinicalExam'));
+    // }
 
     public function edit(ClinicalExam $clinicalExam)
     {
@@ -73,13 +79,17 @@ class ClinicalExamController extends Controller
         ]);
 
         $clinicalExam->update($data);
-
-        return redirect()->route('clinical_exams.index')->with('success', 'Clinical Exam updated successfully.');
+// Quay lại trang chi tiết hồ sơ gốc
+        return redirect()->route('medical_records.show', $clinicalExam->medical_record_id)
+                         ->with('success', 'Cập nhật thành công.');
+        // return redirect()->route('clinical_exams.index')->with('success', 'Clinical Exam updated successfully.');
     }
 
-    public function destroy(ClinicalExam $clinicalExam)
+   public function destroy(ClinicalExam $clinicalExam)
     {
+        $medicalRecordId = $clinicalExam->medical_record_id;
         $clinicalExam->delete();
-        return redirect()->route('clinical_exams.index')->with('success', 'Clinical Exam deleted successfully.');
+        return redirect()->route('medical_records.show', $medicalRecordId)
+                         ->with('success', 'Đã xóa kết quả khám.');
     }
 }

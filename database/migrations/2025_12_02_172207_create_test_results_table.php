@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('test_results', function (Blueprint $table) {
                $table->id();//thông tin xét nghiệm
-
+$table->foreignId('medical_record_id')->nullable()->constrained('medical_records')->onDelete('cascade');
         // Bệnh nhân
         $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
 
@@ -29,7 +29,8 @@ return new class extends Migration
         $table->string('lab_name');                // Tên phòng xét nghiệm
         $table->string('test_name');               // Tên xét nghiệm
         $table->date('date');                      // Ngày xét nghiệm
-        $table->string('result');                  // Kết quả
+          $table->string('result')->nullable()->change();              // Kết quả
+
         $table->string('unit')->nullable();        // Đơn vị đo
         $table->string('normal_range')->nullable(); // Giá trị tham chiếu
         $table->string('evaluation')->nullable();   // Bác sĩ đánh giá kết quả

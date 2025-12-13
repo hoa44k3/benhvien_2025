@@ -114,4 +114,18 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('activeMenu', `#${tabId}`);
         });
     });
+   
+    document.addEventListener('DOMContentLoaded', function() {
+        // Tìm nút mở modal
+        const openModalBtn = document.querySelector('[data-bs-target="#addTestModal"]');
+        const modalElement = document.getElementById('addTestModal');
+        
+        if(openModalBtn && modalElement) {
+            openModalBtn.addEventListener('click', function() {
+                var myModal = new bootstrap.Modal(modalElement);
+                myModal.show();
+            });
+        }
+    });
+
 });

@@ -47,18 +47,6 @@ document.addEventListener('DOMContentLoaded', () => {
         dateInput.min = dateInput.value;
     }
 
-    const bookingForm = document.getElementById('booking-form');
-    if (bookingForm) {
-        bookingForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            document.querySelector('.submit-button').innerHTML = `
-                <div class="p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg shadow-inner mt-4">
-                    <i class="fas fa-check-circle mr-2"></i> 
-                    <strong>Đặt lịch thành công!</strong> Chúng tôi sẽ xác nhận qua SĐT sớm nhất.
-                </div>
-            `;
-        });
-    }
 
     // ========== 2. DỊCH VỤ ==========
     const categories = document.querySelectorAll('.category-item');

@@ -8,33 +8,39 @@
     {{-- HEADER --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h3 class="fw-bold text-dark mb-0">
-            <i class="fas fa-file-invoice me-2 text-primary"></i> Chi tiết Đơn thuốc: <span class="text-info">{{ $prescription->code }}</span>
+            <i class="fas fa-file-invoice me-2 text-primary"></i> 
+            Chi tiết Đơn thuốc: 
+            <span class="text-info">{{ $prescription->code }}</span>
         </h3>
 
         <div class="d-flex space-x-2">
-            {{-- In đơn thuốc PDF --}}
+            {{-- In PDF --}}
             @if(Route::has('prescriptions.pdf'))
             <a href="{{ route('prescriptions.pdf', $prescription->id) }}"
-                class="btn btn-danger shadow-sm fw-bold me-2" title="Tải xuống hoặc In">
-                <i class="fas fa-file-pdf me-1"></i> In Đơn thuốc (PDF)
+                class="btn btn-danger shadow-sm fw-bold me-2">
+                <i class="fas fa-file-pdf me-1"></i> In PDF
             </a>
             @endif
 
             {{-- Sửa --}}
             <a href="{{ route('prescriptions.edit', $prescription->id) }}"
-                class="btn btn-warning shadow-sm fw-bold" title="Chỉnh sửa thông tin đơn">
+                class="btn btn-warning shadow-sm fw-bold">
                 <i class="fas fa-edit me-1"></i> Sửa
             </a>
         </div>
     </div>
 
     <div class="row g-4">
+
         {{-- THÔNG TIN CHUNG --}}
         <div class="col-lg-12">
             <div class="card shadow-lg border-0 rounded-3">
                 <div class="card-header bg-light border-bottom">
-                    <h5 class="mb-0 fw-bold"><i class="fas fa-info-circle me-2"></i> Thông tin chung</h5>
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-info-circle me-2"></i> Thông tin chung
+                    </h5>
                 </div>
+
                 <div class="card-body p-4 small">
 
                     <div class="row g-3 mb-3">
@@ -42,6 +48,7 @@
                             <strong><i class="fas fa-user-md me-1"></i> Bác sĩ kê đơn:</strong>
                             <p class="mb-0 text-dark">{{ $prescription->doctor->name ?? '---' }}</p>
                         </div>
+
                         <div class="col-md-6">
                             <strong><i class="fas fa-hospital-user me-1"></i> Bệnh nhân:</strong>
                             <p class="mb-0 text-dark">{{ $prescription->patient->name ?? '---' }}</p>
@@ -53,20 +60,16 @@
                             <strong><i class="fas fa-calendar-alt me-1"></i> Ngày kê:</strong>
                             <p class="mb-0 text-dark">{{ $prescription->created_at->format('d/m/Y H:i') }}</p>
                         </div>
+
                         <div class="col-md-6">
                             <strong><i class="fas fa-tag me-1"></i> Trạng thái:</strong>
                             @php
-                                $badgeClass = '';
-                                if ($prescription->status == 'Đang kê') {
-                                    $badgeClass = 'bg-warning text-dark';
-                                } elseif ($prescription->status == 'Đã duyệt') {
-                                    $badgeClass = 'bg-info';
-                                } else { // Đã phát thuốc (Giả định)
-                                    $badgeClass = 'bg-success';
-                                }
+                                $badgeClass = $prescription->status === 'Đang kê' ? 'bg-warning text-dark' :
+                                             ($prescription->status === 'Đã duyệt' ? 'bg-info' : 'bg-success');
                             @endphp
                             <span class="badge {{ $badgeClass }} fw-medium">
-                                <i class="fas fa-circle me-1"></i> {{ $prescription->status }}
+                                <i class="fas fa-circle me-1"></i> 
+                                {{ $prescription->status }}
                             </span>
                         </div>
                     </div>
@@ -91,7 +94,9 @@
         <div class="col-lg-12">
             <div class="card shadow-lg border-0 rounded-3">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 fw-bold"><i class="fas fa-prescription-bottle-alt me-2"></i> Danh sách thuốc trong đơn</h5>
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-prescription-bottle-alt me-2"></i> Danh sách thuốc
+                    </h5>
                     <a href="{{ route('prescription_items.create', $prescription->id) }}"
                         class="btn btn-light btn-sm fw-bold shadow-sm">
                         <i class="fas fa-plus me-1"></i> Thêm Thuốc
@@ -103,16 +108,16 @@
                         <table class="table mb-0 table-hover table-striped align-middle small">
                             <thead class="table-light">
                                 <tr class="text-center">
-                                    <th class="p-2" style="width: 15%;">Tên thuốc</th>
-                                    <th class="p-2" style="width: 8%;">Hàm lượng</th>
-                                    <th class="p-2" style="width: 8%;">Đơn vị</th>
-                                    <th class="p-2" style="width: 8%;">Số lượng</th>
-                                    <th class="p-2" style="width: 10%;">Liều dùng</th>
-                                    <th class="p-2" style="width: 8%;">Lần/ngày</th>
-                                    <th class="p-2" style="width: 8%;">Thời gian</th>
-                                    <th class="p-2" style="width: 15%;">Cách dùng</th>
-                                    <th class="p-2" style="width: 10%;">Thành tiền</th>
-                                    <th class="p-2" style="width: 10%;">Hành động</th>
+                                    <th class="p-2">Tên thuốc</th>
+                                    <th class="p-2">Hàm lượng</th>
+                                    <th class="p-2">Đơn vị</th>
+                                    <th class="p-2">Số lượng</th>
+                                    <th class="p-2">Liều dùng</th>
+                                    <th class="p-2">Lần/ngày</th>
+                                    <th class="p-2">Thời gian</th>
+                                    <th class="p-2">Cách dùng</th>
+                                    <th class="p-2">Thành tiền</th>
+                                    <th class="p-2">Hành động</th>
                                 </tr>
                             </thead>
 
@@ -128,20 +133,22 @@
                                     <td class="p-2">{{ $item->duration ?? '-' }}</td>
                                     <td class="p-2 text-start">{{ $item->instruction ?? '-' }}</td>
                                     <td class="p-2 fw-bold text-danger">
-                                        @if($item->price)
-                                            {{ number_format($item->price * $item->quantity) }} đ
-                                        @else
-                                            ---
-                                        @endif
+                                        {{ $item->price ? number_format($item->price * $item->quantity) . ' đ' : '---' }}
                                     </td>
                                     <td class="p-2">
-                                        {{-- Nút sửa, xóa chi tiết thuốc (Chưa có trong code cũ nhưng cần thiết) --}}
                                         <div class="d-flex justify-content-center">
-                                            <a href="{{ route('prescription_items.edit', $item->id) }}" class="btn btn-sm btn-warning me-1" title="Sửa thuốc"><i class="fas fa-edit"></i></a>
-                                            {{-- Form Xóa --}}
-                                            <form action="{{ route('prescription_items.destroy', $item->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Xác nhận xóa thuốc {{ $item->medicine_name }} khỏi đơn?')">
+                                            <a href="{{ route('prescription_items.edit', $item->id) }}"
+                                                class="btn btn-sm btn-warning me-1">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+
+                                            <form action="{{ route('prescription_items.destroy', $item->id) }}" 
+                                                method="POST"
+                                                onsubmit="return confirm('Xác nhận xóa {{ $item->medicine_name }}?')">
                                                 @csrf @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-danger" title="Xóa thuốc"><i class="fas fa-trash-alt"></i></button>
+                                                <button class="btn btn-sm btn-danger">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
                                             </form>
                                         </div>
                                     </td>
@@ -149,32 +156,32 @@
                                 @empty
                                 <tr>
                                     <td colspan="10" class="text-center py-3 text-muted">
-                                        <i class="fas fa-info-circle me-2"></i> Chưa có thuốc nào được thêm vào đơn.
-                                        @if($prescription->id)
-                                        <a href="{{ route('prescription_items.create', $prescription->id) }}" class="text-primary fw-medium">Thêm ngay</a>
-                                        @endif
+                                        <i class="fas fa-info-circle me-2"></i> Chưa có thuốc nào.
+                                        <a href="{{ route('prescription_items.create', $prescription->id) }}"
+                                            class="text-primary fw-medium">Thêm ngay</a>
                                     </td>
                                 </tr>
                                 @endforelse
                             </tbody>
-                            
-                            {{-- THÔNG TIN TỔNG CỘNG --}}
+
                             @if($prescription->items->isNotEmpty())
                             <tfoot>
                                 <tr>
-                                    <th colspan="8" class="text-end p-2 fs-6">TỔNG THÀNH TIỀN:</th>
+                                    <th colspan="8" class="text-end p-2 fs-6">TỔNG TIỀN:</th>
                                     <th class="p-2 fs-6 text-danger fw-bold">
-                                        {{ number_format($prescription->items->sum(fn($item) => $item->price * $item->quantity)) }} đ
+                                        {{ number_format($prescription->items->sum(fn($i)=>$i->price * $i->quantity)) }} đ
                                     </th>
                                     <th></th>
                                 </tr>
                             </tfoot>
                             @endif
+
                         </table>
                     </div>
                 </div>
             </div>
         </div>
+
     </div>
 </div>
 @endsection

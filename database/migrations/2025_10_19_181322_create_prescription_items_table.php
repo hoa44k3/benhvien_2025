@@ -21,6 +21,9 @@ return new class extends Migration
             $table->string('duration', 100)->nullable()->comment('Thời gian dùng, ví dụ: 5 ngày');
             $table->integer('quantity')->default(1)->comment('Số lượng thuốc');
             $table->decimal('price', 15, 2)->nullable()->comment('Giá bán lẻ');
+         $table->string('strength')->nullable()->after('price');
+        $table->string('unit')->nullable()->after('strength');
+        $table->integer('times_per_day')->nullable()->after('unit');
             $table->timestamps();
         });
     }

@@ -57,11 +57,6 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ route('hospital_rooms.index') }}" class="nav-link" data-tab="phonggiuong" data-title="Quản lý Phòng & Giường bệnh" data-subtitle="Theo dõi tình trạng phòng và giường bệnh (UC38).">
-                        <i class="fas fa-bed"></i> Phòng & Giường bệnh (UC38)
-                    </a>
-                </li>
-                <li class="nav-item">
                     <a href="{{ route('doctorsite.index') }}" class="nav-link" data-tab="phonggiuong" data-title="Quản lý bác sĩ" data-subtitle="quản lý bác sĩ (UC38).">
                         <i class="fas fa-bed"></i> Quản lý bác sĩ (UC38)
                     </a>
@@ -72,16 +67,26 @@
                         <i class="fas fa-user-shield"></i> Quản lý dịch vụ (UC34)
                     </a>
                 </li>
+                 <li class="nav-item">
+                    <a href="{{ route('invoices.index') }}" class="nav-link" data-tab="hoadon" data-title="Quản lý dịch vụ" data-subtitle="Quản lý dịch vụ (UC34).">
+                        <i class="fas fa-user-shield"></i> Hóa đơn (UC34)
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('test_results.index') }}" class="nav-link" data-tab="xét nghiệm" data-title="Quản lý dịch vụ" data-subtitle="Quản lý dịch vụ (UC34).">
+                        <i class="fas fa-user-shield"></i> Xét nghiệm (UC34)
+                    </a>
+                </li>
                 <li class="nav-item">
                     <a href="{{ route('categories.index') }}" class="nav-link" data-tab="danhmuc" data-title="Quản lý danh mục" data-subtitle="Danh mục(UC39).">
                         <i class="fas fa-users"></i> Quản lý danh mục(UC39)
                     </a>
                 </li>
-                <li class="nav-item">
+                {{-- <li class="nav-item">
                     <a href="#" class="nav-link" data-tab="chatbot" data-title="Quản lý Chatbot AI" data-subtitle="Cấu hình, đào tạo và theo dõi hiệu suất Chatbot tư vấn (UC37).">
                         <i class="fas fa-robot"></i> Quản lý Chatbot AI (UC37)
                     </a>
-                </li>
+                </li> --}}
                  <li class="nav-item">
                     <a href="{{ route('medical_records.index') }}" class="nav-link" data-tab="chatbot" data-title="Chi tiết khám bệnh
                     " data-subtitle="Cấu hình, đào tạo và theo dõi hiệu suất Chatbot tư vấn (UC37).">
@@ -118,5 +123,7 @@
 
            @yield('body')
    <script src="{{ asset('js/admin.js') }}"></script>
+   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+@stack('scripts')
 </html>
