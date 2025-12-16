@@ -15,6 +15,7 @@ return new class extends Migration
         $table->id();
         $table->string('patient_code')->nullable()->unique()->comment('Mã bệnh nhân, VD: PT001');
         $table->string('name');
+        $table->string('type')->default('patient')->after('id')->comment('doctor, admin, patient');
         $table->integer('age')->nullable()->comment('Tuổi bệnh nhân');
         $table->string('phone')->nullable()->comment('Số điện thoại');
         $table->string('last_visit')->nullable()->comment('Lần khám cuối');

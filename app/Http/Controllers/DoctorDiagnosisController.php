@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Appointment;
 use App\Models\Prescription;
 use App\Models\PrescriptionItem;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 class DoctorDiagnosisController extends Controller
@@ -13,23 +14,28 @@ class DoctorDiagnosisController extends Controller
     /**
      * 📋 Danh sách bệnh nhân có lịch hẹn đã xác nhận hoặc đang chờ
      */
-   public function index()
-{
-    $appointments = Appointment::with('user')
-        ->whereIn('status', ['Đã xác nhận', 'Đang chờ'])
-        ->orderBy('created_at', 'asc')
-        ->get();
+    public function index()
+    {
+        // Lấy các lịch hẹn chưa hoàn thành
+        $appointments = Appointment::whereIn('status', ['Đã xác nhận', 'Đang chờ'])
+            // ->where('doctor_id', auth()->id()) // Nếu muốn chỉ hiện bệnh nhân của bác sĩ này
+            ->orderBy('date', 'asc')
+            ->orderBy('time', 'asc')
+            ->get();
 
-    return view('doctor.diagnosis.index', compact('appointments'));
-}
+        return view('doctor.diagnosis.index', compact('appointments'));
+    }
 
 
     /**
      * 🧑‍⚕️ Trang khám bệnh & kê đơn
      */
-    public function show(Appointment $appointment)
+    // 2. Giao diện khám bệnh
+    public function show($id)
     {
-        // Khi bác sĩ bắt đầu khám thì chuyển trạng thái sang “Đã xác nhận”
+        $appointment = Appointment::findOrFail($id);
+
+        // Chuyển trạng thái sang "Đang khám" nếu cần
         if ($appointment->status === 'Đang chờ') {
             $appointment->update(['status' => 'Đã xác nhận']);
         }
@@ -40,50 +46,58 @@ class DoctorDiagnosisController extends Controller
     /**
      * 💊 Lưu chẩn đoán & đơn thuốc
      */
-    public function store(Request $request, Appointment $appointment)
+   // 3. Lưu kết quả khám
+   public function store(Request $request, $id)
     {
-        $validated = $request->validate([
+        $appointment = Appointment::findOrFail($id);
+
+        // Validate dữ liệu
+        $request->validate([
             'diagnosis' => 'required|string|max:1000',
             'note' => 'nullable|string|max:1000',
-            'medicines' => 'required|array|min:1',
-            'medicines.*.medicine_name' => 'required|string|max:100',
-            'medicines.*.dosage' => 'nullable|string|max:100',
-            'medicines.*.frequency' => 'nullable|string|max:100',
-            'medicines.*.duration' => 'nullable|string|max:100',
-            'medicines.*.quantity' => 'required|integer|min:1',
-            'medicines.*.price' => 'nullable|numeric|min:0',
+            'medicine_name' => 'required|array',
+            'medicine_name.*' => 'required|string',
+            'medicine_quantity' => 'required|array',
+            'medicine_quantity.*' => 'required|integer|min:1',
+            'medicine_usage' => 'required|array',
         ]);
 
-        $prescriptionCode = 'PRES-' . strtoupper(Str::random(8));
-
+        // 1. Tạo Đơn thuốc (Prescription)
+        // SỬA: 'status' phải là 'Đang kê' (để khớp với enum của bảng prescriptions)
         $prescription = Prescription::create([
-            'code' => $prescriptionCode,
+            'code' => 'DT-' . strtoupper(Str::random(8)),
             'appointment_id' => $appointment->id,
-            // 'doctor_id' => auth()->guard('doctor')->id() ?? auth()->id(),
-            'doctor_id' => auth('doctor')->id(), // ✅ Cách viết an toàn hơn
+            'doctor_id' => $appointment->doctor_id,
             'patient_id' => $appointment->user_id,
-            'diagnosis' => $validated['diagnosis'],
-            'note' => $validated['note'] ?? null,
-            'status' => 'Đã duyệt',
+            'diagnosis' => $request->diagnosis,
+            'note' => $request->note,
+            'status' => 'Đang kê', // <--- QUAN TRỌNG: Giá trị này có trong list enum
         ]);
 
-        foreach ($validated['medicines'] as $item) {
-            PrescriptionItem::create([
-                'prescription_id' => $prescription->id,
-                'medicine_name' => $item['medicine_name'],
-                'dosage' => $item['dosage'] ?? '',
-                'frequency' => $item['frequency'] ?? '',
-                'duration' => $item['duration'] ?? '',
-                'quantity' => $item['quantity'],
-                'price' => $item['price'] ?? 0,
-            ]);
+        // 2. Lưu chi tiết thuốc
+        $names = $request->medicine_name;
+        $quantities = $request->medicine_quantity;
+        $usages = $request->medicine_usage;
+
+        for ($i = 0; $i < count($names); $i++) {
+            if (!empty($names[$i])) {
+                PrescriptionItem::create([
+                    'prescription_id' => $prescription->id,
+                    'medicine_name' => $names[$i],
+                    'quantity' => $quantities[$i],
+                    'instruction' => $usages[$i] ?? '',
+                    'price' => 0,
+                ]);
+            }
         }
 
-        $appointment->update(['status' => 'Hoàn thành']);
+        // 3. Cập nhật trạng thái Lịch hẹn (Appointments)
+        // SỬA: 'status' phải là 'Hoàn thành' (để khớp với logic của bảng appointments)
+        // Đừng dùng 'Đang kê' ở đây vì bảng appointments không hiểu giá trị đó
+        $appointment->update(['status' => 'Hoàn thành']); 
 
-        return redirect()
-            ->route('doctor.diagnosis.index')
-            ->with('success', '✅ Chẩn đoán và đơn thuốc đã được lưu thành công!');
+        return redirect()->route('doctor.diagnosis.index')
+            ->with('success', '✅ Đã hoàn thành ca khám và kê đơn!');
     }
 
     /**
@@ -96,5 +110,22 @@ class DoctorDiagnosisController extends Controller
             ->first();
 
         return view('doctor.diagnosis.prescription', compact('appointment', 'prescription'));
+    }
+    /**
+     * 📹 Chức năng Gọi Video (Tích hợp Jitsi Meet)
+     */
+    public function videoCall($id)
+    {
+        $appointment = Appointment::findOrFail($id);
+
+        // Tạo tên phòng unique dựa trên Mã lịch hẹn để tránh người khác vào nhầm
+        // Ví dụ: SmartHospital_LH123456
+        $roomName = 'SmartHospital_' . $appointment->code;
+
+        // Lấy thông tin người dùng hiện tại (Bác sĩ) để hiển thị tên trong cuộc gọi
+        $userName = Auth::user()->name;
+        $userEmail = Auth::user()->email;
+
+        return view('doctor.diagnosis.video_call', compact('appointment', 'roomName', 'userName', 'userEmail'));
     }
 }

@@ -28,5 +28,9 @@ public function department()
 {
     return $this->belongsTo(Department::class);
 }
-
+public function steps()
+    {
+        // Phải là 'step_order' thay vì 'order'
+        return $this->hasMany(ServiceStep::class)->orderBy('step_order', 'asc');
+    }
 }

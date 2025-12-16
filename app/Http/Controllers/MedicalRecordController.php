@@ -9,6 +9,7 @@ use App\Models\TestResult;
 use App\Models\User;
 use App\Models\Department;
 use App\Models\Invoice;
+use App\Models\Review;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -181,81 +182,7 @@ public function cancel(MedicalRecord $medical_record)
     /**
      * Hoàn tất khám bệnh và Tự động tạo hóa đơn
      */
-//     public function complete(MedicalRecord $medical_record)
-//     {
-//         try {
-//             DB::beginTransaction();
 
-//             // 1. Cập nhật trạng thái hồ sơ
-//             $medical_record->update(['status' => 'đã_khám']);
-
-//             // 2. Tính toán chi phí
-//             // Phí khám (Lấy từ Khoa hoặc mặc định)
-//             $examFee = $medical_record->department->fee ?? 150000;
-
-//             // Phí thuốc (Lấy từ đơn thuốc mới nhất)
-//             $prescription = $medical_record->prescriptions()->latest()->first();
-//             $medicineTotal = 0;
-//             if ($prescription) {
-//                 $medicineTotal = $prescription->items->sum(function($item) {
-//                     return ($item->price ?? 0) * ($item->quantity ?? 1);
-//                 });
-//             }
-
-//             $totalAmount = $examFee + $medicineTotal;
-
-//             // 3. Tạo Hóa đơn (Invoice Header)
-//             $invoice = Invoice::create([
-//                 'code' => 'HD-' . strtoupper(Str::random(8)),
-//                 'user_id' => $medical_record->user_id,
-//                 'medical_record_id' => $medical_record->id,
-//                 'appointment_id' => $medical_record->appointment_id,
-//                 'prescription_id' => $prescription ? $prescription->id : null, // Cột mới thêm
-//                 'total' => $totalAmount,
-//                 'status' => 'unpaid',
-//                 'created_by' => Auth::id(),
-//                 'issued_date' => now(),
-//             ]);
-
-//             // 4. Tạo Chi tiết Hóa đơn (Invoice Items)
-            
-//             // Dòng 1: Tiền công khám
-//             DB::table('invoice_items')->insert([
-//                 'invoice_id' => $invoice->id,
-//                 'item_type' => 'service',
-//                 'item_name' => 'Phí khám chuyên khoa ' . ($medical_record->department->name ?? 'Tổng quát'),
-//                 'quantity' => 1,
-//                 'price' => $examFee,
-//                 'total' => $examFee,
-//                 'created_at' => now(),
-//                 'updated_at' => now(),
-//             ]);
-
-//             // Dòng 2...n: Tiền thuốc (nếu có đơn thuốc)
-//             if ($prescription) {
-//                 foreach ($prescription->items as $item) {
-//                     DB::table('invoice_items')->insert([
-//                         'invoice_id' => $invoice->id,
-//                         'item_type' => 'medicine',
-//                         'item_id' => $item->medicine_id, // Nếu có link tới bảng medicines
-//                         'item_name' => $item->medicine_name . ' (' . $item->quantity . ' ' . ($item->unit ?? '') . ')',
-//                         'quantity' => $item->quantity,
-//                         'price' => $item->price,
-//                         'total' => ($item->price * $item->quantity),
-//                         'created_at' => now(),
-//                         'updated_at' => now(),
-//                     ]);
-//                 }
-//             }
-
-//             DB::commit();
-// return redirect()->route('medical_records.index')
-//                      ->with('success', 'Ca khám đã hoàn tất.');
-//         } catch (\Exception $e) {
-//             DB::rollBack();
-//             return back()->with('error', 'Lỗi khi tạo hóa đơn: ' . $e->getMessage());
-//         }
-//     }
 public function complete(MedicalRecord $medical_record)
 {
     if ($medical_record->status != 'đang_khám') {
@@ -267,7 +194,12 @@ public function complete(MedicalRecord $medical_record)
 
         // 1. Cập nhật trạng thái về Đã khám
         $medical_record->update(['status' => 'đã_khám']);
-
+// 🔥 QUAN TRỌNG: Cập nhật trạng thái Lịch hẹn sang 'completed'
+        // Để bên Tài chính (Finance) tính được hoa hồng cho bác sĩ
+        if ($medical_record->appointment_id) {
+            \App\Models\Appointment::where('id', $medical_record->appointment_id)
+                ->update(['status' => 'completed']);
+        }
         // 2. Tính toán tiền
         $examFee = $medical_record->department->fee ?? 150000;
         
@@ -340,7 +272,11 @@ public function complete(MedicalRecord $medical_record)
         return back()->with('error', 'Lỗi hệ thống: ' . $e->getMessage());
     }
 }
-
+// Thêm hàm này vào trong class MedicalRecord
+    public function review()
+    {
+        return $this->hasOne(Review::class, 'medical_record_id');
+    }
     /**
      * Remove the specified resource from storage.
      */

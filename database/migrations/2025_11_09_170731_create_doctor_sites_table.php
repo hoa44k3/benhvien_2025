@@ -23,6 +23,19 @@ return new class extends Migration
             $table->integer('reviews_count')->default(0)->comment('Số lượt đánh giá');
             $table->string('image')->nullable()->comment('Ảnh bác sĩ');
             $table->boolean('status')->default(1)->comment('1 = hoạt động, 0 = ẩn');
+            // Lương cứng
+        $table->decimal('base_salary', 15, 2)->default(0)->after('status')->comment('Lương cứng hàng tháng');
+        
+        // % Hoa hồng
+        $table->float('commission_exam_percent')->default(0)->after('base_salary')->comment('% Hoa hồng phí khám');
+        $table->float('commission_prescription_percent')->default(0)->after('commission_exam_percent')->comment('% Hoa hồng tiền thuốc');
+        $table->float('commission_service_percent')->default(0)->after('commission_prescription_percent')->comment('% Hoa hồng dịch vụ CLS');
+
+        // Thông tin tài khoản nhận lương
+    $table->string('bank_name')->nullable(); // Ví dụ: Vietcombank
+    $table->string('bank_account_number')->nullable(); // STK: 0011...
+    $table->string('bank_account_holder')->nullable(); // Tên chủ TK
+
             $table->timestamps();
         });
     }

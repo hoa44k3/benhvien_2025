@@ -22,133 +22,77 @@
     </section>
 
     <!-- Featured Features Section -->
-    <section class="py-16 md:py-24">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 class="text-4xl font-extrabold mb-3 text-center">Tính năng nổi bật</h2>
-            <p class="text-lg text-gray-500 text-center mb-16">Hệ thống tích hợp đầy đủ các tính năng hiện đại, giúp tối ưu hóa quy trình khám chữa bệnh và nâng cao trải nghiệm người dùng</p>
+  <section class="py-16 md:py-24 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h2 class="text-4xl font-extrabold mb-3 text-gray-800">Cẩm nang sức khỏe</h2>
+            <p class="text-lg text-gray-500">
+                Kiến thức y khoa, mẹo vặt sức khỏe và tin tức mới nhất từ chuyên gia
+            </p>
+        </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
             
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- Card 1 -->
-                <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition duration-300 border border-gray-100 flex flex-col items-center text-center">
-                    <div class="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center text-primary text-3xl mb-4 shadow-inner">
-                        <i class="far fa-calendar-alt"></i>
+            {{-- CỘT TRÁI: BÀI VIẾT MỚI NHẤT (Chiếm 2 phần) --}}
+            <div class="lg:col-span-2 space-y-8">
+                @foreach($latestPosts as $post)
+                <div class="flex flex-col md:flex-row gap-6 group">
+                    {{-- Ảnh thumb --}}
+                    <div class="w-full md:w-1/3 h-52 overflow-hidden rounded-xl">
+                        <a href="{{ route('site.postshow', $post->id) }}">
+                            <img src="{{ $post->image ? asset('storage/'.$post->image) : 'https://placehold.co/600x400' }}" 
+                                 alt="{{ $post->title }}" 
+                                 class="w-full h-full object-cover transform group-hover:scale-110 transition duration-500">
+                        </a>
                     </div>
-                    <h3 class="text-xl font-bold mb-3">Đặt lịch khám online</h3>
-                    <p class="text-gray-600">Đặt lịch khám bệnh dễ dàng, nhanh chóng từ xa, tránh xếp hàng chờ đợi</p>
+                    {{-- Nội dung tóm tắt --}}
+                    <div class="flex-1 flex flex-col justify-center">
+                        <div class="text-sm text-blue-600 font-bold mb-2 uppercase">
+                            <i class="far fa-calendar-alt mr-1"></i> {{ $post->created_at->format('d/m/Y') }}
+                        </div>
+                        <h3 class="text-2xl font-bold mb-3 text-gray-800 group-hover:text-blue-600 transition">
+                            <a href="{{ route('site.postshow', $post->id) }}">{{ $post->title }}</a>
+                        </h3>
+                        <p class="text-gray-600 line-clamp-2 mb-4">{{ $post->description }}</p>
+                        <a href="{{ route('site.postshow', $post->id) }}" class="text-blue-600 font-semibold hover:underline">
+                            Xem chi tiết <i class="fas fa-arrow-right ml-1"></i>
+                        </a>
+                    </div>
                 </div>
-                <!-- Card 2 -->
-                <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition duration-300 border border-gray-100 flex flex-col items-center text-center">
-                    <div class="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center text-primary text-3xl mb-4 shadow-inner">
-                        <i class="far fa-file-alt"></i>
+                <hr class="border-gray-100">
+                @endforeach
+            </div>
+
+            {{-- CỘT PHẢI: BÀI VIẾT NỔI BẬT (Chiếm 1 phần) --}}
+            <div class="lg:col-span-1">
+                <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100 sticky top-24">
+                    <h3 class="text-xl font-bold mb-6 flex items-center border-l-4 border-blue-600 pl-3">
+                        <i class="fas fa-star text-yellow-400 mr-2"></i> Bài viết nổi bật
+                    </h3>
+                    
+                    <div class="space-y-6">
+                        @foreach($featuredPosts as $post)
+                        <div class="group">
+                            <div class="h-40 rounded-lg overflow-hidden mb-3 relative">
+                                <a href="{{ route('site.postshow', $post->id) }}">
+                                    <img src="{{ $post->image ? asset('storage/'.$post->image) : 'https://placehold.co/600x400' }}" 
+                                         class="w-full h-full object-cover transform group-hover:scale-110 transition duration-500">
+                                </a>
+                                <span class="absolute top-2 left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded">HOT</span>
+                            </div>
+                            <h4 class="font-bold text-gray-800 leading-tight group-hover:text-blue-600 transition mb-1">
+                                <a href="{{ route('site.postshow', $post->id) }}">{{ $post->title }}</a>
+                            </h4>
+                            <span class="text-xs text-gray-500"><i class="far fa-eye mr-1"></i> {{ $post->views }} lượt xem</span>
+                        </div>
+                        @endforeach
                     </div>
-                    <h3 class="text-xl font-bold mb-3">Hồ sơ bệnh án điện tử</h3>
-                    <p class="text-gray-600">Quản lý và theo dõi hồ sơ sức khỏe cá nhân một cách thuận tiện</p>
-                </div>
-                <!-- Card 3 -->
-                <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition duration-300 border border-gray-100 flex flex-col items-center text-center">
-                    <div class="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center text-primary text-3xl mb-4 shadow-inner">
-                        <i class="fas fa-money-check-alt"></i>
-                    </div>
-                    <h3 class="text-xl font-bold mb-3">Thanh toán trực tuyến</h3>
-                    <p class="text-gray-600">Thanh toán viện phí an toàn qua VNPay, Momo, thẻ ngân hàng</p>
-                </div>
-                <!-- Card 4 -->
-                <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition duration-300 border border-gray-100 flex flex-col items-center text-center">
-                    <div class="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center text-primary text-3xl mb-4 shadow-inner">
-                        <i class="far fa-comments"></i>
-                    </div>
-                    <h3 class="text-xl font-bold mb-3">Chatbot tư vấn</h3>
-                    <p class="text-gray-600">Hỗ trợ chẩn đoán triệu chứng ban đầu và tư vấn chuyên khoa phù hợp</p>
-                </div>
-                <!-- Card 5 -->
-                <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition duration-300 border border-gray-100 flex flex-col items-center text-center">
-                    <div class="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center text-primary text-3xl mb-4 shadow-inner">
-                        <i class="far fa-bell"></i>
-                    </div>
-                    <h3 class="text-xl font-bold mb-3">Thông báo thông minh</h3>
-                    <p class="text-gray-600">Nhận nhắc lịch khám, uống thuốc, tái khám qua ứng dụng</p>
-                </div>
-                <!-- Card 6 -->
-                <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition duration-300 border border-gray-100 flex flex-col items-center text-center">
-                    <div class="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center text-primary text-3xl mb-4 shadow-inner">
-                        <i class="far fa-file-pdf"></i>
-                    </div>
-                    <h3 class="text-xl font-bold mb-3">Đơn thuốc điện tử</h3>
-                    <p class="text-gray-600">Xem đơn thuốc, hướng dẫn sử dụng và theo dõi quá trình điều trị</p>
                 </div>
             </div>
-        </div>
-    </section>
-    {{-- <section class="py-16 md:py-24">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 class="text-4xl font-extrabold mb-3 text-center">Tính năng nổi bật</h2>
-        <p class="text-lg text-gray-500 text-center mb-16">
-            Hệ thống tích hợp đầy đủ các tính năng hiện đại, giúp tối ưu hóa quy trình khám chữa bệnh và nâng cao trải nghiệm người dùng
-        </p>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            @forelse ($categories as $category)
-                <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition duration-300 border border-gray-100 flex flex-col items-center text-center">
-                    <div class="w-20 h-20 rounded-full bg-blue-50 flex items-center justify-center text-primary text-3xl mb-4 shadow-inner overflow-hidden">
-                        @if ($category->image_path)
-                            <img src="{{ asset('storage/' . $category->image_path) }}" alt="{{ $category->name }}" class="w-full h-full object-cover rounded-full">
-                        @else
-                            <i class="far fa-folder-open text-blue-400"></i>
-                        @endif
-                    </div>
-                    <h3 class="text-xl font-bold mb-3">{{ $category->name }}</h3>
-                    <p class="text-gray-600">{{ $category->description ?? 'Chưa có mô tả' }}</p>
-                </div>
-            @empty
-                <p class="col-span-3 text-center text-gray-500">Chưa có danh mục tính năng nào được hiển thị.</p>
-            @endforelse
         </div>
     </div>
-</section> --}}
+</section>
 
-
-    <!-- Professional Services Section -->
-    {{-- <section class="py-16 md:py-24 bg-gray-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 class="text-4xl font-extrabold mb-3 text-center">Dịch vụ y tế chuyên nghiệp</h2>
-            <p class="text-lg text-gray-500 text-center mb-16">Đội ngũ bác sĩ giàu kinh nghiệm, trang thiết bị hiện đại, cam kết mang đến dịch vụ chăm sóc sức khỏe tốt nhất</p>
-            
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <!-- Service Card 1 -->
-                <div class="service-card bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
-                    <img src="https://placehold.co/400x250/3b82f6/ffffff?text=Kh%C3%A1m+t%E1%BB%95ng+qu%C3%A1t" alt="Khám tổng quát" class="w-full h-48 object-cover">
-                    <div class="p-4">
-                        <h3 class="text-xl font-semibold mb-1">Khám tổng quát</h3>
-                        <p class="text-gray-600">Khám sức khỏe định kỳ và tầm soát bệnh</p>
-                    </div>
-                </div>
-                <!-- Service Card 2 -->
-                <div class="service-card bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
-                    <img src="https://placehold.co/400x250/6366f1/ffffff?text=Chuy%C3%AAn+khoa+tim+m%E1%BA%A1ch" alt="Chuyên khoa tim mạch" class="w-full h-48 object-cover">
-                    <div class="p-4">
-                        <h3 class="text-xl font-semibold mb-1">Chuyên khoa tim mạch</h3>
-                        <p class="text-gray-600">Chẩn đoán và điều trị các bệnh về tim mạch</p>
-                    </div>
-                </div>
-                <!-- Service Card 3 -->
-                <div class="service-card bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
-                    <img src="https://placehold.co/400x250/3b82f6/ffffff?text=Chuy%C3%AAn+khoa+nhi" alt="Chuyên khoa nhi" class="w-full h-48 object-cover">
-                    <div class="p-4">
-                        <h3 class="text-xl font-semibold mb-1">Chuyên khoa nhi</h3>
-                        <p class="text-gray-600">Chăm sóc sức khỏe trẻ em từ sơ sinh đến dưới 18 tuổi</p>
-                    </div>
-                </div>
-                <!-- Service Card 4 -->
-                <div class="service-card bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
-                    <img src="https://placehold.co/400x250/6366f1/ffffff?text=X%C3%A9t+nghi%E1%BB%87m" alt="Xét nghiệm" class="w-full h-48 object-cover">
-                    <div class="p-4">
-                        <h3 class="text-xl font-semibold mb-1">Xét nghiệm</h3>
-                        <p class="text-gray-600">Xét nghiệm máu, nước tiểu và các chỉ số sinh hóa</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section> --}}
 <section class="py-16 md:py-24 bg-gray-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h2 class="text-4xl font-extrabold mb-3 text-center">Dịch vụ y tế chuyên nghiệp</h2>
@@ -156,23 +100,80 @@
             Đội ngũ bác sĩ giàu kinh nghiệm, trang thiết bị hiện đại, cam kết mang đến dịch vụ chăm sóc sức khỏe tốt nhất
         </p>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            @foreach($departments as $department)
-                <div class="service-card bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-2xl transition duration-300">
-                    <img src="{{ asset('storage/' . $department->image) }}" 
-                         alt="{{ $department->name }}" 
-                         class="w-full h-48 object-cover">
-                    <div class="p-4">
-                        <h3 class="text-xl font-semibold mb-1">{{ $department->name }}</h3>
-                        <p class="text-gray-600">
-                            {{ $department->comment ?? 'Chuyên khoa hàng đầu với đội ngũ bác sĩ tận tâm.' }}
-                        </p>
-                    </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    @foreach($departments as $department)
+        <div class="service-card group bg-white rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 flex flex-col h-full border border-gray-100 overflow-hidden relative">
+            
+            {{-- 1. ẢNH ĐẠI DIỆN & BADGE --}}
+            <a href="{{ route('services', ['department' => $department->id]) }}" class="relative h-48 block overflow-hidden">
+                <img src="{{ $department->image ? asset('storage/' . $department->image) : asset('images/default-department.jpg') }}" 
+                     alt="{{ $department->name }}" 
+                     class="w-full h-full object-cover transform group-hover:scale-105 transition duration-700">
+                
+                {{-- Lớp phủ gradient để làm nổi bật text bên trên --}}
+                <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60"></div>
+                {{-- Trạng thái --}}
+                <div class="absolute top-3 right-3">
+                    @if($department->status === 'active')
+                        <span class="bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-sm flex items-center gap-1">
+                            <span class="w-2 h-2 bg-white rounded-full animate-pulse"></span> Hoạt động
+                        </span>
+                    @else
+                        <span class="bg-gray-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-sm">
+                            Tạm ngưng
+                        </span>
+                    @endif
                 </div>
-            @endforeach
+            </a>
+
+            {{-- 2. NỘI DUNG CHI TIẾT --}}
+            <div class="p-5 pt-8 flex flex-col flex-grow relative">
+                
+                {{-- Tên Khoa --}}
+                <h3 class="text-xl font-bold text-gray-800 mb-1 group-hover:text-blue-600 transition line-clamp-1" title="{{ $department->name }}">
+                    <a href="{{ route('services', ['department' => $department->id]) }}">
+                        {{ $department->name }}
+                    </a>
+                </h3>
+
+                {{-- Trưởng khoa (Nếu có relation user) --}}
+                <p class="text-xs text-gray-500 mb-4 flex items-center">
+                    <i class="fas fa-user-tie mr-1 text-blue-400"></i>
+                    Trưởng khoa: <span class="font-semibold text-gray-700 ml-1">{{ $department->user->name ?? 'Đang cập nhật' }}</span>
+                </p>
+
+                {{-- Mô tả --}}
+                <p class="text-gray-600 text-sm mb-4 line-clamp-2 h-10 flex-grow">
+                    {{ Str::limit($department->description ?? 'Chuyên khoa hàng đầu với trang thiết bị hiện đại và đội ngũ tận tâm.', 80) }}
+                </p>
+
+                {{-- Phí khám --}}
+                <div class="flex items-center justify-between mb-4 pb-4 border-b border-dashed border-gray-200">
+                    <span class="text-sm text-gray-500">Phí khám cơ bản:</span>
+                    <span class="text-lg font-bold text-red-600">
+                        {{ $department->fee > 0 ? number_format($department->fee, 0, ',', '.') . ' đ' : 'Liên hệ' }}
+                    </span>
+                </div>
+
+                {{-- 3. CÁC NÚT HÀNH ĐỘNG --}}
+                <div class="mt-auto grid grid-cols-2 gap-3">
+                    <a href="{{ route('services', ['department' => $department->id]) }}" 
+                       class="py-2.5 px-3 bg-gray-50 text-gray-700 text-sm font-bold rounded-lg text-center hover:bg-gray-200 transition flex items-center justify-center gap-2 group/btn">
+                        Chi tiết <i class="fas fa-arrow-right text-xs transition-transform group-hover/btn:translate-x-1"></i>
+                    </a>
+                    
+                    <a href="{{ route('schedule', ['department_id' => $department->id]) }}" 
+                       class="py-2.5 px-3 bg-blue-600 text-white text-sm font-bold rounded-lg text-center hover:bg-blue-700 transition shadow-md shadow-blue-200 flex items-center justify-center gap-2 transform active:scale-95">
+                        <i class="far fa-calendar-check"></i> Đặt lịch
+                    </a>
+                </div>
+            </div>
         </div>
+    @endforeach
+</div>
     </div>
 </section>
+
     <!-- Statistics Section -->
     <section class="bg-primary text-white py-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

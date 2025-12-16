@@ -33,7 +33,10 @@ protected $dates = ['date'];
     // {
     //     return $this->belongsTo(Department::class, 'department_id');
     // }
-
+public function appointment()
+    {
+        return $this->belongsTo(Appointment::class);
+    }
     public function medicalRecord()
     {
         return $this->belongsTo(MedicalRecord::class, 'medical_record_id');

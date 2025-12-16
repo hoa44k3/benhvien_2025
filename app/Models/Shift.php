@@ -9,7 +9,7 @@ class Shift extends Model
     use HasFactory;
 
     protected $fillable = [
-        'staff_id', 'created_at', 'shift', 'room'
+        'staff_id', 'created_at', 'shift', 'room', 'date'
     ];
 
     public function roles()

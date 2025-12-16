@@ -65,6 +65,7 @@ class DepartmentController extends Controller
             'fee' => 'nullable|numeric|min:0',
             'status' => ['nullable', Rule::in(['active','inactive'])],
             'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'icon' => 'nullable|string|max:50',
         ]);
 
         try {
@@ -126,6 +127,7 @@ class DepartmentController extends Controller
             'fee' => 'nullable|numeric|min:0',
             'status' => ['nullable', Rule::in(['active','inactive'])],
             'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'icon' => 'nullable|string|max:50',
         ]);
 
         try {

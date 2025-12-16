@@ -9,6 +9,6 @@ class DoctorController extends Controller
 {
     public function index()
     {
-        return view('doctor.index'); // Tạo view doctor/dashboard.blade.php
+        return view('doctor.index'); 
     }
 }

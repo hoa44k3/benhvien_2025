@@ -20,6 +20,7 @@ class Department extends Model
         'fee',
         'status',
         'image',
+        'icon'
     ];
     //  * Quan hệ 1-n: Một khoa có nhiều lịch hẹn
     //  */

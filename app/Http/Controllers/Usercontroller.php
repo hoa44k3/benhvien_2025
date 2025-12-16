@@ -150,6 +150,21 @@ class UserController extends Controller
             }
 
             $user->roles()->sync($request->role_ids ?? []);
+            // Lấy tên các role vừa gán
+        $roles = Role::whereIn('id', $request->role_ids ?? [])->pluck('name')->toArray();
+        
+        if (in_array('doctor', $roles)) {
+            // Kiểm tra xem đã có hồ sơ chưa, chưa có thì tạo
+            $exists = \App\Models\DoctorSite::where('user_id', $user->id)->exists();
+            if (!$exists) {
+                \App\Models\DoctorSite::create([
+                    'user_id' => $user->id,
+                    'status' => 1,
+                    'rating' => 0,
+                    'reviews_count' => 0
+                ]);
+            }
+        }
             $user->save();
 
             // 🔹 Ghi log thành công

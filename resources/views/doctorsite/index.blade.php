@@ -7,14 +7,13 @@
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h3 class="fw-bold text-dark mb-0">
-            <i class="fas fa-user-md me-2 text-primary"></i> Danh sách Bác sĩ
+            <i class="fas fa-user-md me-2 text-primary"></i> Quản lý Bác sĩ
         </h3>
         <a href="{{ route('doctorsite.create') }}" class="btn btn-primary shadow-sm fw-bold">
             <i class="fas fa-plus me-2"></i> Thêm Bác sĩ Mới
         </a>
     </div>
 
-    {{-- Thông báo success --}}
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
             <i class="fas fa-check-circle me-2"></i> {{ session('success') }}
@@ -25,102 +24,120 @@
     <div class="card shadow-lg border-0 rounded-3">
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table mb-0 table-hover table-striped align-middle small">
-                    <thead class="table-light">
+                <table class="table mb-0 table-hover align-middle small table-striped text-nowrap">
+                    <thead class="bg-light text-primary">
                         <tr>
-                            <th class="text-center" style="width: 30px;">#</th>
-                            <th style="width: 70px;">Ảnh</th>
-                            <th style="width: 150px;">Tên bác sĩ</th>
-                            <th style="width: 150px;">Khoa & Email</th>
-                            <th style="width: 130px;">Chuyên môn</th>
-                            <th style="width: 100px;">Kinh nghiệm</th>
-                            <th>Giới thiệu (Sơ lược)</th>
-                            <th class="text-center" style="width: 100px;">Đánh giá</th>
-                            <th class="text-center" style="width: 80px;">Trạng thái</th>
-                            <th class="text-center" style="width: 130px;">Hành động</th>
+                            <th class="text-center">#</th>
+                            <th>Thông tin Bác sĩ</th>
+                            <th>Chuyên môn</th>
+                            <th>Tài chính (Lương/HH)</th>
+                            <th>Thông tin Ngân hàng</th> <th class="text-center">Đánh giá</th>
+                            <th class="text-center">Trạng thái</th>
+                            <th class="text-center">Hành động</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($doctors as $doctor)
                         <tr>
-                            {{-- Số thứ tự --}}
-                            <td class="text-center">
+                            <td class="text-center fw-bold text-muted">
                                 {{ $doctors->firstItem() + $loop->index }}
                             </td>
                             
-                            {{-- Ảnh --}}
+                            {{-- Ảnh & Tên --}}
                             <td>
-                                @if($doctor->image)
-                                    <img src="{{ asset('storage/' . $doctor->image) }}" alt="doctor" width="50" height="50" class="rounded-circle object-fit-cover shadow-sm border border-light">
+                                <div class="d-flex align-items-center">
+                                    <img src="{{ $doctor->image ? asset('storage/' . $doctor->image) : asset('assets/img/default-doctor.png') }}" 
+                                         alt="doctor" width="45" height="45" 
+                                         class="rounded-circle object-fit-cover shadow-sm border border-2 border-white me-2">
+                                    <div>
+                                        <div class="fw-bold text-dark">{{ $doctor->user->name ?? 'Không rõ' }}</div>
+                                        <div class="text-muted small">{{ $doctor->user->email ?? '-' }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            
+                            {{-- Chuyên môn --}}
+                            <td>
+                                <span class="badge bg-soft-primary text-primary mb-1">
+                                    {{ $doctor->department->name ?? 'Chưa gán khoa' }}
+                                </span>
+                                <div class="small mt-1">
+                                    <i class="fas fa-stethoscope text-info me-1"></i> {{ $doctor->specialization ?? 'N/A' }}
+                                </div>
+                                <div class="text-muted small">
+                                    <i class="fas fa-briefcase me-1"></i> {{ $doctor->experience_years }} năm KN
+                                </div>
+                            </td>
+                            
+                            {{-- Tài chính --}}
+                            <td>
+                                <div class="fw-bold text-success mb-1">
+                                    <i class="fas fa-money-bill-wave me-1"></i> {{ number_format($doctor->base_salary, 0, ',', '.') }} đ
+                                </div>
+                                <div class="d-flex gap-1 flex-wrap" style="font-size: 0.75rem;">
+                                    <span class="badge bg-white text-dark border" title="Hoa hồng Khám">K: {{ $doctor->commission_exam_percent }}%</span>
+                                    <span class="badge bg-white text-dark border" title="Hoa hồng Thuốc">T: {{ $doctor->commission_prescription_percent }}%</span>
+                                    <span class="badge bg-white text-dark border" title="Hoa hồng Dịch vụ">D: {{ $doctor->commission_service_percent }}%</span>
+                                </div>
+                            </td>
+
+                            {{-- Ngân hàng (MỚI) --}}
+                            <td>
+                                @if($doctor->bank_account_number)
+                                    <div class="fw-semibold text-dark">{{ $doctor->bank_name }}</div>
+                                    <div class="text-primary font-monospace">{{ $doctor->bank_account_number }}</div>
+                                    <div class="text-muted small fst-italic">{{Str::limit($doctor->bank_account_holder, 15)}}</div>
                                 @else
-                                    <img src="{{ asset('assets/img/default-doctor.png') }}" width="50" height="50" alt="Default Doctor" class="rounded-circle object-fit-cover shadow-sm border border-light">
+                                    <span class="text-muted small">---</span>
                                 @endif
                             </td>
 
-                            {{-- Tên bác sĩ --}}
-                            <td>
-                                <strong class="text-primary">{{ $doctor->user->name ?? 'Không rõ' }}</strong>
-                            </td>
-                            
-                            {{-- Khoa & Email --}}
-                            <td>
-                                <span class="badge bg-secondary mb-1">{{ $doctor->department->name ?? 'Chưa gán' }}</span>
-                                <br><small class="text-muted text-truncate d-block">{{ $doctor->user->email ?? '-' }}</small>
-                            </td>
-                            
-                            {{-- Chuyên khoa chính --}}
-                            <td>
-                                <span class="text-dark fw-medium">{{ $doctor->specialization ?? '-' }}</span>
-                            </td>
-                            
-                            {{-- Số năm kinh nghiệm --}}
+                            {{-- Đánh giá --}}
                             <td class="text-center">
-                                <span class="fw-bold text-success">{{ $doctor->experience_years ?? 0 }}</span> năm
-                            </td>
-                            
-                            {{-- Giới thiệu --}}
-                            <td style="max-width:300px;">
-                                <span class="text-muted">{{ Str::limit($doctor->bio, 80) }}</span>
-                            </td>
-
-                            {{-- Điểm đánh giá & Lượt đánh giá --}}
-                            <td class="text-center">
-                                <i class="fas fa-star text-warning me-1"></i>
-                                <span class="fw-bold text-dark">{{ number_format($doctor->rating, 1) }}/5</span>
-                                <br><small class="text-muted">({{ $doctor->reviews_count }} lượt)</small>
+                                <div class="fw-bold text-warning">
+                                    {{ number_format($doctor->rating, 1) }} <i class="fas fa-star"></i>
+                                </div>
+                                <small class="text-muted">({{ $doctor->reviews_count }} lượt)</small>
                             </td>
 
                             {{-- Trạng thái --}}
                             <td class="text-center">
                                 @if($doctor->status)
-                                    <span class="badge bg-success"><i class="fas fa-check-circle me-1"></i> Hoạt động</span>
+                                    <span class="badge bg-success rounded-pill px-2">Hoạt động</span>
                                 @else
-                                    <span class="badge bg-secondary"><i class="fas fa-eye-slash me-1"></i> Ẩn</span>
+                                    <span class="badge bg-secondary rounded-pill px-2">Đang ẩn</span>
                                 @endif
                             </td>
 
                             {{-- Hành động --}}
                             <td class="text-center">
-                                <div class="d-flex justify-content-center">
-                                    <a href="{{ route('doctorsite.show', $doctor) }}" class="btn btn-sm btn-info text-white me-1" title="Xem chi tiết">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                    <a href="{{ route('doctorsite.edit', $doctor) }}" class="btn btn-sm btn-warning me-1" title="Chỉnh sửa">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <form action="{{ route('doctorsite.destroy', $doctor) }}" method="POST" class="d-inline" onsubmit="return confirm('Xác nhận xóa bác sĩ {{ $doctor->user->name ?? $doctor->id }}? Hành động này không thể hoàn tác.')">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger" title="Xóa">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
-                                    </form>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-light border dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                        <i class="fas fa-cog"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow">
+                                        <li><a class="dropdown-item" href="{{ route('doctorsite.show', $doctor) }}"><i class="fas fa-eye text-info me-2"></i> Chi tiết</a></li>
+                                        <li><a class="dropdown-item" href="{{ route('doctorsite.edit', $doctor) }}"><i class="fas fa-edit text-warning me-2"></i> Sửa hồ sơ</a></li>
+                                        <li><a class="dropdown-item" href="{{ route('doctorsite.finance', $doctor) }}"><i class="fas fa-wallet text-success me-2"></i> Tài chính</a></li>
+                                        <li><a class="dropdown-item" href="{{ route('doctor_attendances.index', ['doctor_id' => $doctor->user_id]) }}"><i class="fas fa-calendar-alt text-primary me-2"></i> Chấm công</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <form action="{{ route('doctorsite.destroy', $doctor) }}" method="POST" class="d-inline">
+                                                @csrf @method('DELETE')
+                                                <button type="submit" class="dropdown-item text-danger" onclick="return confirm('Xóa bác sĩ này?')">
+                                                    <i class="fas fa-trash-alt me-2"></i> Xóa
+                                                </button>
+                                            </form>
+                                        </li>
+                                    </ul>
                                 </div>
                             </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="10" class="text-center py-4 text-muted">
-                                <i class="fas fa-info-circle me-2"></i> Không tìm thấy dữ liệu bác sĩ nào.
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                <i class="fas fa-user-md fa-3x mb-3 text-secondary opacity-50"></i>
+                                <p class="mb-0">Chưa có dữ liệu bác sĩ nào.</p>
                             </td>
                         </tr>
                         @endforelse
@@ -129,30 +146,17 @@
             </div>
         </div>
 
-        {{-- Footer Card - Phân trang --}}
-        @if($doctors->total() > $doctors->perPage())
-            <div class="card-footer bg-light border-top pt-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div class="text-muted small">
-                        Hiển thị **{{ $doctors->firstItem() }}** đến **{{ $doctors->lastItem() }}** trong tổng số **{{ $doctors->total() }}** bác sĩ.
-                    </div>
-                    {{-- Laravel Pagination Links --}}
-                    <div>
-                        {{ $doctors->links('pagination::bootstrap-5') }}
-                    </div>
+        @if($doctors->hasPages())
+            <div class="card-footer bg-white border-top py-3">
+                <div class="d-flex justify-content-end">
+                    {{ $doctors->links('pagination::bootstrap-5') }}
                 </div>
             </div>
         @endif
     </div>
 </div>
-
 <style>
-    /* Custom style for object-fit on image */
-    .object-fit-cover {
-        object-fit: cover;
-    }
-    .table-hover tbody tr:hover {
-        background-color: #f8f9fa; /* Light background on hover */
-    }
+    .object-fit-cover { object-fit: cover; }
+    .bg-soft-primary { background-color: rgba(13, 110, 253, 0.1); }
 </style>
 @endsection

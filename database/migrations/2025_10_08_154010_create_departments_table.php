@@ -24,6 +24,8 @@ return new class extends Migration
             $table->decimal('fee', 15, 2)->default(0)->comment('Phí khám (VNĐ)');
             $table->enum('status', ['active', 'inactive'])->default('active')->comment('Trạng thái hoạt động');
             $table->string('image', 255)->nullable()->comment('Ảnh đại diện chuyên khoa (lưu trong storage)');
+            // Trong migration update (hoặc sửa trực tiếp nếu chưa go-live)
+$table->string('icon', 50)->nullable()->comment('Class icon fontawesome, vd: fas fa-heart');
             $table->timestamps();
         });
     }

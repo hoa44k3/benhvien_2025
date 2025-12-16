@@ -1,136 +1,76 @@
-@extends('doctor.master')
+@extends('doctor.master') 
+{{-- Lưu ý: Kế thừa đúng layout bác sĩ của bạn --}}
 
-@section('title', 'Khám bệnh & Kê đơn thuốc')
+@section('title', 'Danh sách chờ khám')
 
 @section('body')
-<div class="container-fluid py-4">
-    @if ($appointment)
-        <div class="row g-4">
-            {{-- Cột trái: Thông tin bệnh nhân --}}
-            <div class="col-md-4">
-                <div class="card shadow-sm border-0">
-                    <div class="card-body">
-                        <h5 class="text-primary fw-bold mb-3">👩‍⚕️ Bệnh nhân Đang Khám</h5>
+<div class="container mx-auto max-w-7xl px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800 border-l-4 border-blue-500 pl-3">
+            📋 Danh sách Bệnh nhân chờ khám
+        </h2>
+    </div>
 
-                        <div class="mb-3">
-                            <h6 class="fw-semibold text-dark">
-                                {{ $appointment->user->name ?? 'Không xác định' }}
-                            </h6>
-                            <p class="text-muted mb-1">
-                                Mã BN: <strong>{{ '000' . $appointment->user->id }}</strong> |
-                                Giới tính: {{ $appointment->user->gender ?? '---' }}
-                            </p>
-                        </div>
-
-                        <div class="mb-3">
-                            <a href="{{ route('doctor.videoCall', $appointment->id) }}" 
-                               class="btn btn-primary w-100 py-2 fw-semibold">
-                                <i class="bi bi-camera-video me-2"></i> Bắt đầu Video Call
-                            </a>
-                        </div>
-
-                        <div>
-                            <label class="fw-semibold text-muted d-block mb-1">Lý do khám:</label>
-                            <div class="alert alert-danger p-2 m-0">
-                                {{ $appointment->reason ?? 'Chưa cập nhật' }}
+    <div class="bg-white shadow-md rounded-lg overflow-hidden border border-gray-200">
+        <table class="min-w-full leading-normal">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">STT</th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Bệnh nhân</th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Thời gian hẹn</th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Lý do khám</th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Trạng thái</th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($appointments as $app)
+                <tr class="hover:bg-gray-50 transition">
+                    <td class="px-5 py-5 border-b border-gray-200 text-sm">{{ $loop->iteration }}</td>
+                    <td class="px-5 py-5 border-b border-gray-200">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-500 font-bold">
+                                {{ substr($app->patient_name ?? 'BN', 0, 1) }}
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-gray-900 font-bold whitespace-no-wrap">{{ $app->patient_name }}</p>
+                                <p class="text-gray-500 text-xs">{{ $app->patient_phone }}</p>
                             </div>
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Cột phải: Nhập chẩn đoán và kê đơn --}}
-            <div class="col-md-8">
-                <div class="card shadow-sm border-0">
-                    <div class="card-body">
-                        <h5 class="text-success fw-bold mb-3">🩺 Nhập Chẩn đoán & Y lệnh</h5>
-
-                        <form action="{{ route('doctor.diagnosis.store', $appointment->id) }}" method="POST">
-                            @csrf
-
-                            {{-- Chẩn đoán --}}
-                            <div class="mb-4">
-                                <label class="form-label fw-semibold">Chẩn đoán (ICD-10):</label>
-                                <textarea name="diagnosis" class="form-control" rows="3" 
-                                    placeholder="VD: R51 - Đau đầu">{{ old('diagnosis') }}</textarea>
-                            </div>
-
-                            {{-- Kê đơn thuốc --}}
-                            <div class="border rounded p-3 mb-4">
-                                <div class="d-flex align-items-center mb-3">
-                                    <i class="bi bi-capsule text-danger fs-5 me-2"></i>
-                                    <h6 class="mb-0 text-danger fw-bold">Kê đơn Thuốc Điện tử</h6>
-                                </div>
-
-                                <div id="medicine-list">
-                                    <div class="row g-2 align-items-center mb-2">
-                                        <div class="col-md-5">
-                                            <input type="text" name="medicine_name[]" class="form-control" placeholder="Tên thuốc">
-                                        </div>
-                                        <div class="col-md-2">
-                                            <input type="text" name="medicine_quantity[]" class="form-control" placeholder="SL">
-                                        </div>
-                                        <div class="col-md-4">
-                                            <input type="text" name="medicine_usage[]" class="form-control" placeholder="Liều dùng">
-                                        </div>
-                                        <div class="col-md-1 text-end">
-                                            <button type="button" class="btn btn-outline-danger btn-sm remove-medicine">
-                                                <i class="bi bi-x-lg"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <button type="button" id="add-medicine" 
-                                    class="btn btn-link text-decoration-none text-primary fw-semibold">
-                                    <i class="bi bi-plus-circle me-1"></i> Thêm thuốc
-                                </button>
-                            </div>
-
-                            <button type="submit" class="btn btn-success w-100 py-2 fw-semibold">
-                                <i class="bi bi-send-check me-2"></i> Ký số & Gửi Đơn thuốc (Dược sĩ)
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    @else
-        <div class="alert alert-warning text-center">
-            Hiện không có bệnh nhân nào đang chờ khám.
-        </div>
-    @endif
+                    </td>
+                    <td class="px-5 py-5 border-b border-gray-200 text-sm">
+                        <p class="text-gray-900 font-semibold">{{ $app->time }}</p>
+                        <p class="text-gray-500 text-xs">{{ \Carbon\Carbon::parse($app->date)->format('d/m/Y') }}</p>
+                    </td>
+                    <td class="px-5 py-5 border-b border-gray-200 text-sm text-gray-600 italic">
+                        {{ Str::limit($app->reason, 50) }}
+                    </td>
+                    <td class="px-5 py-5 border-b border-gray-200 text-center">
+                        @if($app->status == 'Đang chờ')
+                            <span class="px-3 py-1 font-semibold text-yellow-700 bg-yellow-100 rounded-full text-xs">Đang chờ</span>
+                        @elseif($app->status == 'Đã xác nhận')
+                            <span class="px-3 py-1 font-semibold text-blue-700 bg-blue-100 rounded-full text-xs">Đợi khám</span>
+                        @endif
+                    </td>
+                    <td class="px-5 py-5 border-b border-gray-200 text-center">
+                        <a href="{{ route('doctor.diagnosis.show', $app->id) }}" 
+                           class="inline-flex items-center px-4 py-2 bg-primary text-white text-sm font-medium rounded hover:bg-blue-700 transition shadow-sm">
+                            <i class="fas fa-stethoscope mr-2"></i> Khám ngay
+                        </a>
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="6" class="px-5 py-8 text-center text-gray-500">
+                        <div class="flex flex-col items-center">
+                            <i class="fas fa-clipboard-check text-4xl mb-3 text-gray-300"></i>
+                            <p>Không có bệnh nhân nào đang chờ.</p>
+                        </div>
+                    </td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
 </div>
-
-{{-- Script thêm/xóa thuốc --}}
-@push('scripts')
-<script>
-document.getElementById('add-medicine').addEventListener('click', function () {
-    const newRow = `
-        <div class="row g-2 align-items-center mb-2">
-            <div class="col-md-5">
-                <input type="text" name="medicine_name[]" class="form-control" placeholder="Tên thuốc">
-            </div>
-            <div class="col-md-2">
-                <input type="text" name="medicine_quantity[]" class="form-control" placeholder="SL">
-            </div>
-            <div class="col-md-4">
-                <input type="text" name="medicine_usage[]" class="form-control" placeholder="Liều dùng">
-            </div>
-            <div class="col-md-1 text-end">
-                <button type="button" class="btn btn-outline-danger btn-sm remove-medicine">
-                    <i class="bi bi-x-lg"></i>
-                </button>
-            </div>
-        </div>`;
-    document.getElementById('medicine-list').insertAdjacentHTML('beforeend', newRow);
-});
-
-document.addEventListener('click', function (e) {
-    if (e.target.closest('.remove-medicine')) {
-        e.target.closest('.row').remove();
-    }
-});
-</script>
-@endpush
 @endsection

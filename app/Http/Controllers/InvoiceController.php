@@ -11,15 +11,14 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail; // Thêm
+use App\Mail\InvoicePaid; // Thêm
+use Illuminate\Support\Facades\Log;
 
 class InvoiceController extends Controller
 {
     public function index()
     {
-        // $invoices = Invoice::with(['user', 'created_by'])->latest()->paginate(10);
-        // $invoices = Invoice::with(['user', 'created_by', 'appointment'])
-        // ->orderBy('created_at', 'desc');
-        // ->paginate(10);
         $invoices = \App\Models\Invoice::with(['user', 'medicalRecord', 'items'])
         ->orderBy('created_at', 'desc')
         ->paginate(10);
@@ -64,6 +63,23 @@ class InvoiceController extends Controller
         return view('invoices.edit', compact('invoice', 'users'));
     }
 
+    // public function update(Request $request, Invoice $invoice)
+    // {
+    //     $data = $request->validate([
+    //         'status' => 'required|in:unpaid,paid,refunded',
+    //         'payment_method' => 'nullable|in:cash,bank,momo,vnpay',
+    //         'note' => 'nullable|string',
+    //     ]);
+
+    //     // Nếu chuyển sang đã thanh toán thì cập nhật ngày trả
+    //     if ($data['status'] == 'paid' && $invoice->status != 'paid') {
+    //         $data['paid_at'] = now();
+    //     }
+
+    //     $invoice->update($data);
+
+    //     return redirect()->route('invoices.show', $invoice->id)->with('success', 'Cập nhật trạng thái hóa đơn thành công.');
+    // }
     public function update(Request $request, Invoice $invoice)
     {
         $data = $request->validate([
@@ -72,9 +88,19 @@ class InvoiceController extends Controller
             'note' => 'nullable|string',
         ]);
 
-        // Nếu chuyển sang đã thanh toán thì cập nhật ngày trả
+        // Logic gửi mail khi Admin xác nhận thanh toán
+        // Nếu chuyển từ TRẠNG THÁI KHÁC sang PAID
         if ($data['status'] == 'paid' && $invoice->status != 'paid') {
             $data['paid_at'] = now();
+            
+            // Gửi mail cho bệnh nhân
+            if ($invoice->user && $invoice->user->email) {
+                try {
+                    Mail::to($invoice->user->email)->send(new InvoicePaid($invoice));
+                } catch (\Exception $e) {
+                    Log::error('Admin update invoice - Mail error: ' . $e->getMessage());
+                }
+            }
         }
 
         $invoice->update($data);

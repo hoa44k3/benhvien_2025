@@ -68,6 +68,16 @@
                     </a>
                 </li>
                  <li class="nav-item">
+                    <a href="{{ route('doctor_attendances.index') }}" class="nav-link" data-tab="chấm công" data-title="Quản lý chấm công" data-subtitle="Quản lý dịch vụ (UC34).">
+                        <i class="fas fa-user-shield"></i> bác sĩ chấm công (UC34)
+                    </a>
+                </li>
+                    <li class="nav-item">
+                    <a href="{{ route('leaves.index') }}" class="nav-link" data-tab="chấm công" data-title="Quản lý chấm công" data-subtitle="Quản lý dịch vụ (UC34).">
+                        <i class="fas fa-user-shield"></i> Duyệt xin nghỉ  (UC34)
+                    </a>
+                </li>
+                 <li class="nav-item">
                     <a href="{{ route('invoices.index') }}" class="nav-link" data-tab="hoadon" data-title="Quản lý dịch vụ" data-subtitle="Quản lý dịch vụ (UC34).">
                         <i class="fas fa-user-shield"></i> Hóa đơn (UC34)
                     </a>
@@ -82,11 +92,31 @@
                         <i class="fas fa-users"></i> Quản lý danh mục(UC39)
                     </a>
                 </li>
-                {{-- <li class="nav-item">
-                    <a href="#" class="nav-link" data-tab="chatbot" data-title="Quản lý Chatbot AI" data-subtitle="Cấu hình, đào tạo và theo dõi hiệu suất Chatbot tư vấn (UC37).">
-                        <i class="fas fa-robot"></i> Quản lý Chatbot AI (UC37)
+                  <li class="nav-item">
+                    <a href="{{ route('service_steps.index') }}" class="nav-link" data-tab="quytrinh" data-title="Quản lý quy trình" data-subtitle="quy trình(UC39).">
+                        <i class="fas fa-users"></i> Quản lý quy trình(UC39)
                     </a>
-                </li> --}}
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('contacts.index') }}" class="nav-link" data-tab="lienhe" data-title="Quản lý liên hệ" data-subtitle="liên hệ.">
+                        <i class="fas fa-robot"></i> Liên hệ  (UC37)
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('posts.index') }}" class="nav-link" data-tab="baiviet" data-title="Quản lý bài viết" data-subtitle="bài viết">
+                        <i class="fas fa-robot"></i> Bài viết(UC37)
+                    </a>
+                </li>
+                  <li class="nav-item">
+                    <a href="{{ route('comments.index') }}" class="nav-link" data-tab="binhluan" data-title="Quản lý bình luận" data-subtitle="bình luận">
+                        <i class="fas fa-robot"></i> Quản lý bình luận(UC37)
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('faqs.index') }}" class="nav-link" data-tab="cauhoi" data-title="câu hỏi (UC37).">
+                        <i class="fas fa-robot"></i> Quản lý câu hỏi  (UC37)
+                    </a>
+                </li>
                  <li class="nav-item">
                     <a href="{{ route('medical_records.index') }}" class="nav-link" data-tab="chatbot" data-title="Chi tiết khám bệnh
                     " data-subtitle="Cấu hình, đào tạo và theo dõi hiệu suất Chatbot tư vấn (UC37).">
@@ -97,12 +127,6 @@
                     <a href="{{ route('prescriptions.index') }}" class="nav-link" data-tab="chatbot" data-title="Chi tiết khám bệnh
                     " data-subtitle="Cấu hình, đào tạo và theo dõi hiệu suất Chatbot tư vấn (UC37).">
                         <i class="fas fa-robot"></i> Quản lý đơn thuốc - chi tiết đơn thuốc(UC37)
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ route('test_results.index') }}" class="nav-link" data-tab="chatbot" data-title="Chi tiết khám bệnh
-                    " data-subtitle="thông tin xét nghiệm của bệnh nhân (UC37).">
-                        <i class="fas fa-robot"></i> Thông tin xét nghiệm (UC37)
                     </a>
                 </li>
                 <li class="nav-item">

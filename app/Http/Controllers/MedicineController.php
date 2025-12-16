@@ -10,90 +10,84 @@ use Carbon\Carbon;
 
 class MedicineController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-    //     $medicines = Medicine::orderBy('id', 'desc')->get();
-    //      // Tính tổng số loại thuốc
-    //     $totalMedicines = $medicines->count();
+        // 1. Khởi tạo Query Builder
+        $query = Medicine::query();
 
-    //     // Tổng giá trị tồn kho (giá * tồn kho)
-    //     // Tự động đổi đơn vị theo giá trị
-    //     $totalStockValue = $medicines->sum(fn($m) => $m->price * $m->stock);
+        // 2. Xử lý Tìm kiếm (Keyword: Mã hoặc Tên)
+        if ($request->filled('keyword')) {
+            $keyword = $request->keyword;
+            $query->where(function ($q) use ($keyword) {
+                $q->where('name', 'like', '%' . $keyword . '%')
+                  ->orWhere('code', 'like', '%' . $keyword . '%');
+            });
+        }
 
-    //     if ($totalStockValue >= 1_000_000_000) {
-    //         $formattedValue = number_format($totalStockValue / 1_000_000_000, 1) . ' tỷ VNĐ';
-    //     } elseif ($totalStockValue >= 1_000_000) {
-    //         $formattedValue = number_format($totalStockValue / 1_000_000, 1) . ' triệu VNĐ';
-    //     } else {
-    //         $formattedValue = number_format($totalStockValue) . ' VNĐ';
-    //     }
+        // 3. Xử lý Lọc theo Phân loại
+        if ($request->filled('category')) {
+            $query->where('category', $request->category);
+        }
 
+        // 4. Xử lý Lọc theo Cảnh báo (Tồn kho thấp / Hết hạn)
+        if ($request->filled('alert')) {
+            if ($request->alert == 'low_stock') {
+                // Lọc thuốc có tồn kho <= tồn tối thiểu (hoặc mặc định là 10)
+                $query->whereRaw('stock <= COALESCE(min_stock, 10)');
+            } elseif ($request->alert == 'expired') {
+                // Lọc thuốc đã hết hạn hoặc sắp hết hạn (trong 90 ngày)
+                $query->where(function($q) {
+                    $q->whereDate('expiry_date', '<', now()) // Đã hết hạn
+                      ->orWhereDate('expiry_date', '<=', now()->addDays(90)); // Sắp hết hạn
+                });
+            }
+        }
 
-    //     // Thuốc sắp hết hạn (hạn trong vòng 30 ngày) hoặc hết kho
-    //     // chỉ những thuốc sắp hết hạn (≤ 30 ngày) hoặc hết hàng mới tính
-    //    $soonExpired = $medicines->filter(function ($item) {
-    //         if (!$item->expiry_date) return false;
+        // Lấy dữ liệu thuốc đã lọc và phân trang (10 item/trang)
+        $medicines = $query->orderBy('id', 'desc')->paginate(10)->withQueryString();
 
-    //         $expiry = Carbon::parse($item->expiry_date);
-    //         $daysLeft = $expiry->isFuture() ? $expiry->diffInDays(now()) : 0;
+        // --- PHẦN TÍNH TOÁN DASHBOARD (Thống kê trên TOÀN BỘ dữ liệu, không phụ thuộc bộ lọc) ---
+        
+        $allMedicines = Medicine::all(); // Lấy tất cả để tính toán thống kê chung
 
-    //         // sắp hết hạn nếu còn dưới 30 ngày hoặc hết hạn rồi
-    //         $isExpiredSoon = $daysLeft <= 30;
-    //         $isOutOfStock = $item->stock <= 0;
+        // 1. Tổng số loại thuốc
+        $totalMedicines = $allMedicines->count();
 
-    //         return $isExpiredSoon || $isOutOfStock;
-    //     })->count();
-    //     return view('medicines.index', compact('medicines', 'totalMedicines', 'totalStockValue', 'soonExpired'));
-    
-     // Lấy toàn bộ thuốc (để hiển thị trong bảng)
-    $medicines = Medicine::orderBy('id', 'desc')->get();
+        // 2. Tổng giá trị tồn kho
+        $totalStockValue = $allMedicines->sum(fn($m) => ($m->price ?? 0) * ($m->stock ?? 0));
+        $formattedTotalStock = $this->formatCurrency($totalStockValue);
 
-    // Tổng số loại thuốc
-    $totalMedicines = $medicines->count();
+        // 3. Giá trị thuốc sắp hết kho (Stock <= Min Stock)
+        $lowStockValue = $allMedicines->filter(function ($m) {
+            return $m->stock <= ($m->min_stock ?? 10);
+        })->sum(fn($m) => ($m->price ?? 0) * ($m->stock ?? 0));
+        $formattedLowStockValue = $this->formatCurrency($lowStockValue);
 
-    // Tổng giá trị tồn kho (tất cả thuốc)
-    $totalStockValue = $medicines->sum(function ($m) {
-        $price = $m->price ?? 0;
-        $stock = $m->stock ?? 0;
-        return $price * $stock;
-    });
+        // 4. Số lượng thuốc hết hạn
+        $expiredCount = $allMedicines->where('expiry_date', '<', now())->count();
 
-    // Định dạng linh hoạt: VNĐ / triệu / tỷ
-    if ($totalStockValue >= 1_000_000_000) {
-        $formattedTotalStock = number_format($totalStockValue / 1_000_000_000, 1) . ' tỷ VNĐ';
-    } elseif ($totalStockValue >= 1_000_000) {
-        $formattedTotalStock = number_format($totalStockValue / 1_000_000, 1) . ' triệu VNĐ';
-    } else {
-        $formattedTotalStock = number_format($totalStockValue) . ' VNĐ';
+        // Lấy danh sách Categories để đổ vào Select Box lọc
+        $categories = Medicine::select('category')->distinct()->whereNotNull('category')->pluck('category');
+
+        return view('medicines.index', compact(
+            'medicines',
+            'categories',
+            'totalMedicines',
+            'formattedTotalStock',
+            'formattedLowStockValue',
+            'expiredCount'
+        ));
     }
-
-    // Lọc thuốc có trạng thái "sắp hết"
-    $lowStockMedicines = Medicine::where('status', 'sắp hết')->get();
-
-    // Tính tổng giá trị của nhóm "sắp hết"
-    $lowStockValue = $lowStockMedicines->sum(function ($m) {
-        $price = $m->price ?? 0;
-        $stock = $m->stock ?? 0;
-        return $price * $stock;
-    });
-
-    // Format giá trị sắp hết kho
-    if ($lowStockValue >= 1_000_000_000) {
-        $formattedLowStockValue = number_format($lowStockValue / 1_000_000_000, 1) . ' tỷ VNĐ';
-    } elseif ($lowStockValue >= 1_000_000) {
-        $formattedLowStockValue = number_format($lowStockValue / 1_000_000, 1) . ' triệu VNĐ';
-    } else {
-        $formattedLowStockValue = number_format($lowStockValue) . ' VNĐ';
+    // Hàm phụ trợ để format tiền tệ (Tỷ/Triệu/VNĐ)
+    private function formatCurrency($value)
+    {
+        if ($value >= 1_000_000_000) {
+            return number_format($value / 1_000_000_000, 1) . ' tỷ VNĐ';
+        } elseif ($value >= 1_000_000) {
+            return number_format($value / 1_000_000, 1) . ' triệu VNĐ';
+        }
+        return number_format($value) . ' VNĐ';
     }
-
-    // Truyền dữ liệu sang view
-    return view('medicines.index', compact(
-        'medicines',
-        'totalMedicines',
-        'formattedTotalStock',
-        'formattedLowStockValue'
-    ));
-}
 
     public function create()
     {

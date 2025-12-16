@@ -5,33 +5,101 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Appointment;
+use App\Models\DoctorAttendance;
+use App\Models\DoctorSite;
 use App\Models\Shift;
 use Carbon\Carbon;
 
 class DoctorScheduleController extends Controller
 {
 public function index()
-{
-    $user = Auth::user();
+    {
+        $user = Auth::user();
+        if (!$user) return redirect()->route('login');
 
-    if (!$user) {
-        return redirect()->route('login');
+        $today = Carbon::now()->format('Y-m-d');
+
+        // 1. Lấy Hồ sơ bác sĩ (để lấy thông tin lương, ngân hàng)
+        $doctorProfile = DoctorSite::where('user_id', $user->id)->first();
+
+        // 2. Lấy thông tin Chấm công HÔM NAY (để hiện nút Check-in/Check-out)
+        $todayAttendance = DoctorAttendance::where('doctor_id', $user->id)
+                            ->where('date', $today)
+                            ->first();
+
+        // 3. Lấy Lịch khám hôm nay
+        $appointments = Appointment::where('doctor_id', $user->id)
+            ->whereDate('date', $today)
+            ->orderBy('time', 'asc')
+            ->get();
+
+        // 4. Lấy Ca làm việc (Shifts) --> ĐÃ THÊM LẠI ĐỂ SỬA LỖI
+        $shifts = Shift::where('user_id', $user->id)
+            ->whereDate('date', $today)
+            ->get();
+
+        // 5. TÍNH LƯƠNG TẠM TÍNH (Real-time)
+        $salaryStats = $this->calculateMonthlySalary($user->id, $doctorProfile);
+
+        // Truyền đủ biến vào View
+        return view('doctor.schedule.index', compact(
+            'user', 
+            'doctorProfile', 
+            'todayAttendance', 
+            'appointments', 
+            'salaryStats',
+            'today',
+            'shifts' // <--- Đã có biến này, hết lỗi compact
+        ));
     }
+// Hàm phụ trợ tính lương
+    private function calculateMonthlySalary($userId, $profile)
+    {
+        // 1. Nếu chưa có hồ sơ bác sĩ -> Trả về tất cả bằng 0 để tránh lỗi View
+        if (!$profile) {
+            return [
+                'work_days' => 0,
+                'base_salary' => 0,   // <--- Quan trọng: Phải có key này
+                'commission' => 0,
+                'total' => 0
+            ];
+        }
 
-    $today = \Carbon\Carbon::today()->toDateString();
+        $currentMonth = \Carbon\Carbon::now()->month;
+        $currentYear = \Carbon\Carbon::now()->year;
+        $standardDays = 26; // Quy chuẩn 26 công/tháng
 
-    $appointments = \App\Models\Appointment::where('doctor_id', $user->id)
-        ->whereDate('date', $today)
-        ->orderBy('time', 'asc')
-        ->get();
+        // 2. Tính số công thực tế
+        $actualWorkDays = DoctorAttendance::where('doctor_id', $userId)
+            ->whereMonth('date', $currentMonth)
+            ->whereYear('date', $currentYear)
+            ->whereIn('status', ['present', 'late'])
+            ->count();
 
-    $shifts = \App\Models\Shift::where('user_id', $user->id)
-        ->whereDate('date', $today)
-        ->get();
+        // 3. Tính lương cứng (Nếu DB chưa có cột base_salary thì mặc định là 0)
+        $baseSalary = $profile->base_salary ?? 0; 
+        $baseSalaryReceived = ($baseSalary / $standardDays) * $actualWorkDays;
 
-    return view('doctor.schedule.index', compact('appointments', 'shifts', 'today'));
-}
+        // 4. Tính hoa hồng (Demo logic)
+        $completedApps = Appointment::where('doctor_id', $userId)
+            ->where('status', 'Hoàn thành')
+            ->whereMonth('date', $currentMonth)
+            ->count();
+        
+        $examFee = 200000; 
+        $commissionRate = $profile->commission_exam_percent ?? 0;
+        $totalExamRevenue = $completedApps * $examFee;
+        $commissionReceived = $totalExamRevenue * ($commissionRate / 100);
 
+        // 5. Trả về mảng kết quả
+        return [
+            'work_days' => $actualWorkDays,
+            'base_salary' => $baseSalaryReceived, // <--- Key này phải khớp với View gọi
+            'commission' => $commissionReceived,
+            'total' => $baseSalaryReceived + $commissionReceived
+        ];
+    }
+    
     /**
      * Form thêm lịch khám mới
      */
@@ -116,8 +184,5 @@ public function index()
 
         return back()->with('success', '✅ Cập nhật ca làm việc thành công!');
     }
-    //   public function destroy(DoctorSchedule $doctorSchedule){
-    //     $doctorSchedule->delete();
-    //     return response()->json(['success'=>true]);
-    // }
+   
 }

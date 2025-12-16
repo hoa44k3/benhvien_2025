@@ -52,7 +52,8 @@
             @endif
 
             @foreach($medicalRecords as $record)
-            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-teal-600 hover:shadow-xl transition-shadow">
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-teal-600 hover:shadow-xl transition-shadow relative">
+                {{-- Header Card --}}
                 <div class="flex justify-between items-center pb-4 border-b border-gray-200 mb-4">
                     <div class="text-xl font-bold text-gray-900">
                         {{ $record->title }} - {{ \Carbon\Carbon::parse($record->date)->format('d/m/Y') }}
@@ -62,20 +63,24 @@
                             'đã_khám' => 'bg-green-100 text-green-700',
                             'đang_khám' => 'bg-blue-100 text-blue-700',
                             'chờ_khám' => 'bg-gray-100 text-gray-700',
-                            'hủy' => 'bg-red-100 text-red-700'
+                            'hủy' => 'bg-red-100 text-red-700',
+                            'completed' => 'bg-green-100 text-green-700'
                         ];
+                        $statusKey = strtolower($record->status);
                     @endphp
-                    <span class="{{ $statusColors[$record->status] ?? 'bg-gray-100' }} px-3 py-1 rounded-full text-sm font-semibold capitalize">
+                    <span class="{{ $statusColors[$statusKey] ?? 'bg-gray-100' }} px-3 py-1 rounded-full text-sm font-semibold capitalize">
                         {{ str_replace('_', ' ', $record->status) }}
                     </span>
                 </div>
 
+                {{-- Thông tin bác sĩ --}}
                 <div class="text-sm text-gray-600 mb-5 flex flex-wrap gap-4">
-                    <span><i class="fas fa-user-md mr-1 text-teal-600"></i> BS. {{ $record->doctor->name ?? '---' }}</span>
+                    <span><i class="fas fa-user-md mr-1 text-teal-600"></i> BS. {{ $record->doctor->user->name ?? ($record->doctor->name ?? '---') }}</span>
                     <span><i class="fas fa-clinic-medical mr-1 text-teal-600"></i> Khoa: {{ $record->department->name ?? '---' }}</span>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                {{-- Nội dung khám --}}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
                     <div class="bg-gray-50 p-4 rounded-lg">
                         <h4 class="font-semibold text-teal-700 mb-1"><i class="fas fa-stethoscope mr-2"></i> Chẩn đoán</h4>
                         <p class="text-gray-700">{{ $record->diagnosis ?? 'Chưa cập nhật' }}</p>
@@ -85,11 +90,44 @@
                         <p class="text-gray-700">{{ $record->treatment ?? 'Chưa cập nhật' }}</p>
                     </div>
                 </div>
+
+                {{-- PHẦN ĐÁNH GIÁ (LOGIC MỚI) --}}
+                @if($record->status == 'completed' || $record->diagnosis)
+                    <div class="mt-4 pt-3 border-t border-gray-100 flex justify-end items-center">
+                        {{-- Kiểm tra xem ca khám này đã có review chưa (nhờ relationship hasOne trong Model) --}}
+                        @if($record->review)
+                            {{-- ĐÃ ĐÁNH GIÁ: HIỂN THỊ KẾT QUẢ --}}
+                            <div class="flex items-center bg-yellow-50 px-4 py-2 rounded-lg border border-yellow-200">
+                                <span class="text-gray-600 text-sm mr-2 font-medium">Bạn đã đánh giá:</span>
+                                <div class="flex text-yellow-400 mr-2">
+                                    @for($i = 1; $i <= 5; $i++)
+                                        @if($i <= $record->review->rating)
+                                            <i class="fas fa-star"></i>
+                                        @else
+                                            <i class="far fa-star text-gray-300"></i>
+                                        @endif
+                                    @endfor
+                                </div>
+                                @if($record->review->comment)
+                                    <span class="text-xs text-gray-500 italic border-l border-gray-300 pl-2">
+                                        "{{ Str::limit($record->review->comment, 30) }}"
+                                    </span>
+                                @endif
+                            </div>
+                        @else
+                            {{-- CHƯA ĐÁNH GIÁ: HIỆN NÚT --}}
+                            <button onclick="openReviewModal({{ $record->doctor_id }}, {{ $record->id }}, '{{ $record->doctor->user->name ?? 'Bác sĩ' }}')" 
+                                    class="flex items-center px-4 py-2 bg-white border border-yellow-400 text-yellow-600 rounded-lg hover:bg-yellow-50 transition-all duration-200 shadow-sm font-semibold">
+                                <i class="far fa-star mr-2"></i> Viết đánh giá bác sĩ
+                            </button>
+                        @endif
+                    </div>
+                @endif
             </div>
             @endforeach
         </div>
 
-        {{-- TAB 2: ĐƠN THUỐC --}}
+        {{-- TAB 2: ĐƠN THUỐC (Giữ nguyên) --}}
         <div id="prescriptions" class="tab-content hidden space-y-6">
             @if($prescriptions->isEmpty())
                 <div class="text-center py-10 text-gray-500 bg-gray-50 rounded-xl">
@@ -106,11 +144,10 @@
                             <p class="text-sm text-gray-500">{{ $prescription->created_at->format('d/m/Y H:i') }}</p>
                         </div>
                         <span class="text-sm font-medium px-3 py-1 bg-blue-50 text-blue-700 rounded-lg">
-                            BS. {{ $prescription->doctor->name ?? '---' }}
+                            BS. {{ $prescription->doctor->user->name ?? ($prescription->doctor->name ?? '---') }}
                         </span>
                     </div>
 
-                    {{-- Danh sách thuốc --}}
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm text-left text-gray-600">
                             <thead class="text-xs text-gray-700 uppercase bg-gray-50">
@@ -133,7 +170,6 @@
                             </tbody>
                         </table>
                     </div>
-
                     @if ($prescription->note)
                         <div class="mt-4 p-3 bg-yellow-50 text-yellow-800 text-sm rounded-lg border border-yellow-200">
                             <i class="fas fa-info-circle mr-1"></i> <strong>Lưu ý:</strong> {{ $prescription->note }}
@@ -143,7 +179,7 @@
             @endforeach
         </div> 
 
-        {{-- TAB 3: KẾT QUẢ XÉT NGHIỆM --}}
+        {{-- TAB 3: KẾT QUẢ XÉT NGHIỆM (Giữ nguyên) --}}
         <div id="test-results" class="tab-content hidden space-y-6">
             @if($testResults->isEmpty())
                 <div class="text-center py-10 text-gray-500 bg-gray-50 rounded-xl">
@@ -171,7 +207,7 @@
 
                 <div class="text-sm text-gray-600 mb-4 flex flex-wrap gap-4">
                     <span><i class="fas fa-flask mr-1 text-purple-600"></i> Phòng Lab: {{ $test->lab_name ?? 'Tại chỗ' }}</span>
-                    <span><i class="fas fa-user-md mr-1 text-purple-600"></i> BS Chỉ định: {{ $test->doctor->name ?? '---' }}</span>
+                    <span><i class="fas fa-user-md mr-1 text-purple-600"></i> BS Chỉ định: {{ $test->doctor->user->name ?? ($test->doctor->name ?? '---') }}</span>
                 </div>
 
                 <div class="overflow-x-auto">
@@ -201,26 +237,80 @@
             </div>
             @endforeach
         </div>
+
+        {{-- MODAL ĐÁNH GIÁ --}}
+        <div id="reviewModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center backdrop-blur-sm">
+            <div class="bg-white p-6 rounded-2xl w-full max-w-md shadow-2xl transform transition-all scale-100">
+                <div class="flex justify-between items-center mb-4 border-b pb-2">
+                    <h3 class="text-xl font-bold text-gray-800">Đánh giá bác sĩ</h3>
+                    <button type="button" onclick="document.getElementById('reviewModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <p class="mb-4 text-sm text-gray-600">Bác sĩ: <span id="reviewDoctorName" class="font-bold text-primary text-base"></span></p>
+
+                {{-- Cập nhật Form Action --}}
+                <form action="{{ route('review.store') }}" method="POST">
+                    @csrf
+                    {{-- Input ẩn ID Bác sĩ --}}
+                    <input type="hidden" name="doctor_id" id="reviewDoctorId">
+                    {{-- Input ẩn ID Bệnh án (QUAN TRỌNG) --}}
+                    <input type="hidden" name="medical_record_id" id="reviewMedicalRecordId">
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-bold mb-2 text-gray-700">Mức độ hài lòng:</label>
+                        <select name="rating" class="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none">
+                            <option value="5" selected>⭐⭐⭐⭐⭐ - Tuyệt vời</option>
+                            <option value="4">⭐⭐⭐⭐ - Tốt</option>
+                            <option value="3">⭐⭐⭐ - Bình thường</option>
+                            <option value="2">⭐⭐ - Tệ</option>
+                            <option value="1">⭐ - Rất tệ</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label class="block text-sm font-bold mb-2 text-gray-700">Nhận xét của bạn:</label>
+                        <textarea name="comment" class="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none" rows="4" placeholder="Hãy chia sẻ trải nghiệm khám bệnh của bạn..."></textarea>
+                    </div>
+
+                    <div class="flex justify-end gap-3">
+                        <button type="button" onclick="document.getElementById('reviewModal').classList.add('hidden')" class="px-5 py-2.5 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition">Hủy</button>
+                        <button type="submit" class="px-5 py-2.5 bg-teal-600 text-white font-semibold rounded-lg hover:bg-teal-700 shadow-md transition transform active:scale-95">Gửi đánh giá</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
     </div>
 
-    {{-- Script chuyển tab --}}
+    {{-- Script xử lý --}}
     <script>
+        // Hàm mở modal đánh giá (Nhận thêm recordId)
+        function openReviewModal(doctorId, recordId, doctorName) {
+            document.getElementById('reviewDoctorId').value = doctorId;
+            document.getElementById('reviewMedicalRecordId').value = recordId; // Set ID bệnh án
+            document.getElementById('reviewDoctorName').innerText = doctorName;
+            document.getElementById('reviewModal').classList.remove('hidden');
+        }
+
+        // Script chuyển tab
         document.addEventListener('DOMContentLoaded', () => {
             const tabs = document.querySelectorAll('.tab-item');
             const contents = document.querySelectorAll('.tab-content');
 
             tabs.forEach(tab => {
                 tab.addEventListener('click', () => {
-                    // Xóa active cũ
+                    // Xóa class active cũ
                     tabs.forEach(t => {
                         t.classList.remove('active', 'text-teal-600', 'border-teal-600');
                         t.classList.add('text-gray-600', 'border-transparent', 'hover:text-teal-600');
-                        t.style.borderBottomWidth = "3px"; // Reset border width logic
+                        t.style.borderBottomWidth = "3px"; 
                     });
                     
                     contents.forEach(c => c.classList.add('hidden'));
 
-                    // Active mới
+                    // Thêm class active mới
                     tab.classList.add('active', 'text-teal-600', 'border-teal-600');
                     tab.classList.remove('text-gray-600', 'border-transparent', 'hover:text-teal-600');
                     

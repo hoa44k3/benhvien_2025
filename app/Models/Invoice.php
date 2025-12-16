@@ -29,6 +29,11 @@ class Invoice extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+     public function doctor()
+    {
+        return $this->belongsTo(User::class, 'doctor_id');
+    }
+
 // 3. Người tạo hóa đơn (Thu ngân/Admin)
     public function createdBy()
     {

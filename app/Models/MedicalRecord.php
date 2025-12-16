@@ -52,4 +52,9 @@ public function prescriptions()
     // Nếu bảng prescriptions có medical_record_id
     return $this->hasMany(Prescription::class, 'medical_record_id');
 }
+public function review()
+{
+    // Một hồ sơ bệnh án có thể có 1 đánh giá
+    return $this->hasOne(Review::class, 'medical_record_id');
+}
 }

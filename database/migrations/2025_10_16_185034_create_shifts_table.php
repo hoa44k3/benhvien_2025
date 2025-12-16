@@ -16,6 +16,7 @@ return new class extends Migration
              $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->enum('shift', ['Sáng', 'Chiều', 'Nghỉ'])->default('Sáng')->comment('Ca làm việc');
             $table->string('room')->nullable()->comment('Phòng khám hoặc Telemedicine');
+              $table->date('date')->after('user_id');
             $table->timestamps();
         });
     }

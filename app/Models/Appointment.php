@@ -43,7 +43,16 @@ public function user()
 {
     return $this->belongsTo(User::class, 'approved_by');
 }
-
+public function medicalRecord()
+    {
+        // 1 lịch hẹn có 1 hồ sơ bệnh án
+        return $this->hasOne(MedicalRecord::class, 'appointment_id');
+    }
+public function prescription()
+    {
+        // 1 lịch hẹn có 1 đơn thuốc
+        return $this->hasOne(Prescription::class, 'appointment_id');
+    }
 public function checkinUser()
 {
     return $this->belongsTo(User::class, 'checked_in_by');

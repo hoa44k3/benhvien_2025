@@ -10,6 +10,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use App\Models\Role;
 use App\Helpers\AuditHelper;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
@@ -41,7 +42,8 @@ protected $fillable = [
         'nationality',
         'role_id',
         'is_active',
-    'age'
+    'age',
+    'type'
 ];
 
  

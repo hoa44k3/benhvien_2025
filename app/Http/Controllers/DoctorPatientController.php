@@ -12,31 +12,47 @@ class DoctorPatientController extends Controller
     /**
      * 🧑‍⚕️ Danh sách bệnh nhân của bác sĩ đang đăng nhập
      */
-    public function index()
+  public function index(Request $request)
     {
-        // Lấy ID bác sĩ hiện tại
         $doctorId = Auth::id();
+        $query = Appointment::with(['user']) // Load quan hệ user để lấy tên, sđt
+            ->where('doctor_id', $doctorId);
 
-        // Lấy danh sách lịch hẹn có liên kết với bệnh nhân
-        $appointments = Appointment::with(['user:id,name,gender,phone,patient_code'])
-            ->where('doctor_id', $doctorId)
-            ->whereIn('status', ['Đã xác nhận', 'Đang chờ khám', 'Đang khám', 'Hoàn thành'])
-            ->orderByDesc('date')
-            ->get();
+        // Tìm kiếm (nếu có)
+        if ($request->has('search') && $request->search != '') {
+            $keyword = $request->search;
+            $query->where(function($q) use ($keyword) {
+                $q->where('patient_name', 'like', "%{$keyword}%")
+                  ->orWhere('patient_phone', 'like', "%{$keyword}%");
+            });
+        }
+
+        // Lấy tất cả trạng thái để bác sĩ theo dõi lịch sử
+        $appointments = $query->orderByDesc('date')
+                              ->orderBy('time', 'asc')
+                              ->paginate(10); // Phân trang cho đẹp
 
         return view('doctor.patients.index', compact('appointments'));
     }
 
-    /**
-     * 📋 Xem chi tiết thông tin bệnh nhân
+  /**
+     * 📋 Xem chi tiết hồ sơ bệnh nhân (Lịch sử khám cũ)
      */
     public function show($id)
     {
-        $appointment = Appointment::with('user')
+        // Lấy thông tin lịch hẹn
+        $appointment = Appointment::with(['user', 'medicalRecord', 'prescription'])
             ->where('doctor_id', Auth::id())
             ->findOrFail($id);
 
-        return view('doctor.patients.show', compact('appointment'));
+        // Lấy lịch sử các lần khám trước của bệnh nhân này (nếu có)
+        $history = Appointment::where('user_id', $appointment->user_id)
+            ->where('id', '!=', $id)
+            ->where('status', 'Hoàn thành')
+            ->orderByDesc('date')
+            ->get();
+
+        return view('doctor.patients.show', compact('appointment', 'history'));
     }
 
     /**

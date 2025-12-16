@@ -18,6 +18,15 @@ class DoctorSite extends Model
         'image',
         'status',
         'experience_years',
+        'base_salary',
+        'commission_exam_percent',
+        'commission_prescription_percent',
+        'commission_service_percent',
+        'bank_name',
+        'bank_account_number',
+        'bank_account_holder',
+
+        
     ];
 
     public function user()
