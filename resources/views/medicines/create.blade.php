@@ -35,23 +35,38 @@
                         </div>
                     </div>
                     
-                    {{-- Phân loại --}}
-                    <div class="col-md-6">
-                        <label for="category" class="form-label fw-semibold">Phân loại</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="fas fa-layer-group"></i></span>
-                            <input type="text" name="category" id="category" class="form-control" value="{{ old('category') }}" placeholder="Ví dụ: Kháng sinh, Giảm đau">
-                        </div>
-                    </div>
+                   {{-- Phân loại --}}
+{{-- Phân loại --}}
+<div class="col-md-6">
+    <label for="medicine_category_id" class="form-label fw-semibold">Phân loại</label>
+    <div class="input-group">
+        <span class="input-group-text"><i class="fas fa-layer-group"></i></span>
+        <select name="medicine_category_id" id="medicine_category_id" class="form-select">
+            <option value="">-- Chọn phân loại --</option>
+            @foreach($categories as $cat)
+                <option value="{{ $cat->id }}" {{ old('medicine_category_id') == $cat->id ? 'selected' : '' }}>
+                    {{ $cat->name }}
+                </option>
+            @endforeach
+        </select>
+    </div>
+</div>
 
-                    {{-- Đơn vị --}}
-                    <div class="col-md-6">
-                        <label for="unit" class="form-label fw-semibold">Đơn vị</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="fas fa-box"></i></span>
-                            <input type="text" name="unit" id="unit" class="form-control" value="{{ old('unit', 'Viên') }}" placeholder="Viên, Hộp, Chai, Vỉ...">
-                        </div>
-                    </div>
+{{-- Đơn vị --}}
+<div class="col-md-6">
+    <label for="medicine_unit_id" class="form-label fw-semibold">Đơn vị</label>
+    <div class="input-group">
+        <span class="input-group-text"><i class="fas fa-box"></i></span>
+        <select name="medicine_unit_id" id="medicine_unit_id" class="form-select">
+            <option value="">-- Chọn đơn vị --</option>
+            @foreach($units as $unit)
+                <option value="{{ $unit->id }}" {{ old('medicine_unit_id') == $unit->id ? 'selected' : '' }}>
+                    {{ $unit->name }}
+                </option>
+            @endforeach
+        </select>
+    </div>
+</div>
 
                 </div>
                 

@@ -38,6 +38,8 @@ use App\Http\Controllers\DoctorLeaveController;
 use App\Http\Controllers\DoctorStatisticController;
 use App\Http\Controllers\DoctorTestResultController;
 use App\Http\Controllers\LeaveController;
+use App\Http\Controllers\MedicineCategoryController;
+use App\Http\Controllers\MedicineUnitController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\ServiceStepController;
 
@@ -232,8 +234,7 @@ Route::prefix('admin/medical_records')->group(function () {
     Route::post('/{medical_record}/complete', [MedicalRecordController::class, 'complete'])->name('medical_records.complete');
     Route::get('/download/{id}', [MedicalRecordController::class, 'download'])->name('medical_records.download');
     // Route Bắt đầu khám
-    Route::post('/{medical_record}/start', [MedicalRecordController::class, 'startExam'])->name('medical_records.start');
-    
+    Route::post('/{medical_record}/start', [MedicalRecordController::class, 'startExam'])->name('medical_records.start');  
     // Route Hủy khám
     Route::post('/{medical_record}/cancel', [MedicalRecordController::class, 'cancel'])->name('medical_records.cancel');
 });
@@ -383,6 +384,26 @@ Route::prefix('medicines')->group(function () {
     Route::get('/{medicine}/edit', [MedicineController::class, 'edit'])->name('medicines.edit');
     Route::put('/{medicine}', [MedicineController::class, 'update'])->name('medicines.update');
     Route::delete('/{medicine}', [MedicineController::class, 'destroy'])->name('medicines.destroy');
+
+      /* ========== DANH MỤC THUỐC ========== */
+    Route::prefix('medicine_categories')->group(function () {
+        Route::get('/', [MedicineCategoryController::class, 'index'])->name('medicine_categories.index');
+        Route::get('/create', [MedicineCategoryController::class, 'create'])->name('medicine_categories.create');
+        Route::post('/store', [MedicineCategoryController::class, 'store'])->name('medicine_categories.store');
+        Route::get('/{medicineCategory}/edit', [MedicineCategoryController::class, 'edit'])->name('medicine_categories.edit');
+        Route::put('/{medicineCategory}', [MedicineCategoryController::class, 'update'])->name('medicine_categories.update');
+        Route::delete('/{medicineCategory}', [MedicineCategoryController::class, 'destroy'])->name('medicine_categories.destroy');
+    });
+
+    /* ========== ĐƠN VỊ THUỐC ========== */
+    Route::prefix('medicine_units')->group(function () {
+        Route::get('/', [MedicineUnitController::class, 'index'])->name('medicine_units.index');
+        Route::get('/create', [MedicineUnitController::class, 'create'])->name('medicine_units.create');
+        Route::post('/store', [MedicineUnitController::class, 'store'])->name('medicine_units.store');
+        Route::get('/{medicineUnit}/edit', [MedicineUnitController::class, 'edit'])->name('medicine_units.edit');
+        Route::put('/{medicineUnit}', [MedicineUnitController::class, 'update'])->name('medicine_units.update');
+        Route::delete('/{medicineUnit}', [MedicineUnitController::class, 'destroy'])->name('medicine_units.destroy');
+    });
 });
 
 Route::prefix('categories')->group(function () {

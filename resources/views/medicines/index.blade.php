@@ -88,14 +88,15 @@
                     </button>
 
                     {{-- Lọc theo Phân loại --}}
-                    <select class="form-select w-auto" name="category" onchange="this.form.submit()">
-                        <option value="">-- Tất cả Phân loại --</option>
-                        @foreach($categories as $cat)
-                            <option value="{{ $cat }}" {{ request('category') == $cat ? 'selected' : '' }}>
-                                {{ $cat }}
-                            </option>
-                        @endforeach
-                    </select>
+                {{-- Lọc theo Phân loại --}}
+<select class="form-select w-auto" name="medicine_category_id" onchange="this.form.submit()">
+    <option value="">-- Tất cả Phân loại --</option>
+    @foreach($categories as $cat)
+        <option value="{{ $cat->id }}" {{ request('medicine_category_id') == $cat->id ? 'selected' : '' }}>
+            {{ $cat->name }}
+        </option>
+    @endforeach
+</select>
 
                     {{-- Lọc theo Cảnh báo --}}
                     <select class="form-select w-auto" name="alert" onchange="this.form.submit()">
@@ -144,6 +145,30 @@
                     </thead>
                     <tbody>
                         @forelse ($medicines as $medicine)
+                       @php
+            // 1. RESET BIẾN CẨN THẬN Ở ĐẦU VÒNG LẶP
+            $daysLeft = 0;
+            $isExpired = false;
+            $isExpiringSoon = false;
+            $expiryText = '';
+
+            if ($medicine->expiry_date) {
+                // Parse ngày hết hạn
+                $expiry = \Carbon\Carbon::parse($medicine->expiry_date)->startOfDay();
+                $now = \Carbon\Carbon::now()->startOfDay();
+                
+                // Tính khoảng cách ngày (Số âm: Đã qua, Số dương: Còn lại)
+                // Lưu ý: dùng tham số false để lấy số âm/dương
+                $daysLeft = $now->diffInDays($expiry, false); 
+
+                // Logic xác định trạng thái
+                if ($daysLeft < 0) {
+                    $isExpired = true; // Đã qua ngày
+                } elseif ($daysLeft <= 90) {
+                    $isExpiringSoon = true; // Còn dương và dưới 90 ngày
+                }
+            }
+        @endphp
                             <tr>
                                 <td class="fw-bold text-primary">{{ $medicine->code }}</td>
                                 
@@ -151,9 +176,20 @@
                                     <span class="fw-semibold">{{ $medicine->name }}</span>
                                 </td>
 
-                                <td><span class="badge bg-info text-dark">{{ $medicine->category }}</span></td>
-                                
-                                <td class="text-center">{{ $medicine->unit }}</td>
+                         {{-- Cột Phân loại --}}
+                                <td>
+                                    {{-- Sửa $medicine->category thành $medicine->medicineCategory --}}
+                                    @if($medicine->medicineCategory)
+                                        <span class="badge bg-info text-dark">{{ $medicine->medicineCategory->name }}</span>
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
+                                </td>
+
+                                <td class="text-center">
+                                    {{-- Sửa $medicine->unit thành $medicine->medicineUnit --}}
+                                    {{ $medicine->medicineUnit ? $medicine->medicineUnit->name : '-' }}
+                                </td>
 
                                 <td class="text-center {{ $medicine->stock <= ($medicine->min_stock ?? 0) ? 'text-danger fw-bold' : '' }}">
                                     {{ number_format($medicine->stock) }}
@@ -165,29 +201,39 @@
 
                                 <td class="text-end fw-bold text-success">{{ number_format($medicine->price) }}</td>
 
-                                <td class="text-center">
-                                    @php
-                                        $expiryDate = $medicine->expiry_date ? \Carbon\Carbon::parse($medicine->expiry_date) : null;
-                                        $isExpired = $expiryDate && $expiryDate->isPast();
-                                        $isExpiringSoon = $expiryDate && $expiryDate->diffInDays(\Carbon\Carbon::now()) <= 90 && !$isExpired;
-                                        $expiryClass = $isExpired ? 'text-danger fw-bold' : ($isExpiringSoon ? 'text-warning fw-bold' : '');
-                                    @endphp
-                                    <span class="{{ $expiryClass }}">
-                                        {{ $expiryDate ? $expiryDate->format('d/m/Y') : '-' }}
-                                    </span>
-                                </td>
+                              <td class="text-center">
+                @if($medicine->expiry_date)
+                    <div class="{{ $isExpired ? 'text-danger fw-bold' : ($isExpiringSoon ? 'text-warning fw-bold' : '') }}">
+                        {{ \Carbon\Carbon::parse($medicine->expiry_date)->format('d/m/Y') }}
+                    </div>
+                    
+                    {{-- Hiển thị debug: Còn bao nhiêu ngày --}}
+                    @if($isExpiringSoon)
+                        <small class="text-danger fst-italic" style="font-size: 0.75rem;">
+                            (Còn {{ intval($daysLeft) }} ngày)
+                        </small>
+                    @elseif(!$isExpired)
+                         <small class="text-muted" style="font-size: 0.75rem;">(Còn {{ intval($daysLeft) }} ngày)</small>
+                    @endif
+                @else
+                    <span class="text-muted">-</span>
+                @endif
+            </td>
 
                                 <td>{{ Str::limit($medicine->supplier, 20) }}</td>
 
-                                <td class="text-center">
-                                    @if($isExpired)
-                                        <span class="badge bg-danger">Hết Hạn</span>
-                                    @elseif($medicine->stock <= ($medicine->min_stock ?? 10))
-                                        <span class="badge bg-warning text-dark">Sắp Hết</span>
-                                    @else
-                                        <span class="badge bg-success">Hoạt động</span>
-                                    @endif
-                                </td>
+                             <td class="text-center">
+                @if($isExpired)
+                    <span class="badge bg-danger">Hết Hạn</span>
+                @elseif($isExpiringSoon)
+                    <span class="badge bg-warning text-dark border border-danger">Sắp Hết Hạn</span>
+                @elseif($medicine->stock <= ($medicine->min_stock ?? 10))
+                    <span class="badge bg-warning text-dark">Sắp Hết Hàng</span>
+                @else
+                    <span class="badge bg-success">Hoạt động</span>
+                @endif
+            </td>f
+                            </td>
 
                                 <td class="text-center">
                                     <a href="{{ route('medicines.edit', $medicine->id) }}" class="btn btn-sm btn-outline-warning me-1" title="Sửa">

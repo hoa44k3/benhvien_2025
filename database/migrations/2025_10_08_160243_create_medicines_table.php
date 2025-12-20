@@ -23,6 +23,22 @@ return new class extends Migration
             $table->date('expiry_date')->nullable()->comment('Hạn sử dụng thuốc');
             $table->enum('status', ['Trống', 'Sắp hết', 'Hết hạn'])->default('Trống')->comment('Trạng thái thuốc');
             $table->string('supplier', 100)->nullable()->comment('Nhà cung cấp thuốc (nếu có)');
+            $table->unsignedBigInteger('medicine_category_id')->nullable()->after('category');
+         $table->unsignedBigInteger('medicine_unit_id')->nullable()->after('unit');
+              // Thêm khóa ngoại mới
+            $table->foreignId('medicine_category_id')
+                ->nullable()
+                ->after('name')
+                ->constrained('medicine_categories')
+                ->nullOnDelete()
+                ->comment('Danh mục thuốc');
+
+            $table->foreignId('medicine_unit_id')
+                ->nullable()
+                ->after('medicine_category_id')
+                ->constrained('medicine_units')
+                ->nullOnDelete()
+                ->comment('Đơn vị thuốc');
             $table->timestamps();
         });
     }

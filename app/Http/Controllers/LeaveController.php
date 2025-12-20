@@ -92,22 +92,27 @@ class LeaveController extends Controller
     }
 
     // --- Hàm phụ trợ tách riêng logic hủy lịch ---
-    private function cancelAppointmentsAndNotify($leave)
-    {
-        $affectedAppointments = Appointment::where('doctor_id', $leave->user_id)
-            ->whereBetween('date', [$leave->start_date, $leave->end_date])
-            ->whereIn('status', ['Đang chờ', 'Đã xác nhận'])
-            ->with('user')
-            ->get();
+   // app/Http/Controllers/LeaveController.php
 
-        foreach ($affectedAppointments as $app) {
-            $app->update(['status' => 'Hủy lịch (Bác sĩ nghỉ)']);
-            
-            if ($app->user && $app->user->email) {
-                try {
-                    Mail::to($app->user->email)->send(new PatientRescheduleMail($app, $leave->user->name));
-                } catch (\Exception $e) {}
-            }
+private function cancelAppointmentsAndNotify($leave)
+{
+    $affectedAppointments = Appointment::where('doctor_id', $leave->user_id)
+        ->whereBetween('date', [$leave->start_date, $leave->end_date])
+        ->whereIn('status', ['Đang chờ', 'Đã xác nhận']) // Lấy các lịch chưa hoàn thành
+        ->with('user')
+        ->get();
+
+    foreach ($affectedAppointments as $app) {
+        // --- SỬA LẠI DÒNG NÀY ---
+        // Phải dùng đúng từ khóa 'Hủy' như trong Migration khai báo
+        $app->update(['status' => 'Hủy']); 
+
+        if ($app->user && $app->user->email) {
+            try {
+                // Nội dung mail vẫn giữ nguyên để báo lý do cho khách
+                Mail::to($app->user->email)->send(new PatientRescheduleMail($app, $leave->user->name));
+            } catch (\Exception $e) {}
         }
     }
+}
 }

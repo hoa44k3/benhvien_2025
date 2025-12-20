@@ -57,11 +57,46 @@
                         <i class="fas fa-stethoscope"></i> Chuyên khoa & Dịch vụ (UC35)
                     </a>
                 </li>
-                <li class="nav-item">
+                {{-- <li class="nav-item">
                     <a href="{{ route('medicines.index') }}" class="nav-link" data-tab="thuockho" data-title="Quản lý Thuốc & Kho thuốc" data-subtitle="Quản lý số lượng, nhập/xuất và danh mục thuốc (UC36).">
                         <i class="fas fa-pills"></i> Thuốc & Kho thuốc (UC36)
                     </a>
-                </li>
+                </li> --}}
+                <li class="nav-item has-treeview {{ request()->is('medicines*') ? 'menu-open' : '' }}">
+    <a href="{{ route('medicines.index') }}"
+       class="nav-link {{ request()->is('medicines') ? 'active' : '' }}"
+       data-tab="thuockho"
+       data-title="Quản lý Thuốc & Kho thuốc"
+       data-subtitle="Quản lý số lượng, nhập/xuất và danh mục thuốc (UC36).">
+
+        <i class="fas fa-pills nav-icon"></i>
+        <p>
+            Thuốc & Kho thuốc (UC36)
+            <i class="right fas fa-angle-left"></i>
+        </p>
+    </a>
+
+    <ul class="nav nav-treeview">
+
+        <li class="nav-item">
+            <a href="{{ route('medicine_units.index') }}"
+               class="nav-link {{ request()->is('medicines/medicine_units*') ? 'active' : '' }}">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Đơn vị thuốc</p>
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a href="{{ route('medicine_categories.index') }}"
+               class="nav-link {{ request()->is('medicines/medicine_categories*') ? 'active' : '' }}">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Phân loại thuốc</p>
+            </a>
+        </li>
+
+    </ul>
+</li>
+
                 <li class="nav-item">
                     <a href="{{ route('doctorsite.index') }}" class="nav-link" data-tab="phonggiuong" data-title="Quản lý bác sĩ" data-subtitle="quản lý bác sĩ (UC38).">
                         <i class="fas fa-bed"></i> Quản lý bác sĩ (UC38)

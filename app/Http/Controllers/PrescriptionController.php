@@ -18,16 +18,7 @@ class PrescriptionController extends Controller
         $prescriptions = Prescription::with(['doctor', 'patient', 'medicalRecord','items'])
             ->orderBy('id', 'desc')
             ->paginate(10);
-// if ($prescriptions->isNotEmpty()) {
-//     $first = $prescriptions->first();
-    
-//     // 👇 Sửa lại lệnh dd để xem chi tiết 1 viên thuốc
-//     dd([
-//         'ID Đơn thuốc' => $first->id,
-//         'Accessor Total' => $first->total_amount, // Nếu cái này null -> Lỗi Model (Bước 1)
-//         'CHI TIẾT 1 THUỐC' => $first->items->first()->toArray() // Soi kỹ dòng này
-//     ]);
-// }
+
         return view('prescriptions.index', compact('prescriptions'));
     }
 

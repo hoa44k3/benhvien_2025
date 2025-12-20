@@ -55,7 +55,18 @@
                                 <span class="badge bg-danger">Từ chối</span>
                             @endif
                         </td>
-                        <td>{{ $leave->admin_note }}</td>
+                       {{-- Trong vòng lặp foreach --}}
+                        <td>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span>{{ $leave->admin_note }}</span>
+                                
+                                {{-- Nút mở Modal sửa ghi chú --}}
+                                <button type="button" class="btn btn-link text-decoration-none p-0 ms-2" 
+                                        onclick="openNoteModal({{ $leave->id }}, '{{ $leave->admin_note }}')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+                        </td>
                         <td>
                             @if($leave->status == 'pending')
                                 {{-- Nút DUYỆT --}}
@@ -108,9 +119,55 @@
         </div>
     </div>
 </div>
+{{-- MODAL CẬP NHẬT GHI CHÚ --}}
+<div class="modal fade" id="noteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cập nhật Ghi chú Admin</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            {{-- Form cập nhật ghi chú --}}
+            <form id="noteForm" method="POST">
+                @csrf
+                @method('PUT')
+                
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="modal_admin_note" class="form-label">Nội dung ghi chú:</label>
+                        <textarea class="form-control" name="admin_note" id="modal_admin_note" rows="4" placeholder="Nhập ghi chú vào đây..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-primary">Lưu ghi chú</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
-{{-- Script xử lý nhập lý do từ chối --}}
+{{-- SCRIPT XỬ LÝ --}}
 <script>
+    // 1. Hàm mở Modal Ghi chú
+    function openNoteModal(id, currentNote) {
+        // Gán action cho form (URL update)
+        // Lưu ý: route 'leaves.update' cần ID, ta thay placeholder '0' bằng ID thật
+        let url = "{{ route('leaves.update', '0') }}";
+        url = url.replace('/0', '/' + id); // Thay số 0 cuối đường dẫn bằng ID
+
+        document.getElementById('noteForm').action = url;
+
+        // Điền nội dung cũ vào textarea
+        document.getElementById('modal_admin_note').value = currentNote;
+
+        // Hiển thị Modal bằng Bootstrap 5
+        var myModal = new bootstrap.Modal(document.getElementById('noteModal'));
+        myModal.show();
+    }
+
+    // 2. Hàm từ chối (Code cũ của bạn giữ nguyên hoặc sửa lại chút cho đẹp)
     function rejectLeave(id) {
         let note = prompt("Vui lòng nhập lý do từ chối:");
         if (note !== null && note.trim() !== "") {
@@ -118,5 +175,7 @@
             document.getElementById('reject-form-' + id).submit();
         }
     }
+
+
 </script>
 @endsection

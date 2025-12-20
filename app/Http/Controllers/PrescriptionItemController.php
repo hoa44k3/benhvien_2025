@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Prescription;
 use App\Models\PrescriptionItem;
 use App\Models\Medicine;
+use Carbon\Carbon;
 
 class PrescriptionItemController extends Controller
 {
@@ -33,14 +34,35 @@ class PrescriptionItemController extends Controller
         'times_per_day' => 'nullable|integer',
         ]);
 
-        // Auto fill nếu có medicine_id
-        if ($request->filled('medicine_id')) {
-            $med = Medicine::find($request->medicine_id);
-            if ($med) {
-                $data['medicine_name'] = $med->name;
-                $data['price'] = $med->price;
+    // LOGIC MỚI: Kiểm tra hạn sử dụng trước khi thêm
+    if ($request->filled('medicine_id')) {
+        $med = Medicine::find($request->medicine_id);
+        
+        if ($med && $med->expiry_date) {
+            $expiry = Carbon::parse($med->expiry_date);
+            $now = Carbon::now();
+            $daysLeft = $now->diffInDays($expiry, false); // false để lấy số âm nếu đã qua
+
+            // 1. Chặn nếu đã hết hạn
+            if ($daysLeft < 0) {
+                return back()
+                    ->withInput()
+                    ->withErrors(['medicine_id' => "LỖI: Thuốc \"{$med->name}\" đã hết hạn sử dụng. Không thể kê đơn!"]);
             }
+
+            // 2. Chặn nếu sắp hết hạn (ví dụ dưới 60 ngày)
+            // Bạn có thể chỉnh số 60 thành số ngày quy định của bệnh viện
+            if ($daysLeft < 60) {
+                return back()
+                    ->withInput()
+                    ->withErrors(['medicine_id' => "CẢNH BÁO: Thuốc \"{$med->name}\" là thuốc cận date (còn {$daysLeft} ngày). Để đảm bảo an toàn, vui lòng chọn lô thuốc khác!"]);
+            }
+            
+            // Nếu OK
+            $data['medicine_name'] = $med->name;
+            $data['price'] = $med->price;
         }
+    }
 
 
         $prescription->items()->create($data);
@@ -74,14 +96,34 @@ class PrescriptionItemController extends Controller
         'times_per_day' => 'nullable|integer',
         ]);
 
-        // Nếu chọn thuốc có sẵn
-        if ($request->filled('medicine_id')) {
-            $med = Medicine::find($request->medicine_id);
-            if ($med) {
-                $data['medicine_name'] = $med->name;
-                $data['price'] = $med->price;
+       if ($request->filled('medicine_id')) {
+        $med = Medicine::find($request->medicine_id);
+        
+        if ($med && $med->expiry_date) {
+            $expiry = Carbon::parse($med->expiry_date);
+            $now = Carbon::now();
+            $daysLeft = $now->diffInDays($expiry, false); // false để lấy số âm nếu đã qua
+
+            // 1. Chặn nếu đã hết hạn
+            if ($daysLeft < 0) {
+                return back()
+                    ->withInput()
+                    ->withErrors(['medicine_id' => "LỖI: Thuốc \"{$med->name}\" đã hết hạn sử dụng. Không thể kê đơn!"]);
             }
+
+            // 2. Chặn nếu sắp hết hạn (ví dụ dưới 60 ngày)
+            // Bạn có thể chỉnh số 60 thành số ngày quy định của bệnh viện
+            if ($daysLeft < 60) {
+                return back()
+                    ->withInput()
+                    ->withErrors(['medicine_id' => "CẢNH BÁO: Thuốc \"{$med->name}\" là thuốc cận date (còn {$daysLeft} ngày). Để đảm bảo an toàn, vui lòng chọn lô thuốc khác!"]);
+            }
+            
+            // Nếu OK
+            $data['medicine_name'] = $med->name;
+            $data['price'] = $med->price;
         }
+    }
 
         $item->update($data);
 

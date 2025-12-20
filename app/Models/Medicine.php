@@ -12,16 +12,29 @@ class Medicine extends Model
     protected $fillable = [
         'code',
         'name',
-        'category',
+        // 'category',
         'stock',
         'min_stock',
-        'unit',
+        // 'unit',
         'price',
         'expiry_date',
         'status',
         'supplier',
+        'medicine_category_id',
+        'medicine_unit_id',
     ];
    
     // protected $fillable = ['name', 'quantity', 'threshold', 'status'];
+// Liên kết với bảng Phân loại
+  // ĐỔI TÊN HÀM: category -> medicineCategory
+    public function medicineCategory()
+    {
+        return $this->belongsTo(MedicineCategory::class, 'medicine_category_id');
+    }
 
+    // ĐỔI TÊN HÀM: unit -> medicineUnit
+    public function medicineUnit()
+    {
+        return $this->belongsTo(MedicineUnit::class, 'medicine_unit_id');
+    }
 }

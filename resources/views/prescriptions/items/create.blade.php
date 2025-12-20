@@ -38,23 +38,77 @@
                     <form method="POST" action="{{ route('prescription_items.store', $prescription->id) }}">
                         @csrf
 
-                        {{-- CHỌN THUỐC TRONG KHO --}}
-                        <div class="mb-3">
-                            <label for="medicine_select" class="form-label fw-bold">
-                                <i class="fas fa-pills me-1"></i> Chọn thuốc có sẵn
-                            </label>
-                            <select id="medicine_select" name="medicine_id" class="form-select shadow-sm">
-                                <option value="">— Chọn thuốc —</option>
-                                @foreach($medicines as $m)
-                                    <option value="{{ $m->id }}"
-                                        data-name="{{ $m->name }}"
-                                        data-price="{{ $m->price }}">
-                                        {{ $m->code }} — {{ $m->name }} ({{ number_format($m->price) }} đ)
-                                    </option>
-                                @endforeach
-                            </select>
-                            <small class="text-muted fst-italic">Chọn thuốc để tự động điền tên và giá.</small>
-                        </div>
+                     {{-- CHỌN THUỐC TRONG KHO --}}
+<div class="mb-3">
+    <label for="medicine_select" class="form-label fw-bold">
+        <i class="fas fa-pills me-1"></i> Chọn thuốc có sẵn
+    </label>
+    <select id="medicine_select" name="medicine_id" class="form-select shadow-sm">
+        <option value="">— Chọn thuốc —</option>
+        @foreach($medicines as $m)
+           @php
+    if ($m->expiry_date) {
+        // QUAN TRỌNG: Thêm ->startOfDay() để reset giờ về 00:00:00
+        $expiry = \Carbon\Carbon::parse($m->expiry_date)->startOfDay();
+        $now = \Carbon\Carbon::now()->startOfDay();
+        
+        // Tính số ngày chẵn
+        $daysLeft = $now->diffInDays($expiry, false); 
+        
+        $isExpired = $daysLeft < 0; 
+        $isNearExpiry = $daysLeft >= 0 && $daysLeft <= 60; // Dưới 60 ngày
+
+        $dateStr = $expiry->format('d/m/Y');
+    } else {
+        $daysLeft = 9999;
+        $isExpired = false;
+        $isNearExpiry = false;
+        $dateStr = 'N/A';
+    }
+
+    // Hiển thị
+    if ($isExpired) {
+        $warningText = " (ĐÃ HẾT HẠN - $dateStr)";
+        $styleClass = "text-danger fw-bold bg-danger-subtle"; 
+        $status = 'expired';
+    } elseif ($isNearExpiry) {
+        // Số ngày giờ đây đã tròn trịa (Ví dụ: Còn 10 ngày)
+        $warningText = " (CẬN DATE - Còn $daysLeft ngày)";
+        $styleClass = "text-warning fw-bold bg-warning-subtle text-dark"; 
+        $status = 'near_expiry';
+    } else {
+        $warningText = "";
+        $styleClass = "";
+        $status = 'ok';
+    }
+@endphp
+
+            <option value="{{ $m->id }}"
+                class="{{ $styleClass }}"
+                data-name="{{ $m->name }}"
+                data-price="{{ $m->price }}"
+                data-status="{{ $status }}" {{-- Trạng thái: expired, near_expiry, ok --}}
+                data-expiry-info="{{ $warningText }}">
+                
+                {{ $m->code }} — {{ $m->name }} {{ $warningText }}
+            </option>
+        @endforeach
+    </select>
+    
+    {{-- ALERT: Hết hạn (Đỏ) --}}
+    <div id="alert_expired" class="alert alert-danger mt-2 d-none fade show" role="alert">
+        <i class="fas fa-ban me-2"></i> 
+        <strong>KHÔNG ĐƯỢC KÊ:</strong> Thuốc này đã hết hạn sử dụng<span class="expiry-detail"></span>.
+    </div>
+
+    {{-- ALERT: Sắp hết hạn (Vàng) --}}
+    <div id="alert_near" class="alert alert-warning mt-2 d-none fade show" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i> 
+        <strong>CẢNH BÁO:</strong> Thuốc này sắp hết hạn<span class="expiry-detail"></span>. Cân nhắc kỹ thời gian dùng thuốc của bệnh nhân!
+    </div>
+    
+    <small class="text-muted fst-italic">Hệ thống sẽ chặn kê thuốc hết hạn hoặc còn hạn dưới 60 ngày.</small>
+</div>
 
                         {{-- TÊN THUỐC --}}
                         <div class="mb-3">
@@ -159,6 +213,39 @@ document.getElementById('medicine_select').addEventListener('change', function()
     document.getElementById('medicine_name').value = opt.dataset.name || '';
     document.getElementById('price').value = opt.dataset.price || '';
 });
+
+
+document.getElementById('medicine_select').addEventListener('change', function(){
+    const opt = this.options[this.selectedIndex];
+    
+    const alertExpired = document.getElementById('alert_expired');
+    const alertNear = document.getElementById('alert_near');
+    
+    // Reset form
+    alertExpired.classList.add('d-none');
+    alertNear.classList.add('d-none');
+
+    if(opt.value) {
+        // Điền dữ liệu
+        document.getElementById('medicine_name').value = opt.dataset.name || '';
+        document.getElementById('price').value = opt.dataset.price || '';
+
+        // Kiểm tra trạng thái
+        const status = opt.dataset.status;
+        const info = opt.dataset.expiryInfo || '';
+
+        if (status === 'expired') {
+            alertExpired.querySelector('.expiry-detail').innerText = info;
+            alertExpired.classList.remove('d-none');
+            // Có thể reset value nếu muốn bắt buộc chọn lại ngay
+            // this.value = ""; 
+        } else if (status === 'near_expiry') {
+            alertNear.querySelector('.expiry-detail').innerText = info;
+            alertNear.classList.remove('d-none');
+        }
+    }
+});
 </script>
+
 
 @endsection

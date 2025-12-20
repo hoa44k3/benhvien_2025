@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Helpers\AuditHelper;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\MedicineCategory; // Import model mới
+use App\Models\MedicineUnit;
 use App\Models\Medicine;
 use Carbon\Carbon;
 
@@ -13,7 +15,7 @@ class MedicineController extends Controller
     public function index(Request $request)
     {
         // 1. Khởi tạo Query Builder
-        $query = Medicine::query();
+      $query = Medicine::with(['medicineCategory', 'medicineUnit']);
 
         // 2. Xử lý Tìm kiếm (Keyword: Mã hoặc Tên)
         if ($request->filled('keyword')) {
@@ -24,35 +26,32 @@ class MedicineController extends Controller
             });
         }
 
-        // 3. Xử lý Lọc theo Phân loại
-        if ($request->filled('category')) {
-            $query->where('category', $request->category);
+       // 3. Lọc theo Phân loại (Dựa trên ID danh mục)
+        // 3. Lọc theo Phân loại (Sửa tên cột input cho khớp View)
+        if ($request->filled('medicine_category_id')) {
+            $query->where('medicine_category_id', $request->medicine_category_id);
         }
-
         // 4. Xử lý Lọc theo Cảnh báo (Tồn kho thấp / Hết hạn)
         if ($request->filled('alert')) {
             if ($request->alert == 'low_stock') {
                 // Lọc thuốc có tồn kho <= tồn tối thiểu (hoặc mặc định là 10)
                 $query->whereRaw('stock <= COALESCE(min_stock, 10)');
             } elseif ($request->alert == 'expired') {
-                // Lọc thuốc đã hết hạn hoặc sắp hết hạn (trong 90 ngày)
+                // Lọc thuốc đã hết hạn hoặc sắp hết hạn (trong 60 ngày)
                 $query->where(function($q) {
                     $q->whereDate('expiry_date', '<', now()) // Đã hết hạn
-                      ->orWhereDate('expiry_date', '<=', now()->addDays(90)); // Sắp hết hạn
+                      ->orWhereDate('expiry_date', '<=', now()->addDays(60)); // Sắp hết hạn
                 });
             }
         }
 
         // Lấy dữ liệu thuốc đã lọc và phân trang (10 item/trang)
         $medicines = $query->orderBy('id', 'desc')->paginate(10)->withQueryString();
-
-        // --- PHẦN TÍNH TOÁN DASHBOARD (Thống kê trên TOÀN BỘ dữ liệu, không phụ thuộc bộ lọc) ---
         
+        // --- PHẦN TÍNH TOÁN DASHBOARD (Thống kê trên TOÀN BỘ dữ liệu, không phụ thuộc bộ lọc) ---
         $allMedicines = Medicine::all(); // Lấy tất cả để tính toán thống kê chung
-
         // 1. Tổng số loại thuốc
         $totalMedicines = $allMedicines->count();
-
         // 2. Tổng giá trị tồn kho
         $totalStockValue = $allMedicines->sum(fn($m) => ($m->price ?? 0) * ($m->stock ?? 0));
         $formattedTotalStock = $this->formatCurrency($totalStockValue);
@@ -67,8 +66,9 @@ class MedicineController extends Controller
         $expiredCount = $allMedicines->where('expiry_date', '<', now())->count();
 
         // Lấy danh sách Categories để đổ vào Select Box lọc
-        $categories = Medicine::select('category')->distinct()->whereNotNull('category')->pluck('category');
-
+        // $categories = Medicine::select('category')->distinct()->whereNotNull('category')->pluck('category');
+        // Lấy danh sách Category để đổ vào Select Box lọc ở View Index
+        $categories = MedicineCategory::all();
         return view('medicines.index', compact(
             'medicines',
             'categories',
@@ -89,9 +89,13 @@ class MedicineController extends Controller
         return number_format($value) . ' VNĐ';
     }
 
-    public function create()
+   public function create()
     {
-        return view('medicines.create');
+        // Lấy danh sách để đổ vào dropdown
+        $categories = MedicineCategory::all();
+        $units = MedicineUnit::all();
+        
+        return view('medicines.create', compact('categories', 'units'));
     }
 
     public function store(Request $request)
@@ -100,10 +104,10 @@ class MedicineController extends Controller
             $validated = $request->validate([
                 'code' => 'required|unique:medicines,code',
                 'name' => 'required',
-                'category' => 'nullable|string',
+              'medicine_category_id' => 'nullable|exists:medicine_categories,id', 
+                'medicine_unit_id'     => 'nullable|exists:medicine_units,id',
                 'stock' => 'required|integer|min:0',
                 'min_stock' => 'nullable|integer|min:0',
-                'unit' => 'required|string',
                 'price' => 'required|numeric|min:0',
                 'expiry_date' => 'nullable|date',
                 'status' => 'required|string',
@@ -122,20 +126,22 @@ class MedicineController extends Controller
        
     }
 
-    public function edit(Medicine $medicine)
+   public function edit(Medicine $medicine)
     {
-        return view('medicines.edit', compact('medicine'));
+        $categories = MedicineCategory::all();
+        $units = MedicineUnit::all();
+        return view('medicines.edit', compact('medicine', 'categories', 'units'));
     }
-
     public function update(Request $request, Medicine $medicine)
     {
         try{
             $validated = $request->validate([
                 'name' => 'required',
-                'category' => 'nullable|string',
+              'medicine_category_id' => 'nullable|exists:medicine_categories,id',
+                'medicine_unit_id'     => 'nullable|exists:medicine_units,id',
                 'stock' => 'required|integer|min:0',
                 'min_stock' => 'nullable|integer|min:0',
-                'unit' => 'required|string',
+                
                 'price' => 'required|numeric|min:0',
                 'expiry_date' => 'nullable|date',
                 'status' => 'required|string',
