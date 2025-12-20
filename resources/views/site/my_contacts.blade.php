@@ -3,68 +3,76 @@
 @section('title', 'Lịch sử hỗ trợ')
 
 @section('body')
-<div class="container mx-auto max-w-7xl px-4 py-12">
-    <h2 class="text-3xl font-bold mb-6 text-gray-700 border-l-4 border-teal-600 pl-3">Lịch sử gửi hỗ trợ</h2>
+<div class="bg-slate-50 min-h-screen py-12">
+    <div class="container mx-auto max-w-5xl px-4">
+        <div class="flex items-center justify-between mb-8">
+            <h2 class="text-2xl font-bold text-slate-800">Lịch sử gửi hỗ trợ</h2>
+            <a href="{{ route('contact') }}" class="text-sm font-semibold text-primary hover:underline"><i class="fas fa-plus mr-1"></i> Gửi yêu cầu mới</a>
+        </div>
 
-    <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-        @if($contacts->count() > 0)
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm text-left text-gray-500">
-                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3">Ngày gửi</th>
-                            <th class="px-6 py-3">Chủ đề</th>
-                            <th class="px-6 py-3">Nội dung gửi</th>
-                            <th class="px-6 py-3">Trạng thái</th>
-                            <th class="px-6 py-3">Phản hồi từ Admin</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($contacts as $item)
-                        <tr class="bg-white border-b hover:bg-gray-50">
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                {{ $item->created_at->format('d/m/Y H:i') }}
-                            </td>
-                            <td class="px-6 py-4 font-bold text-gray-800">
-                                {{ $item->subject }}
-                            </td>
-                            <td class="px-6 py-4 max-w-xs truncate" title="{{ $item->message }}">
-                                {{ Str::limit($item->message, 50) }}
-                            </td>
-                            <td class="px-6 py-4">
-                                @if($item->status == 'pending')
-                                    <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">Đang chờ</span>
-                                @else
-                                    <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">Đã trả lời</span>
-                                @endif
-                            </td>
-                            <td class="px-6 py-4">
-                                @if($item->reply_message)
-                                    <div class="bg-teal-50 p-3 rounded border border-teal-100 text-gray-700 text-xs">
-                                        <div class="font-bold text-teal-700 mb-1">
-                                            <i class="fas fa-reply mr-1"></i> Admin trả lời lúc {{ \Carbon\Carbon::parse($item->replied_at)->format('H:i d/m') }}:
+        <div class="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+            @if($contacts->count() > 0)
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Thời gian</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Chủ đề</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Trạng thái</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-1/3">Phản hồi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @foreach($contacts as $item)
+                            <tr class="hover:bg-slate-50/50 transition">
+                                <td class="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
+                                    {{ $item->created_at->format('d/m/Y') }} <br>
+                                    <span class="text-xs text-slate-400">{{ $item->created_at->format('H:i') }}</span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="font-semibold text-slate-800 mb-1">{{ $item->subject }}</div>
+                                    <p class="text-xs text-slate-500 line-clamp-1 italic" title="{{ $item->message }}">{{ $item->message }}</p>
+                                </td>
+                                <td class="px-6 py-4">
+                                    @if($item->status == 'pending')
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700">
+                                            <span class="w-1.5 h-1.5 bg-yellow-500 rounded-full mr-1.5"></span> Đang chờ
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">
+                                            <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></span> Đã trả lời
+                                        </span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4">
+                                    @if($item->reply_message)
+                                        <div class="bg-green-50 p-3 rounded-xl border border-green-100">
+                                            <p class="text-[10px] font-bold text-green-700 mb-1 uppercase tracking-wide">
+                                                Admin • {{ \Carbon\Carbon::parse($item->replied_at)->format('d/m') }}
+                                            </p>
+                                            <p class="text-sm text-slate-700 leading-snug">{!! nl2br(e($item->reply_message)) !!}</p>
                                         </div>
-                                        {!! nl2br(e($item->reply_message)) !!}
-                                    </div>
-                                @else
-                                    <span class="text-gray-400 italic">Chưa có phản hồi</span>
-                                @endif
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-            <div class="p-4">
-                {{ $contacts->links() }}
-            </div>
-        @else
-            <div class="p-8 text-center text-gray-500">
-                <i class="fas fa-inbox text-4xl mb-3 text-gray-300"></i>
-                <p>Bạn chưa gửi yêu cầu hỗ trợ nào.</p>
-                <a href="{{ route('contact') }}" class="text-teal-600 hover:underline mt-2 inline-block">Gửi tin nhắn ngay</a>
-            </div>
-        @endif
+                                    @else
+                                        <span class="text-slate-400 text-sm italic">-- Chưa có phản hồi --</span>
+                                    @endif
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                <div class="px-6 py-4 border-t border-slate-200">
+                    {{ $contacts->links() }}
+                </div>
+            @else
+                <div class="py-16 text-center">
+                    <div class="w-16 h-16 bg-slate-100 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-inbox text-3xl"></i>
+                    </div>
+                    <p class="text-slate-500 mb-4">Bạn chưa có yêu cầu hỗ trợ nào.</p>
+                </div>
+            @endif
+        </div>
     </div>
 </div>
 @endsection

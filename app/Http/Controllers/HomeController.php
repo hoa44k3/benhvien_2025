@@ -436,6 +436,54 @@ public function showPost($id)
 
         return view('site.medical_records', compact('user', 'medicalRecords', 'prescriptions', 'testResults'));
     }
+    // --- TELEMEDICINE: BỆNH NHÂN ---
+
+    /**
+     * API Kiểm tra cuộc gọi đến (Dùng cho Ajax Polling)
+     */
+    public function checkIncomingCall()
+    {
+        if (!Auth::check()) return response()->json(['incoming' => false]);
+
+        // Tìm lịch hẹn của user này, đang diễn ra (status != Hoàn thành) và ĐÃ CÓ LINK PHÒNG
+        $appointment = Appointment::where('user_id', Auth::id())
+            ->whereNotNull('meeting_room') // Bác sĩ đã tạo phòng
+            ->where('meeting_room', '!=', '')
+            ->whereIn('status', ['Đã xác nhận', 'Đang khám']) // Lịch hẹn đang active
+            ->where('updated_at', '>=', now()->subMinutes(60)) 
+            ->latest('updated_at')
+            ->first();
+
+        if ($appointment) {
+            return response()->json([
+                'incoming' => true,
+                'appointment_id' => $appointment->id, // ID lịch hẹn
+                'doctor_name' => $appointment->doctor->name ?? 'Bác sĩ', // Cần relation doctor trong model Appointment
+                'join_url' => route('patient.joinVideoCall', $appointment->id)
+            ]);
+        }
+
+        return response()->json(['incoming' => false]);
+    }
+
+    /**
+     * Màn hình Video Call cho Bệnh nhân
+     */
+    public function joinVideoCall($id)
+    {
+        $appointment = Appointment::where('user_id', Auth::id())->findOrFail($id);
+        
+        // Bảo mật: Nếu chưa có phòng thì ko cho vào
+        if (!$appointment->meeting_room) {
+            return redirect()->route('schedule')->with('error', 'Cuộc gọi chưa bắt đầu hoặc đã kết thúc.');
+        }
+
+        $roomName = $appointment->meeting_room;
+        $userName = Auth::user()->name;
+        $userEmail = Auth::user()->email;
+
+        return view('site.patient_video_call', compact('appointment', 'roomName', 'userName', 'userEmail'));
+    }
     /**
      * Hiển thị trang thanh toán của người dùng
      */

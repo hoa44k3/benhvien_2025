@@ -157,7 +157,19 @@ public function index()
 
         return back()->with('success', '✅ Cập nhật trạng thái thành công!');
     }
+public function updateStatus(Request $request, $id)
+{
+    // Tìm lịch hẹn
+    $appointment = Appointment::where('doctor_id', Auth::id())->findOrFail($id);
 
+    // Cập nhật trạng thái
+    // status nhận từ input hidden trong form (VD: 'Đang khám')
+    $appointment->update([
+        'status' => $request->status
+    ]);
+
+    return back()->with('success', 'Đã cập nhật trạng thái lịch hẹn: ' . $request->status);
+}
     /**
      * Cập nhật ca làm việc
      */

@@ -3,112 +3,94 @@
 @section('title','Dịch vụ Y tế')
 
 @section('body')
-    {{-- 1. HERO BANNER --}}
-    <section class="relative bg-gradient-to-r from-teal-600 to-teal-800 py-16 text-white shadow-lg">
-        <div class="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/medical-icons.png')]"></div>
-        <div class="container mx-auto px-4 text-center relative z-10">
-            <h1 class="text-3xl md:text-5xl font-extrabold mb-4">Dịch vụ Y tế Chất lượng cao</h1>
-            <p class="text-lg opacity-90 mb-8 max-w-2xl mx-auto">
-                Chăm sóc toàn diện - Quy trình chuẩn Y khoa - Chi phí minh bạch
-            </p>
+    {{-- 1. HERO HEADER --}}
+    <div class="bg-slate-900 relative py-20 overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary/20"></div>
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <h1 class="text-3xl md:text-5xl font-extrabold text-white mb-6">Dịch vụ Y tế Chất lượng cao</h1>
+            <p class="text-slate-300 text-lg max-w-2xl mx-auto mb-10">Chúng tôi cung cấp các gói dịch vụ y tế toàn diện với trang thiết bị hiện đại và đội ngũ chuyên gia hàng đầu.</p>
             
-            {{-- Bộ lọc danh mục --}}
-            <div class="flex flex-wrap justify-center gap-2">
+            {{-- Filter Pills --}}
+            <div class="flex flex-wrap justify-center gap-3">
                 <a href="{{ route('services', ['category' => 'all']) }}" 
-                   class="px-5 py-2 rounded-full border border-white/40 font-medium transition hover:bg-white hover:text-teal-700 {{ request('category') == 'all' ? 'bg-white text-teal-700 shadow-md' : 'text-white' }}">
+                   class="px-6 py-2.5 rounded-full text-sm font-bold transition-all {{ request('category') == 'all' || !request('category') ? 'bg-primary text-white shadow-lg shadow-primary/30' : 'bg-white/10 text-white hover:bg-white/20' }}">
                     Tất cả
                 </a>
                 @foreach($categories as $category)
                     <a href="{{ route('services', ['category' => $category->id]) }}" 
-                       class="px-5 py-2 rounded-full border border-white/40 font-medium transition hover:bg-white hover:text-teal-700 {{ request('category') == $category->id ? 'bg-white text-teal-700 shadow-md' : 'text-white' }}">
+                       class="px-6 py-2.5 rounded-full text-sm font-bold transition-all {{ request('category') == $category->id ? 'bg-primary text-white shadow-lg shadow-primary/30' : 'bg-white/10 text-white hover:bg-white/20' }}">
                         {{ $category->name }}
                     </a>
                 @endforeach
             </div>
         </div>
-    </section>
+    </div>
 
-    {{-- 3. DANH SÁCH DỊCH VỤ (Giao diện thẻ bài tối ưu) --}}
-    <section class="py-12 bg-gray-50 min-h-screen">
+    {{-- 2. SERVICES GRID --}}
+    <section class="py-16 bg-slate-50 min-h-screen">
         <div class="container mx-auto px-4 max-w-7xl">
-            
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 @foreach($services as $service)
-                <div class="bg-white rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100 flex flex-col h-full group">
+                <div class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-100 overflow-hidden group flex flex-col h-full hover:-translate-y-1">
                     
-                    {{-- Ảnh đại diện --}}
-                    <div class="relative h-56 overflow-hidden">
+                    {{-- Image Top --}}
+                    <div class="relative h-52 overflow-hidden">
                         <img src="{{ $service->image ? asset('storage/'.$service->image) : asset('images/default-service.jpg') }}" 
                              alt="{{ $service->name }}" 
-                             class="w-full h-full object-cover transform group-hover:scale-110 transition duration-700">
+                             class="w-full h-full object-cover transition duration-700 group-hover:scale-110">
                         
-                        {{-- Badge Trạng thái --}}
-                        <div class="absolute top-3 right-3">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60"></div>
+                        
+                        {{-- Status Badge --}}
+                        <div class="absolute top-4 left-4">
                              @if($service->status)
-                                <span class="bg-green-500/90 backdrop-blur-sm text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">
-                                    <i class="fas fa-check-circle mr-1"></i> Hoạt động
+                                <span class="bg-emerald-500/90 backdrop-blur text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm flex items-center gap-1">
+                                    <i class="fas fa-circle text-[6px] animate-pulse"></i> Hoạt động
                                 </span>
                             @else
-                                <span class="bg-red-500/90 backdrop-blur-sm text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">
-                                    <i class="fas fa-tools mr-1"></i> Bảo trì
+                                <span class="bg-slate-500/90 backdrop-blur text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm">
+                                    Bảo trì
                                 </span>
                             @endif
                         </div>
 
-                        {{-- Badge Giá tiền (Nổi bật) --}}
-                        <div class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/70 to-transparent p-4 pt-10">
-                            <span class="text-white font-bold text-lg text-shadow">
-                                {{ $service->fee ? number_format($service->fee, 0, ',', '.') . ' đ' : 'Liên hệ' }}
-                            </span>
+                        {{-- Department Badge --}}
+                         <div class="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-slate-800 shadow-sm">
+                            {{ $service->department->name ?? 'Đa khoa' }}
                         </div>
                     </div>
 
-                    {{-- Nội dung chính --}}
-                    <div class="p-6 flex-grow flex flex-col">
-                        <div class="flex justify-between items-start mb-2">
-                            <span class="text-xs font-bold text-teal-600 uppercase tracking-wide bg-teal-50 px-2 py-1 rounded">
-                                {{ $service->department->name ?? 'Đa khoa' }}
-                            </span>
-                            <span class="text-xs text-gray-500 flex items-center">
-                                <i class="far fa-clock mr-1"></i> {{ $service->duration ? $service->duration.' phút' : '--' }}
-                            </span>
+                    {{-- Body --}}
+                    <div class="p-6 flex flex-col flex-grow">
+                        <div class="flex justify-between items-end mb-3">
+                             <div class="text-2xl font-bold text-slate-800 group-hover:text-primary transition">
+                                {{ $service->fee ? number_format($service->fee, 0, ',', '.') : '---' }} <span class="text-sm font-normal text-slate-400">VNĐ</span>
+                             </div>
+                             <span class="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded"><i class="far fa-clock mr-1"></i> {{ $service->duration }}p</span>
                         </div>
 
-                        <h3 class="text-xl font-bold text-gray-800 mb-3 leading-tight group-hover:text-teal-700 transition">
-                            <a href="{{ route('services.show', $service) }}">{{ $service->name }}</a>
+                        <h3 class="text-xl font-bold text-slate-900 mb-3 leading-snug">
+                            <a href="{{ route('services.show', $service) }}" class="hover:underline decoration-primary decoration-2 underline-offset-2">{{ $service->name }}</a>
                         </h3>
 
-                        {{-- Mô tả dịch vụ (Show 3 dòng) --}}
-                        <p class="text-gray-600 text-sm mb-4 line-clamp-3 leading-relaxed flex-grow">
+                        <p class="text-slate-500 text-sm mb-6 line-clamp-2 leading-relaxed flex-grow">
                             {{ $service->description }}
                         </p>
 
-                        {{-- Các nút hành động --}}
-                        <div class="mt-auto space-y-3">
-                            <div class="grid grid-cols-2 gap-3">
-                                {{-- Nút Xem Quy Trình (Mở Modal) --}}
-                                <button onclick="openProcessModal({{ $service->id }}, '{{ $service->name }}')" 
-                                        class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-200 transition flex items-center justify-center gap-2">
-                                    <i class="fas fa-list-ol text-teal-600"></i> Quy trình
-                                </button>
-                                
-                                {{-- Nút Xem Chi Tiết --}}
-                                <a href="{{ route('services.show', $service) }}" 
-                                   class="px-4 py-2 bg-blue-50 text-blue-700 rounded-lg text-sm font-semibold hover:bg-blue-100 transition flex items-center justify-center gap-2">
-                                    <i class="far fa-eye"></i> Chi tiết
-                                </a>
-                            </div>
-
-                            {{-- Nút Đặt Lịch (To và Nổi bật nhất) --}}
+                        <div class="grid grid-cols-2 gap-3 mt-auto pt-4 border-t border-slate-50">
+                            <button onclick="openProcessModal({{ $service->id }}, '{{ $service->name }}')" 
+                                    class="py-2.5 px-4 rounded-lg bg-slate-50 text-slate-600 text-sm font-semibold hover:bg-slate-100 transition flex items-center justify-center gap-2">
+                                <i class="fas fa-info-circle"></i> Quy trình
+                            </button>
                             <a href="{{ route('schedule', ['department_id' => $service->department_id]) }}" 
-                               class="block w-full py-3 bg-gradient-to-r from-teal-600 to-teal-700 text-white font-bold text-center rounded-lg shadow-md hover:shadow-lg hover:from-teal-700 hover:to-teal-800 transition transform hover:-translate-y-0.5">
-                                <i class="far fa-calendar-check mr-2"></i> ĐẶT LỊCH NGAY
+                               class="py-2.5 px-4 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-sky-600 shadow-md shadow-sky-100 transition flex items-center justify-center gap-2">
+                                <i class="fas fa-calendar-check"></i> Đặt lịch
                             </a>
                         </div>
                     </div>
                 </div>
 
-                {{-- Dữ liệu ẩn chứa thông tin Quy trình (JS sẽ đọc cái này) --}}
+                {{-- Hidden Data for Modal --}}
                 <div id="process-data-{{ $service->id }}" class="hidden">
                     @if($service->steps && $service->steps->count() > 0)
                         @foreach($service->steps as $step)
@@ -119,10 +101,10 @@
                             </div>
                         @endforeach
                     @else
-                        {{-- Dữ liệu mẫu Demo --}}
-                        <div class="step-item" data-title="Bước 1: Chuẩn bị" data-desc="Khám lâm sàng, xét nghiệm cần thiết và tư vấn trước thủ thuật."></div>
-                        <div class="step-item" data-title="Bước 2: Thực hiện" data-desc="Tiến hành thủ thuật trong môi trường vô khuẩn bởi bác sĩ chuyên khoa."></div>
-                        <div class="step-item" data-title="Bước 3: Hồi phục" data-desc="Theo dõi sau thủ thuật, hướng dẫn chăm sóc và hẹn lịch tái khám."></div>
+                        {{-- Dummy Data --}}
+                        <div class="step-item" data-title="Bước 1: Tiếp nhận" data-desc="Đăng ký tại quầy hoặc online, nhân viên y tế sẽ hướng dẫn thủ tục."></div>
+                        <div class="step-item" data-title="Bước 2: Khám lâm sàng" data-desc="Bác sĩ chuyên khoa thăm khám và chỉ định cận lâm sàng cần thiết."></div>
+                        <div class="step-item" data-title="Bước 3: Thực hiện & Kết luận" data-desc="Tiến hành dịch vụ và trả kết quả, tư vấn điều trị."></div>
                     @endif
                 </div>
                 @endforeach
@@ -130,51 +112,37 @@
         </div>
     </section>
 
-    {{-- MODAL POPUP QUY TRÌNH (Giữ nguyên logic nhưng làm đẹp CSS) --}}
-    <div id="processModal" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm transition-opacity" onclick="closeProcessModal()"></div>
+    {{-- MODAL PROCESS (Redesigned) --}}
+    <div id="processModal" class="fixed inset-0 z-[60] hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeProcessModal()"></div>
 
         <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg relative z-10 animate-scale-up overflow-hidden">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg relative z-10 animate-fade-in-up overflow-hidden max-h-[85vh] flex flex-col">
                 
-                {{-- Modal Header --}}
-                <div class="bg-teal-600 p-5 flex justify-between items-center text-white">
-                    <h3 class="text-lg font-bold flex items-center">
-                        <i class="fas fa-clipboard-list mr-2"></i> Quy trình dịch vụ
+                <div class="bg-white p-5 border-b border-slate-100 flex justify-between items-center sticky top-0 z-20">
+                    <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                        <span class="w-8 h-8 rounded-full bg-blue-50 text-primary flex items-center justify-center"><i class="fas fa-list-ol text-sm"></i></span>
+                        Quy trình thực hiện
                     </h3>
-                    <button onclick="closeProcessModal()" class="hover:bg-white/20 rounded-full p-1 transition">
-                        <i class="fas fa-times text-xl"></i>
+                    <button onclick="closeProcessModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition text-slate-500">
+                        <i class="fas fa-times"></i>
                     </button>
                 </div>
 
-                {{-- Modal Body --}}
-                <div class="p-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
-                    <h4 id="modal-service-name" class="text-xl font-bold text-teal-800 mb-6 text-center border-b border-teal-100 pb-3">
-                        </h4>
+                <div class="p-6 overflow-y-auto custom-scrollbar">
+                    <h4 id="modal-service-name" class="text-xl font-extrabold text-primary mb-6"></h4>
                     
-                    <div id="modal-steps-container" class="space-y-6 relative border-l-2 border-teal-200 ml-3 pl-6">
-                        </div>
+                    <div id="modal-steps-container" class="space-y-0 relative border-l-2 border-slate-200 ml-3.5 pb-2">
+                        {{-- JS will inject content here --}}
+                    </div>
                 </div>
 
-                {{-- Modal Footer --}}
-                <div class="bg-gray-50 p-4 border-t flex justify-end">
-                    <button onclick="closeProcessModal()" class="px-5 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-lg transition">
-                        Đóng lại
-                    </button>
+                <div class="bg-slate-50 p-4 border-t border-slate-100 text-center">
+                    <button onclick="closeProcessModal()" class="text-sm font-semibold text-slate-500 hover:text-slate-800 transition">Đóng cửa sổ</button>
                 </div>
             </div>
         </div>
     </div>
-
-    {{-- STYLE & SCRIPT --}}
-    <style>
-        .text-shadow { text-shadow: 1px 1px 3px rgba(0,0,0,0.6); }
-        .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        @keyframes scaleUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .animate-scale-up { animation: scaleUp 0.2s ease-out; }
-    </style>
 
     <script>
         function openProcessModal(serviceId, serviceName) {
@@ -191,21 +159,21 @@
             steps.forEach((step, index) => {
                 const stepTitle = step.getAttribute('data-title');
                 const stepDesc = step.getAttribute('data-desc');
-                const stepImage = step.getAttribute('data-image'); // Lấy link ảnh
+                const stepImage = step.getAttribute('data-image');
 
                 let imageHtml = '';
                 if (stepImage) {
-                    imageHtml = `<img src="${stepImage}" class="mt-3 w-full h-32 object-cover rounded-lg shadow-sm border border-gray-100">`;
+                    imageHtml = `<img src="${stepImage}" class="mt-3 w-full h-32 object-cover rounded-lg shadow-sm border border-slate-100">`;
                 }
 
                 const html = `
-                    <div class="relative group">
-                        <div class="absolute -left-[33px] top-1 w-4 h-4 rounded-full bg-white border-4 border-teal-500 shadow-sm group-hover:border-teal-600 transition z-10"></div>
+                    <div class="relative pl-8 pb-8 last:pb-0 group">
+                        <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-white border-4 border-slate-300 group-hover:border-primary transition z-10"></div>
                         
-                        <h5 class="font-bold text-gray-800 text-md mb-1 group-hover:text-teal-600 transition">
-                            <span class="text-teal-500 mr-1">Bước ${index + 1}:</span> ${stepTitle}
+                        <h5 class="font-bold text-slate-800 text-base mb-1 group-hover:text-primary transition">
+                            Bước ${index + 1}: ${stepTitle}
                         </h5>
-                        <div class="text-sm text-gray-600 leading-relaxed bg-gray-50 p-3 rounded-lg border border-gray-100">
+                        <div class="text-sm text-slate-500 leading-relaxed bg-slate-50/50 p-3 rounded-xl border border-slate-100 group-hover:bg-blue-50/30 group-hover:border-blue-100 transition">
                             ${stepDesc}
                             ${imageHtml}
                         </div>

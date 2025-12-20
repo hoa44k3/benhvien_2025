@@ -23,7 +23,8 @@ class Appointment extends Model
     'time',
     'status',
     'approved_by',
-    'checked_in_by'
+    'checked_in_by',
+    'meeting_room',
 
     ];
     // Quan hệ: mỗi lịch hẹn thuộc về 1 bác sĩ (nhân viên)

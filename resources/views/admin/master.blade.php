@@ -44,6 +44,12 @@
                         <i class="fas fa-chart-line"></i> Báo cáo (UC40)
                     </a>
                 </li>
+                
+                <li class="nav-item">
+                    <a href="{{ route('video_calls.index') }}" class="nav-link" data-tab="baocao" data-title="Hệ thống Báo cáo" data-subtitle="Các báo cáo tài chính, hoạt động và hiệu suất chi tiết (UC40).">
+                        <i class="fas fa-chart-line"></i> Lịch sử cuộc gọi (UC40)
+                    </a>
+                </li>
 
                 <li class="nav-section-title">Quản lý Dữ liệu</li>
                 <li class="nav-item">

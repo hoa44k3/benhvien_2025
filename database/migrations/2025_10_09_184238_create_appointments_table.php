@@ -39,7 +39,8 @@ return new class extends Migration
             // 🔥 SỬA: Thêm nullable() ngay tại đây để tránh lỗi 1832 sau này
             $table->foreignId('approved_by')->nullable()->constrained('users')->onDelete('set null');
             $table->foreignId('checked_in_by')->nullable()->constrained('users')->onDelete('set null');
-            
+            // Lưu tên phòng họp (VD: SmartHospital_LH123)
+        $table->string('meeting_room')->nullable()->after('status');
             $table->timestamps();
         });
     }

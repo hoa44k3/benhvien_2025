@@ -7,6 +7,8 @@ use App\Models\Appointment;
 use App\Models\Prescription;
 use App\Models\PrescriptionItem;
 use Illuminate\Support\Facades\Auth;
+use App\Models\VideoCall;
+use Carbon\Carbon;
 use Illuminate\Support\Str;
 
 class DoctorDiagnosisController extends Controller
@@ -99,7 +101,7 @@ class DoctorDiagnosisController extends Controller
         return redirect()->route('doctor.diagnosis.index')
             ->with('success', '✅ Đã hoàn thành ca khám và kê đơn!');
     }
-
+    
     /**
      * 🧾 Xem chi tiết đơn thuốc
      */
@@ -118,14 +120,65 @@ class DoctorDiagnosisController extends Controller
     {
         $appointment = Appointment::findOrFail($id);
 
-        // Tạo tên phòng unique dựa trên Mã lịch hẹn để tránh người khác vào nhầm
-        // Ví dụ: SmartHospital_LH123456
+        // 1. Tạo tên phòng (nếu chưa có)
         $roomName = 'SmartHospital_' . $appointment->code;
 
-        // Lấy thông tin người dùng hiện tại (Bác sĩ) để hiển thị tên trong cuộc gọi
+        // 2. 🔥 CẬP NHẬT VÀO DB ĐỂ BỆNH NHÂN BIẾT
+        $appointment->update([
+            'meeting_room' => $roomName
+        ]);
+
+        // Lấy thông tin người dùng hiện tại (Bác sĩ)
         $userName = Auth::user()->name;
         $userEmail = Auth::user()->email;
 
         return view('doctor.diagnosis.video_call', compact('appointment', 'roomName', 'userName', 'userEmail'));
+    }
+    /**
+     * API: Lưu thời gian bắt đầu gọi (Được gọi bằng JS khi join phòng)
+     */
+    public function logCallStart(Request $request)
+    {
+        $call = VideoCall::create([
+            'appointment_id' => $request->appointment_id,
+            'doctor_id' => $request->doctor_id,
+            'patient_id' => $request->patient_id,
+            'start_time' => now(),
+        ]);
+        return response()->json(['call_id' => $call->id]);
+    }
+
+    /**
+     * API: Lưu thời gian kết thúc gọi (Được gọi bằng JS khi tắt máy)
+     */
+    public function logCallEnd(Request $request)
+    {
+        // 1. Cập nhật log cuộc gọi (Nếu có call_id)
+        $apptIdFromCall = null;
+        if ($request->call_id) {
+            $call = VideoCall::find($request->call_id);
+            if ($call) {
+                $call->update([
+                    'end_time' => now(),
+                    'duration' => now()->diffAsCarbonInterval($call->start_time)->forHumans()
+                ]);
+                $apptIdFromCall = $call->appointment_id;
+            }
+        }
+
+        // 2. 🔥 QUAN TRỌNG: Xóa phòng (Ưu tiên lấy ID từ Frontend gửi lên)
+        // Nếu Frontend gửi 'appointment_id' thì dùng nó, nếu không thì dùng từ log cũ
+        $apptId = $request->appointment_id ?? $apptIdFromCall;
+
+        if ($apptId) {
+            $appointment = Appointment::find($apptId);
+            if ($appointment) {
+                // Ép kiểu về null và lưu lại
+                $appointment->meeting_room = null; 
+                $appointment->save(); 
+            }
+        }
+
+        return response()->json(['status' => 'success']);
     }
 }

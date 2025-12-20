@@ -77,6 +77,11 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/review/store', [HomeController::class, 'storeReview'])->name('review.store');
 // Route hiển thị form đặt lịch
 });
+// API kiểm tra cuộc gọi (Ajax)
+    Route::get('/check-call', [HomeController::class, 'checkIncomingCall'])->name('patient.checkCall');
+    
+    // Trang tham gia cuộc gọi
+    Route::get('/join-call/{id}', [HomeController::class, 'joinVideoCall'])->name('patient.joinVideoCall');
 });
 
 
@@ -462,7 +467,10 @@ Route::middleware(['auth'])->prefix('doctor')->group(function () {
     Route::get('/schedule/create', [DoctorScheduleController::class, 'create'])->name('doctor.schedule.create');
     Route::post('/schedule/store', [DoctorScheduleController::class, 'store'])->name('doctor.schedule.store');
     Route::put('/schedule/update-shift', [DoctorScheduleController::class, 'updateShift'])->name('doctor.schedule.updateShift');
-    Route::put('/schedule/{appointment}/status', [DoctorScheduleController::class, 'updateAppointmentStatus'])->name('doctor.schedule.updateStatus');
+    // Route::put('/schedule/{appointment}/status', [DoctorScheduleController::class, 'updateAppointmentStatus'])->name('doctor.schedule.updateStatus');
+// Route cập nhật trạng thái lịch hẹn (Gọi khám, Hoàn thành...)
+    Route::patch('/appointments/{id}/status', [DoctorScheduleController::class, 'updateStatus'])
+    ->name('doctor.appointments.updateStatus');
 
     Route::get('/patients', [DoctorPatientController::class, 'index'])->name('doctor.patients.index');
     Route::get('/patients/{id}', [DoctorPatientController::class, 'show'])->name('doctor.patients.show');
@@ -491,9 +499,23 @@ Route::middleware(['auth'])->prefix('doctor')->group(function () {
 
     // Trong nhóm Route::middleware(['auth', 'role:doctor'])...
 Route::get('/video-call/{id}', [DoctorDiagnosisController::class, 'videoCall'])->name('doctor.videoCall');
+Route::post('/api/call/start', [DoctorDiagnosisController::class, 'logCallStart'])->name('api.call.start');
+Route::post('/api/call/end', [DoctorDiagnosisController::class, 'logCallEnd'])->name('api.call.end');
 });
 
 
+use App\Http\Controllers\VideoCallController;
+
+Route::prefix('video-calls')->group(function () {
+    // 1. Danh sách cuộc gọi
+    Route::get('/', [VideoCallController::class, 'index'])->name('video_calls.index');
+    
+    // 2. Xem chi tiết cuộc gọi (nếu cần)
+    Route::get('/{id}', [VideoCallController::class, 'show'])->name('video_calls.show');
+    
+    // 3. Xóa lịch sử cuộc gọi
+    Route::delete('/{id}', [VideoCallController::class, 'destroy'])->name('video_calls.destroy');
+});
 Route::prefix('clinical-exams')->name('clinical_exams.')->group(function() {
     Route::get('/', [ClinicalExamController::class,'index'])->name('index');
     Route::get('/create', [ClinicalExamController::class,'create'])->name('create');

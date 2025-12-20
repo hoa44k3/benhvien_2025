@@ -1,173 +1,104 @@
 @extends('site.master')
 
-@section('title', 'Kết quả tìm kiếm cho: ' . $keyword)
+@section('title', 'Kết quả tìm kiếm: ' . $keyword)
 
 @section('body')
-<div class="bg-gray-50 min-h-screen pb-12">
+<div class="bg-slate-50 min-h-screen pb-20">
     
-    {{-- 1. HEADER TÌM KIẾM & THỐNG KÊ --}}
-    <div class="bg-white shadow-sm border-b border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 py-8">
-            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-800">Kết quả tìm kiếm</h1>
-                    <p class="text-gray-500 mt-1">
-                        Tìm thấy <strong class="text-primary">{{ $doctors->count() + $services->count() + $departments->count() }}</strong> kết quả cho từ khóa: "<span class="text-primary font-bold">{{ $keyword }}</span>"
-                    </p>
-                </div>
-                
-                {{-- Form tìm kiếm lại ngay tại đây --}}
-                {{-- <div class="w-full md:w-1/3">
-                    <form action="{{ route('search') }}" method="GET" class="relative">
-                        <input type="text" name="keyword" value="{{ $keyword }}" 
-                               class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition" 
-                               placeholder="Tìm kiếm khác...">
-                        <button type="submit" class="absolute left-3 top-3 text-gray-400 hover:text-primary">
-                            <i class="fas fa-search"></i>
-                        </button>
-                    </form>
-                </div> --}}
-            </div>
+    {{-- SEARCH HEADER --}}
+    <div class="bg-white border-b border-slate-200 sticky top-20 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 py-6">
+            <h1 class="text-2xl font-bold text-slate-800">
+                Kết quả cho "<span class="text-primary">{{ $keyword }}</span>"
+            </h1>
+            <p class="text-sm text-slate-500 mt-1">
+                Tìm thấy tổng cộng <strong class="text-slate-800">{{ $doctors->count() + $services->count() + $departments->count() }}</strong> kết quả phù hợp.
+            </p>
         </div>
     </div>
 
-    <div class="max-w-7xl mx-auto px-4 py-8 space-y-12">
+    <div class="max-w-7xl mx-auto px-4 py-10 space-y-16">
 
-        {{-- TRƯỜNG HỢP KHÔNG TÌM THẤY GÌ --}}
         @if($doctors->isEmpty() && $departments->isEmpty() && $services->isEmpty())
-            <div class="bg-white rounded-xl shadow-sm p-12 text-center border border-gray-100">
-                <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <i class="fas fa-search text-gray-400 text-4xl"></i>
+            <div class="text-center py-20">
+                <div class="w-24 h-24 bg-slate-200 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-search-minus text-4xl"></i>
                 </div>
-                <h3 class="text-xl font-bold text-gray-800 mb-2">Không tìm thấy kết quả nào phù hợp</h3>
-                <p class="text-gray-500 mb-6">Vui lòng thử lại với từ khóa khác hoặc kiểm tra lỗi chính tả.</p>
-                <a href="{{ route('home') }}" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 transition">
-                    <i class="fas fa-home mr-2"></i> Quay về trang chủ
+                <h3 class="text-xl font-bold text-slate-800 mb-2">Không tìm thấy kết quả</h3>
+                <p class="text-slate-500 mb-6">Thử lại với từ khóa khác chung chung hơn.</p>
+                <a href="{{ route('home') }}" class="px-6 py-2.5 bg-white border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 transition">
+                    Về trang chủ
                 </a>
             </div>
         @else
 
-            {{-- 2. KẾT QUẢ: KHOA / CHUYÊN KHOA --}}
+            {{-- 1. DEPARTMENTS --}}
             @if(!$departments->isEmpty())
                 <section>
-                    <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
-                        <span class="bg-blue-100 text-blue-600 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm">
-                            <i class="fas fa-clinic-medical"></i>
-                        </span>
-                        Chuyên khoa ({{ $departments->count() }})
+                    <h2 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                        <i class="fas fa-clinic-medical text-primary"></i> Chuyên khoa ({{ $departments->count() }})
                     </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         @foreach($departments as $dept)
-                            <a href="{{ route('services', ['department' => $dept->id]) }}" class="group block bg-white rounded-xl shadow-sm hover:shadow-md border border-gray-200 overflow-hidden transition-all duration-300">
-                                <div class="h-40 overflow-hidden relative">
+                            <a href="{{ route('services', ['department' => $dept->id]) }}" class="group block bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-lg hover:border-primary/50 transition duration-300">
+                                <div class="h-32 bg-slate-100 overflow-hidden relative">
                                     <img src="{{ $dept->image ? asset('storage/'.$dept->image) : asset('images/default-department.jpg') }}" 
-                                         class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
-                                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                                    <h3 class="absolute bottom-3 left-4 text-white font-bold text-lg">{{ $dept->name }}</h3>
+                                         class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
                                 </div>
-                                <div class="p-4">
-                                    <p class="text-gray-600 text-sm line-clamp-2 mb-3">
-                                        {{ $dept->description ?? 'Chuyên khoa hàng đầu với trang thiết bị hiện đại...' }}
-                                    </p>
-                                    <span class="text-primary text-sm font-semibold group-hover:underline">Xem chi tiết <i class="fas fa-arrow-right ml-1"></i></span>
+                                <div class="p-5">
+                                    <h3 class="font-bold text-slate-800 text-lg group-hover:text-primary transition mb-1">{{ $dept->name }}</h3>
+                                    <p class="text-sm text-slate-500 line-clamp-2">{{ $dept->description ?? 'Chuyên khoa hàng đầu...' }}</p>
                                 </div>
                             </a>
                         @endforeach
                     </div>
                 </section>
-                <hr class="border-gray-200">
             @endif
 
-            {{-- 3. KẾT QUẢ: BÁC SĨ (Hiển thị chi tiết dạng Card ngang) --}}
+            {{-- 2. DOCTORS --}}
             @if(!$doctors->isEmpty())
                 <section>
-                    <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
-                        <span class="bg-teal-100 text-teal-600 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm">
-                            <i class="fas fa-user-md"></i>
-                        </span>
-                        Đội ngũ Bác sĩ ({{ $doctors->count() }})
+                    <h2 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                        <i class="fas fa-user-md text-primary"></i> Bác sĩ ({{ $doctors->count() }})
                     </h2>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         @foreach($doctors as $doc)
-                            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 flex flex-col sm:flex-row gap-5">
-                                {{-- Ảnh bác sĩ --}}
-                                <div class="flex-shrink-0 mx-auto sm:mx-0">
-                                    <img src="{{ $doc->image ? asset('storage/'.$doc->image) : asset('assets/img/default-doctor.png') }}" 
-                                         class="w-28 h-28 rounded-full object-cover border-4 border-gray-50 shadow-sm">
-                                </div>
-                                
-                                {{-- Thông tin chi tiết --}}
-                                <div class="flex-grow text-center sm:text-left">
-                                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-2">
-                                        <div>
-                                            <h3 class="text-lg font-bold text-gray-900">BS. {{ $doc->user->name }}</h3>
-                                            <p class="text-teal-600 font-medium text-sm">{{ $doc->specialization ?? 'Bác sĩ chuyên khoa' }}</p>
-                                        </div>
-                                        <div class="mt-2 sm:mt-0 flex items-center justify-center sm:justify-end text-yellow-400 text-sm">
-                                            <span class="font-bold text-gray-700 mr-1">{{ number_format($doc->rating, 1) }}</span>
-                                            <i class="fas fa-star"></i>
-                                            <span class="text-gray-400 text-xs ml-1">({{ $doc->reviews_count }} đánh giá)</span>
-                                        </div>
-                                    </div>
+                            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 hover:border-primary/50 transition flex items-start gap-4 group">
+                                <img src="{{ $doc->image ? asset('storage/'.$doc->image) : 'https://ui-avatars.com/api/?name='.urlencode($doc->user->name).'&background=random' }}" 
+                                     class="w-20 h-20 rounded-full object-cover border-2 border-slate-100 group-hover:border-primary transition">
+                                <div class="flex-grow">
+                                    <h3 class="font-bold text-slate-800 text-lg group-hover:text-primary transition">{{ $doc->user->name }}</h3>
+                                    <p class="text-xs font-bold text-primary uppercase tracking-wide mb-2">{{ $doc->department->name ?? 'Chuyên khoa' }}</p>
+                                    <p class="text-sm text-slate-500 line-clamp-2 mb-3">{{ $doc->bio ?? 'Bác sĩ chuyên khoa giàu kinh nghiệm.' }}</p>
                                     
-                                    <div class="text-sm text-gray-500 space-y-1 mb-4">
-                                        <p><i class="fas fa-clinic-medical w-5 text-center mr-1"></i> Khoa: <span class="text-gray-700">{{ $doc->department->name ?? 'Chưa cập nhật' }}</span></p>
-                                        <p><i class="fas fa-briefcase w-5 text-center mr-1"></i> Kinh nghiệm: <span class="text-gray-700">{{ $doc->experience_years }} năm</span></p>
-                                        <p class="line-clamp-1 italic">"{{ Str::limit($doc->bio ?? 'Tận tâm, chuyên nghiệp vì sức khỏe bệnh nhân.', 50) }}"</p>
-                                    </div>
-
-                                    <div class="flex gap-3 justify-center sm:justify-start">
-                                        <a href="{{ route('doctorsite.show', $doc->id) }}" class="px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition">
-                                            Hồ sơ
-                                        </a>
-                                        <a href="{{ route('schedule', ['doctor_id' => $doc->id]) }}" class="px-4 py-2 text-sm font-semibold text-white bg-primary rounded-lg hover:bg-blue-600 shadow-md hover:shadow-lg transition">
-                                            Đặt lịch khám
-                                        </a>
+                                    <div class="flex gap-3">
+                                        <a href="{{ route('schedule', ['doctor_id' => $doc->id]) }}" class="text-xs font-bold text-white bg-primary px-3 py-1.5 rounded-lg hover:bg-sky-600 transition">Đặt lịch</a>
+                                        <a href="#" class="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg hover:bg-slate-200 transition">Xem hồ sơ</a>
                                     </div>
                                 </div>
                             </div>
                         @endforeach
                     </div>
                 </section>
-                <hr class="border-gray-200">
             @endif
 
-            {{-- 4. KẾT QUẢ: DỊCH VỤ (Hiển thị dạng bảng giá/Card) --}}
+            {{-- 3. SERVICES --}}
             @if(!$services->isEmpty())
                 <section>
-                    <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
-                        <span class="bg-indigo-100 text-indigo-600 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm">
-                            <i class="fas fa-notes-medical"></i>
-                        </span>
-                        Dịch vụ Y tế ({{ $services->count() }})
+                    <h2 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                        <i class="fas fa-briefcase-medical text-primary"></i> Dịch vụ ({{ $services->count() }})
                     </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                         @foreach($services as $srv)
-                            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:border-indigo-500 hover:shadow-md transition-all duration-300 relative overflow-hidden group">
-                                {{-- Trang trí --}}
-                                <div class="absolute top-0 right-0 w-16 h-16 bg-indigo-50 rounded-bl-full -mr-8 -mt-8 transition group-hover:bg-indigo-100"></div>
-
-                                <div class="mb-4">
-                                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-500 bg-indigo-50 px-2 py-1 rounded">
-                                        {{ $srv->category->name ?? 'Dịch vụ' }}
-                                    </span>
+                            <a href="{{ route('services.show', $srv->id) }}" class="flex items-center p-4 bg-white rounded-xl shadow-sm border border-slate-200 hover:border-primary hover:shadow-md transition group">
+                                <div class="w-10 h-10 rounded-full bg-blue-50 text-primary flex items-center justify-center mr-4 group-hover:bg-primary group-hover:text-white transition">
+                                    <i class="fas fa-notes-medical"></i>
                                 </div>
-
-                                <h3 class="text-lg font-bold text-gray-800 mb-2 group-hover:text-indigo-600 transition">{{ $srv->name }}</h3>
-                                <p class="text-gray-500 text-sm mb-4 h-10 line-clamp-2">
-                                    {{ $srv->description ?? 'Liên hệ để biết thêm chi tiết về quy trình thực hiện dịch vụ này.' }}
-                                </p>
-
-                                <div class="flex items-center justify-between border-t border-gray-100 pt-4">
-                                    <div class="flex flex-col">
-                                        <span class="text-xs text-gray-400">Chi phí ước tính</span>
-                                        <span class="text-lg font-bold text-red-500">{{ number_format($srv->price, 0, ',', '.') }}đ</span>
-                                    </div>
-                                    <a href="{{ route('service.show', $srv->id) }}" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-indigo-600 hover:text-white transition">
-                                        <i class="fas fa-arrow-right"></i>
-                                    </a>
+                                <div>
+                                    <h4 class="font-bold text-slate-700 group-hover:text-primary transition text-sm">{{ $srv->name }}</h4>
+                                    <p class="text-xs text-red-500 font-bold mt-0.5">{{ number_format($srv->price ?? 0) }} đ</p>
                                 </div>
-                            </div>
+                            </a>
                         @endforeach
                     </div>
                 </section>
