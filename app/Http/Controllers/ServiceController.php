@@ -28,8 +28,8 @@ class ServiceController extends Controller
 {
     $request->validate([
         'name' => 'required|string|max:150',
-        'fee' => 'required|numeric',
-        'duration' => 'required|integer',
+       'fee' => 'required|numeric|min:0',
+      'duration' => 'required|integer|min:1',
         'status' => 'required|in:0,1',
         'category_id' => 'nullable|exists:categories,id',
         'department_id' => 'nullable|exists:departments,id',

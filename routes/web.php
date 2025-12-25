@@ -20,7 +20,7 @@ use App\Http\Controllers\ClinicalExamController;
 use App\Http\Controllers\CommentController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\DoctorScheduleController;
-use App\Http\Controllers\ReportController;
+
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DoctorDiagnosisController;
 use App\Http\Controllers\DoctorPatientController;
@@ -41,6 +41,7 @@ use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\MedicineCategoryController;
 use App\Http\Controllers\MedicineUnitController;
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\ReportController ;
 use App\Http\Controllers\ServiceStepController;
 
 Route::group(['prefix' => ''], function() {
@@ -84,6 +85,11 @@ Route::middleware(['auth'])->group(function () {
     
     // Trang tham gia cuộc gọi
     Route::get('/join-call/{id}', [HomeController::class, 'joinVideoCall'])->name('patient.joinVideoCall');
+    // Route lấy giờ đã đặt (AJAX)
+Route::get('/get-booked-slots', [HomeController::class, 'getBookedSlots'])->name('get.booked.slots');
+
+// Route xem chi tiết bác sĩ (Public)
+Route::get('/bac-si/{id}', [App\Http\Controllers\HomeController::class, 'doctorShow'])->name('site.doctors.show');
 });
 
 
@@ -237,6 +243,15 @@ Route::prefix('admin/medical_records')->group(function () {
     Route::post('/{medical_record}/start', [MedicalRecordController::class, 'startExam'])->name('medical_records.start');  
     // Route Hủy khám
     Route::post('/{medical_record}/cancel', [MedicalRecordController::class, 'cancel'])->name('medical_records.cancel');
+    // Xem timeline bệnh nhân (Dành cho bác sĩ)
+Route::get('/patients/{id}/timeline', [MedicalRecordController::class, 'patientTimeline'])
+    ->name('patients.timeline')
+    ->middleware('auth');
+    Route::post('/medical-records/{id}/upload-evidence', [App\Http\Controllers\MedicalRecordController::class, 'uploadEvidence'])
+    ->name('medical_records.upload_evidence');
+
+Route::delete('/medical-record-files/{id}', [App\Http\Controllers\MedicalRecordController::class, 'deleteFile'])
+    ->name('medical_records.delete_file');
 });
 
 
@@ -270,7 +285,7 @@ Route::prefix('prescriptions')->group(function () {
     Route::get('/{prescription}', [PrescriptionController::class, 'show'])->name('prescriptions.show');
     Route::get('/{prescription}/edit', [PrescriptionController::class, 'edit'])->name('prescriptions.edit');
     Route::put('/{prescription}', [PrescriptionController::class, 'update'])->name('prescriptions.update');
-
+Route::get('prescriptions/{prescription}/pdf', [PrescriptionController::class, 'downloadPdf'])->name('prescriptions.downloadPdf');
     // DELETE
     Route::delete('/{prescription}', [PrescriptionController::class, 'destroy'])->name('prescriptions.destroy');
     // Export Excel
@@ -315,11 +330,6 @@ Route::prefix('test_results')->group(function () {
 Route::resource('medical_record_files', App\Http\Controllers\MedicalRecordFileController::class);
 
 
-
-Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
-    Route::get('/', [Admincontroller::class, 'index'])->name('admin.index');
-});
-
 Route::middleware(['auth', 'nurse'])->group(function () {
     Route::get('/nurse', [NurseController::class, 'index'])->name('nurse.index');
 });
@@ -329,6 +339,10 @@ Route::middleware(['auth', 'pharmacist'])->group(function () {
 
 Route::middleware(['auth', 'receptionist'])->group(function () {
     Route::get('/receptionist', [ReceptionistController::class, 'index'])->name('receptionist.index');
+});
+Route::prefix('dashboard')->name('dashboard.')->group(function () {
+    Route::get('/', [DashboardController::class, 'index'])->name('index');
+    
 });
 
 // Đăng nhập
@@ -348,9 +362,6 @@ Route::post('/logout', function () {
 })->name('logout');
 
 
-// Route::middleware(['auth'])->group(function () {
-//     Route::resource('users', UserController::class);
-// });
 Route::middleware(['auth'])->group(function () {
     Route::get('/home', [UserController::class, 'home'])->name('home');
 });
@@ -465,13 +476,6 @@ Route::prefix('audit-log')->name('audit_log.')->group(function () {
     
 });
 
-Route::prefix('dashboard')->name('dashboard.')->group(function () {
-    Route::get('/', [DashboardController::class, 'index'])->name('index');
-    
-});
-
-
-
 Route::prefix('reports')->group(function () {
     Route::get('/', [ReportController::class, 'index'])->name('reports.index');
     Route::post('/view', [ReportController::class, 'viewReport'])->name('reports.view');
@@ -553,7 +557,8 @@ Route::prefix('clinical-exams')->name('clinical_exams.')->group(function() {
 
 // Invoices
 Route::resource('invoices', \App\Http\Controllers\InvoiceController::class);
-
+Route::get('invoices/{id}/print', [InvoiceController::class, 'print'])->name('invoices.print');
+Route::get('invoices/create-from-appointment/{id}', [InvoiceController::class, 'createFromAppointment'])->name('invoices.createFromAppointment');
 // Follow ups
 Route::resource('follow_ups', \App\Http\Controllers\FollowUpController::class);
 // Route tạo hóa đơn từ đơn thuốc

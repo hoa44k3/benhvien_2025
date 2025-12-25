@@ -172,7 +172,7 @@
                     _token: CONFIG.csrf
                 };
 
-                // 🔥 LUÔN GỌI API (Bất chấp có ID cuộc gọi hay không)
+                //  LUÔN GỌI API (Bất chấp có ID cuộc gọi hay không)
                 fetch(CONFIG.apiEnd, {
                     method: 'POST',
                     headers: { 

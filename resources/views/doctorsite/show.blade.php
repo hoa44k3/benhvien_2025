@@ -16,7 +16,7 @@
         </div>
 
         @if(auth()->check() && auth()->id() === $doctor->user_id)
-            {{-- (Phần code chấm công giữ nguyên như cũ) --}}
+            {{-- (Phần code chấm công cho chính bác sĩ đó xem) --}}
             @php
                 $todayAttendance = \App\Models\DoctorAttendance::where('doctor_id', auth()->id())
                     ->where('date', now()->toDateString())
@@ -32,7 +32,7 @@
                             @csrf <button class="btn btn-success"><i class="fas fa-sign-in-alt"></i> Check-in</button>
                         </form>
                     @elseif(!$todayAttendance->check_out)
-                        <div class="alert alert-info">Đã check-in lúc: <strong>{{ $todayAttendance->check_in }}</strong></div>
+                        <div class="alert alert-info">Đã check-in lúc: <strong>{{ \Carbon\Carbon::parse($todayAttendance->check_in)->format('H:i') }}</strong></div>
                         <form method="POST" action="{{ route('doctor_attendances.checkout') }}">
                             @csrf <button class="btn btn-warning"><i class="fas fa-sign-out-alt"></i> Check-out</button>
                         </form>
@@ -53,21 +53,41 @@
                         <img src="{{ $doctor->image ? asset('storage/'.$doctor->image) : asset('assets/img/default-doctor.png') }}" 
                             class="img-fluid rounded-circle shadow-lg mb-3 object-fit-cover" 
                             alt="Ảnh bác sĩ" style="width: 180px; height: 180px;">
-                        <h4 class="fw-bold text-dark">{{ $doctor->user->name ?? 'Không rõ' }}</h4>
-                        <p class="text-muted mb-1">{{ $doctor->user->email ?? '-' }}</p>
+                        
+                        {{-- Tên kèm Học vị --}}
+                        <h4 class="fw-bold text-dark">
+                            @if($doctor->degree) <span class="text-primary">{{ $doctor->degree }}</span> @endif
+                            {{ $doctor->user->name ?? 'Không rõ' }}
+                        </h4>
+                        <p class="text-muted mb-2">{{ $doctor->user->email ?? '-' }}</p>
                         
                         @php
                             $status_class = $doctor->status ? 'bg-success' : 'bg-secondary';
-                            $status_text = $doctor->status ? 'Hoạt động' : 'Ẩn';
+                            $status_text = $doctor->status ? 'Hoạt động' : 'Đang ẩn';
                         @endphp
-                        <span class="badge {{ $status_class }} fw-semibold">{{ $status_text }}</span>
+                        <span class="badge {{ $status_class }} fw-semibold mb-2">{{ $status_text }}</span>
+
+                        {{-- Trạng thái chứng chỉ --}}
+                        @if($doctor->license_number)
+                            <div class="mt-2">
+                                <span class="badge bg-white text-success border border-success">
+                                    <i class="fas fa-check-circle me-1"></i> Đã xác thực CCHN
+                                </span>
+                            </div>
+                        @else
+                            <div class="mt-2">
+                                <span class="badge bg-white text-warning border border-warning">
+                                    <i class="fas fa-exclamation-triangle me-1"></i> Chưa có CCHN
+                                </span>
+                            </div>
+                        @endif
                     </div>
                     <hr>
                     <div class="mt-3">
                         <a href="{{ route('doctorsite.edit', $doctor->id) }}" class="btn btn-warning w-100 mb-2">
                             <i class="fas fa-edit me-1"></i> Chỉnh sửa Hồ sơ
                         </a>
-                        <form action="{{ route('doctorsite.destroy', $doctor->id) }}" method="POST" onsubmit="return confirm('Xác nhận xóa?');" class="d-inline w-100">
+                        <form action="{{ route('doctorsite.destroy', $doctor->id) }}" method="POST" onsubmit="return confirm('Xác nhận xóa hồ sơ bác sĩ này? Dữ liệu liên quan có thể bị ảnh hưởng.');" class="d-inline w-100">
                             @csrf @method('DELETE')
                             <button type="submit" class="btn btn-danger w-100">
                                 <i class="fas fa-trash-alt me-1"></i> Xóa Hồ sơ
@@ -77,60 +97,79 @@
                 </div>
 
                 {{-- Cột Phải: Thông tin chi tiết --}}
-                <div class="col-md-8">
+                <div class="col-md-8 ps-md-4">
                     
-                    {{-- Chuyên môn --}}
-                    <h5 class="fw-bold text-primary mb-3"><i class="fas fa-user-md me-1"></i> Chuyên môn & Đánh giá</h5>
-                    <div class="row mb-4">
+                    {{-- 1. Chuyên môn & Chứng chỉ (CẬP NHẬT) --}}
+                    <h5 class="fw-bold text-primary mb-3 text-uppercase small border-bottom pb-2">
+                        <i class="fas fa-certificate me-1"></i> Hồ sơ Chuyên môn & Pháp lý
+                    </h5>
+                    <div class="row mb-4 g-3">
                         <div class="col-md-6">
-                            <p class="mb-2"><strong>Khoa:</strong> {{ $doctor->department->name ?? 'Chưa gán' }}</p>
-                            <p class="mb-2"><strong>Chuyên khoa:</strong> {{ $doctor->specialization ?? 'N/A' }}</p>
-                            <p class="mb-2"><strong>Kinh nghiệm:</strong> <span class="text-success fw-bold">{{ $doctor->experience_years ?? 0 }}</span> năm</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p class="mb-2"><strong>Đánh giá:</strong> <span class="fw-bold text-warning">{{ number_format($doctor->rating, 1) }} <i class="fas fa-star"></i></span></p>
-                            <p class="mb-2"><strong>Lượt đánh giá:</strong> {{ $doctor->reviews_count ?? 0 }}</p>
-                        </div>
-                    </div>
-
-                    {{-- Tài chính & Ngân hàng (MỚI) --}}
-                    <h5 class="fw-bold text-success mb-3 border-top pt-3"><i class="fas fa-wallet me-1"></i> Thông tin Tài chính</h5>
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <div class="p-3 bg-light rounded border">
-                                <h6 class="fw-bold text-success">Lương & Hoa hồng</h6>
-                                <p class="mb-1">Lương cứng: <strong>{{ number_format($doctor->base_salary) }} đ</strong></p>
-                                <small class="text-muted d-block">HH Khám: {{ $doctor->commission_exam_percent }}%</small>
-                                <small class="text-muted d-block">HH Thuốc: {{ $doctor->commission_prescription_percent }}%</small>
-                                <small class="text-muted d-block">HH Dịch vụ: {{ $doctor->commission_service_percent }}%</small>
+                            <div class="p-3 bg-blue-50 rounded h-100 border border-blue-100">
+                                <p class="mb-2"><strong>Khoa:</strong> {{ $doctor->department->name ?? 'Chưa gán' }}</p>
+                                <p class="mb-2"><strong>Chuyên khoa:</strong> {{ $doctor->specialization ?? 'N/A' }}</p>
+                                <p class="mb-0"><strong>Kinh nghiệm:</strong> <span class="text-success fw-bold">{{ $doctor->experience_years ?? 0 }}</span> năm</p>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="p-3 bg-light rounded border">
-                                <h6 class="fw-bold text-info">Tài khoản Ngân hàng</h6>
-                                @if($doctor->bank_account_number)
-                                    <p class="mb-1">Ngân hàng: <strong>{{ $doctor->bank_name }}</strong></p>
-                                    <p class="mb-1">STK: <strong class="text-primary font-monospace">{{ $doctor->bank_account_number }}</strong></p>
-                                    <p class="mb-0">Chủ TK: {{ $doctor->bank_account_holder }}</p>
+                            <div class="p-3 bg-warning bg-opacity-10 rounded h-100 border border-warning border-opacity-25">
+                                <p class="mb-2"><strong>Số CCHN:</strong> <span class="font-monospace text-dark">{{ $doctor->license_number ?? 'Chưa cập nhật' }}</span></p>
+                                <p class="mb-2"><strong>Nơi cấp:</strong> {{ $doctor->license_issued_by ?? '---' }}</p>
+                                @if($doctor->license_image)
+                                    <a href="{{ asset('storage/'.$doctor->license_image) }}" target="_blank" class="btn btn-sm btn-outline-warning text-dark fw-bold bg-white mt-1">
+                                        <i class="fas fa-file-image me-1 text-danger"></i> Xem ảnh chứng chỉ
+                                    </a>
                                 @else
-                                    <p class="text-muted fst-italic mb-0">Chưa cập nhật thông tin ngân hàng.</p>
+                                    <span class="text-muted small fst-italic"><i class="fas fa-times-circle me-1"></i> Chưa upload ảnh</span>
                                 @endif
                             </div>
                         </div>
                     </div>
 
-                    <h5 class="fw-bold text-secondary mb-3 border-top pt-3"><i class="fas fa-info-circle me-1"></i> Giới thiệu</h5>
-                    <div class="alert alert-light border p-3">
-                        <p class="mb-0 text-muted">{{ $doctor->bio ?? 'Không có thông tin giới thiệu.' }}</p>
+                    {{-- 2. Tài chính & Ngân hàng --}}
+                    <h5 class="fw-bold text-success mb-3 text-uppercase small border-bottom pb-2">
+                        <i class="fas fa-wallet me-1"></i> Thông tin Tài chính
+                    </h5>
+                    <div class="row mb-4 g-3">
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded border h-100">
+                                <h6 class="fw-bold text-success small text-uppercase">Chính sách Lương</h6>
+                                <p class="mb-1">Lương cứng: <strong class="fs-5">{{ number_format($doctor->base_salary) }} đ</strong></p>
+                                <hr class="my-2">
+                                <small class="text-muted d-block">Hoa hồng Khám: <strong>{{ $doctor->commission_exam_percent }}%</strong></small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded border h-100">
+                                <h6 class="fw-bold text-info small text-uppercase">Tài khoản Nhận lương</h6>
+                                @if($doctor->bank_account_number)
+                                    <p class="mb-1 fw-bold">{{ $doctor->bank_name }}</p>
+                                    <p class="mb-1 font-monospace text-primary fs-5">{{ $doctor->bank_account_number }}</p>
+                                    <p class="mb-0 text-uppercase small text-muted">{{ $doctor->bank_account_holder }}</p>
+                                @else <p class="text-muted small fst-italic">Chưa cập nhật.</p> @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- 3. Giới thiệu --}}
+                    <h5 class="fw-bold text-secondary mb-3 text-uppercase small border-bottom pb-2">
+                        <i class="fas fa-info-circle me-1"></i> Giới thiệu (Bio)
+                    </h5>
+                    <div class="bg-light border p-3 rounded text-muted">
+                        {{ $doctor->bio ?? 'Chưa có thông tin giới thiệu.' }}
                     </div>
 
                     <div class="text-muted small text-end mt-4">
-                        Ngày tạo: {{ $doctor->created_at->format('d/m/Y') }}
+                        <i class="far fa-clock me-1"></i> Ngày tạo hồ sơ: {{ $doctor->created_at->format('d/m/Y H:i') }}
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-<style> .object-fit-cover { object-fit: cover; } </style>
+<style> 
+    .object-fit-cover { object-fit: cover; } 
+    .bg-blue-50 { background-color: #f0f7ff; }
+    .border-blue-100 { border-color: #cfe2ff; }
+</style>
 @endsection

@@ -42,6 +42,7 @@ class MedicalRecord extends Model
     // {
     //     return $this->hasMany(MedicalRecordFile::class); // table: medical_record_files
     // }
+    
 public function files()
 {
     return $this->hasMany(MedicalRecordFile::class, 'medical_record_id');

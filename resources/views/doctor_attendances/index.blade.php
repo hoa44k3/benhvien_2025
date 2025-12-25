@@ -1,125 +1,176 @@
 @extends('admin.master')
 
 @section('body')
-<div class="container">
+<div class="container-fluid">
 
-    <h4 class="mb-3">Quản lý Chấm công</h4>
-
-    {{-- Flash message --}}
-    @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
-    @if(session('error'))
-        <div class="alert alert-danger">{{ session('error') }}</div>
-    @endif
-
-    {{-- PHẦN CHẤM CÔNG CÁ NHÂN (Cho Bác sĩ) --}}
-    @php
-        // Lấy giờ hiện tại theo múi giờ Việt Nam để so sánh
-        $todayDate = \Carbon\Carbon::now('Asia/Ho_Chi_Minh')->format('Y-m-d');
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="text-primary fw-bold"><i class="fas fa-headset me-2"></i> Quản lý Ca trực Bác sĩ</h4>
         
-        $todayAttendance = \App\Models\DoctorAttendance::where('doctor_id', auth()->id())
-            ->where('date', $todayDate)
-            ->first();
+        {{-- Form lọc tháng (cho Admin) --}}
+        <form action="{{ route('doctor_attendances.index') }}" method="GET" class="d-flex gap-2">
+            @if(auth()->user()->role == 'admin' || auth()->user()->type == 'admin')
+            <select name="doctor_id" class="form-select form-select-sm" onchange="this.form.submit()">
+                <option value="">-- Tất cả Bác sĩ --</option>
+                @foreach($doctors as $doc)
+                    <option value="{{ $doc->id }}" {{ $doctorId == $doc->id ? 'selected' : '' }}>
+                        BS. {{ $doc->name }}
+                    </option>
+                @endforeach
+            </select>
+            @endif
+            <input type="month" name="month" class="form-control form-select-sm" value="{{ $month }}" onchange="this.form.submit()">
+        </form>
+    </div>
+
+    {{-- PHẦN ĐIỀU KHIỂN CA TRỰC (Chỉ hiển thị cho Bác sĩ) --}}
+    @if(auth()->user()->role == 'doctor' || auth()->user()->type == 'doctor') 
+        @php
+            $currentShift = \App\Models\DoctorAttendance::where('doctor_id', auth()->id())
+                ->whereNull('check_out')
+                ->latest('created_at')
+                ->first();
+        @endphp
+
+        <div class="card mb-5 shadow-sm border-0">
+            <div class="card-body p-4">
+                <div class="row align-items-center">
+                    <div class="col-md-7">
+                        <h5 class="fw-bold text-dark">Trạng thái hoạt động</h5>
+                        @if($currentShift)
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="badge bg-success px-3 py-2 rounded-pill animate-pulse">
+                                    <i class="fas fa-wifi me-1"></i> Đang Online
+                                </span>
+                                <span class="text-muted small">
+                                    Bắt đầu lúc: <strong>{{ \Carbon\Carbon::parse($currentShift->check_in)->format('H:i d/m/Y') }}</strong>
+                                </span>
+                                <span class="text-muted small">
+                                    Ca: <strong>{{ ucfirst($currentShift->shift) }}</strong>
+                                </span>
+                            </div>
+                        @else
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="badge bg-secondary px-3 py-2 rounded-pill">
+                                    <i class="fas fa-power-off me-1"></i> Offline
+                                </span>
+                                <span class="text-muted small">Bạn chưa bắt đầu ca trực nào.</span>
+                            </div>
+                        @endif
+                    </div>
+
+                    <div class="col-md-5 text-end">
+                        @if(!$currentShift)
+                            {{-- FORM BẮT ĐẦU CA --}}
+                            <form method="POST" action="{{ route('doctor_attendances.checkin') }}" class="d-flex gap-2 justify-content-end">
+                                @csrf
+                                <select name="shift" class="form-select w-auto" required>
+                                    <option value="Sáng">Ca Sáng (7h-11h)</option>
+                                    <option value="Chiều">Ca Chiều (13h-17h)</option>
+                                    <option value="Tối">Ca Tối (18h-22h)</option>
+                                    <option value="Tăng cường">Ca Tăng cường</option>
+                                </select>
+                                <button class="btn btn-primary fw-bold px-4">
+                                    <i class="fas fa-play me-1"></i> Bắt đầu Ca
+                                </button>
+                            </form>
+                        @else
+                            {{-- FORM KẾT THÚC CA --}}
+                            <form method="POST" action="{{ route('doctor_attendances.checkout') }}" class="d-flex gap-2 justify-content-end">
+                                @csrf
+                                <input type="text" name="note" class="form-control w-auto" placeholder="Ghi chú công việc..." size="30">
+                                <button class="btn btn-danger fw-bold px-4">
+                                    <i class="fas fa-stop me-1"></i> Kết thúc Ca
+                                </button>
+                            </form>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- DANH SÁCH LỊCH SỬ HOẠT ĐỘNG --}}
+    @php
+        $groupedAttendances = $attendances->groupBy('doctor_id');
     @endphp
 
-    {{-- Nếu user là doctor hoặc có quyền chấm công --}}
-    @if(auth()->user()->role == 'doctor' || auth()->user()->type == 'doctor') 
-    <div class="card mb-4 shadow-sm border-primary">
-        <div class="card-header bg-primary text-white font-weight-bold">
-            <i class="fas fa-clock"></i> Chấm công ngày {{ \Carbon\Carbon::now('Asia/Ho_Chi_Minh')->format('d/m/Y') }}
-        </div>
-        <div class="card-body text-center">
-            @if(!$todayAttendance)
-                <div class="mb-3 text-muted">Bạn chưa bắt đầu ca làm việc hôm nay.</div>
-                <form method="POST" action="{{ route('doctor_attendances.checkin') }}">
-                    @csrf
-                    <div class="mb-3" style="max-width: 400px; margin: 0 auto;">
-                        <input type="text" name="note" class="form-control" placeholder="Ghi chú (nếu có)...">
+    @forelse($groupedAttendances as $docId => $records)
+        @php
+            $docInfo = $records->first()->user;
+            $totalHours = $records->sum('total_hours');
+            $totalShifts = $records->count();
+        @endphp
+
+        <div class="card mb-4 border-0 shadow-sm">
+            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-3">
+                    <img src="{{ $docInfo->image ? asset('storage/'.$docInfo->image) : 'https://ui-avatars.com/api/?name='.urlencode($docInfo->name) }}" 
+                         class="rounded-circle" width="40" height="40" alt="Avatar">
+                    <div>
+                        <h6 class="mb-0 fw-bold text-dark">BS. {{ $docInfo->name }}</h6>
+                        <small class="text-muted">{{ $docInfo->email }}</small>
                     </div>
-                    <button class="btn btn-lg btn-success px-5">
-                        <i class="fas fa-sign-in-alt"></i> CHECK IN (ĐẾN)
-                    </button>
-                </form>
-
-            @elseif(!$todayAttendance->check_out)
-                <div class="alert alert-info d-inline-block">
-                    Đã Check-in lúc: <strong>{{ $todayAttendance->check_in }}</strong>
                 </div>
-                <div class="mt-3">
-                    <form method="POST" action="{{ route('doctor_attendances.checkout') }}">
-                        @csrf
-                        <div class="mb-3" style="max-width: 400px; margin: 0 auto;">
-                            <input type="text" name="note" class="form-control" placeholder="Cập nhật ghi chú trước khi về...">
-                        </div>
-                        <button class="btn btn-lg btn-warning px-5">
-                            <i class="fas fa-sign-out-alt"></i> CHECK OUT (VỀ)
-                        </button>
-                    </form>
+                <div>
+                    <span class="badge bg-info text-dark me-2">Tổng: {{ number_format($totalHours, 1) }} giờ online</span>
+                    <span class="badge bg-light text-dark border">{{ $totalShifts }} ca trực</span>
                 </div>
-
-            @else
-                <div class="alert alert-success">
-                    <i class="fas fa-check-circle"></i> Hôm nay bạn đã hoàn thành công việc.<br>
-                    <strong>Vào: {{ $todayAttendance->check_in }} - Ra: {{ $todayAttendance->check_out }}</strong>
-                </div>
-            @endif
-        </div>
-    </div>
-    @endif
-
-    {{-- DANH SÁCH LỊCH SỬ CHẤM CÔNG --}}
-    <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <span>Lịch sử chấm công tháng {{ $month }}</span>
-            <span class="badge bg-info text-dark">Số ngày công: {{ $workingDays }}</span>
-        </div>
-        <div class="card-body p-0">
-            <table class="table table-bordered table-striped mb-0">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Ngày</th>
-                        <th>Bác sĩ</th> {{-- Cột mới thêm --}}
-                        <th>Giờ đến</th>
-                        <th>Giờ về</th>
-                        <th>Trạng thái</th>
-                        <th>Ghi chú</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($attendances as $att)
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light text-muted small text-uppercase">
                         <tr>
-                            <td>{{ \Carbon\Carbon::parse($att->date)->format('d/m/Y') }}</td>
-                            <td class="font-weight-bold text-primary">
-                                {{-- Hiển thị tên bác sĩ từ quan hệ user --}}
-                                {{ $att->user->name ?? 'Không rõ ID: '.$att->doctor_id }}
+                            <th class="ps-4">Ngày</th>
+                            <th>Ca trực</th>
+                            <th>Bắt đầu</th>
+                            <th>Kết thúc</th>
+                            <th>Thời lượng</th>
+                            <th>Ghi chú</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($records as $att)
+                        <tr>
+                            <td class="ps-4 fw-bold">
+                                {{ \Carbon\Carbon::parse($att->date)->format('d/m/Y') }}
+                                <small class="text-muted fw-normal d-block">
+                                    {{ \Carbon\Carbon::parse($att->date)->locale('vi')->dayName }}
+                                </small>
                             </td>
-                            <td>{{ $att->check_in ?? '--:--' }}</td>
-                            <td>{{ $att->check_out ?? '--:--' }}</td>
                             <td>
-                                @if($att->status === 'present')
-                                    <span class="badge bg-success">Đúng giờ</span>
-                                @elseif($att->status === 'late')
-                                    <span class="badge bg-danger">Đi muộn</span>
-                                @elseif($att->status === 'absent')
-                                    <span class="badge bg-secondary">Vắng</span>
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25">
+                                    {{ $att->shift ?? 'Tự do' }}
+                                </span>
+                            </td>
+                            <td class="text-success fw-bold">{{ \Carbon\Carbon::parse($att->check_in)->format('H:i') }}</td>
+                            <td>
+                                @if($att->check_out)
+                                    <span class="text-danger fw-bold">{{ \Carbon\Carbon::parse($att->check_out)->format('H:i') }}</span>
                                 @else
-                                    <span class="badge bg-dark">{{ $att->status }}</span>
+                                    <span class="badge bg-success animate-pulse">Đang online</span>
                                 @endif
                             </td>
-                            <td>{{ $att->note }}</td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" class="text-center text-muted py-3">
-                                Chưa có dữ liệu chấm công trong tháng này.
+                            <td>
+                                @if($att->total_hours > 0)
+                                    <strong>{{ number_format($att->total_hours, 1) }}</strong> giờ
+                                @else
+                                    -
+                                @endif
                             </td>
+                            <td class="text-muted small fst-italic">{{ $att->note }}</td>
                         </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
         </div>
-    </div>
+    @empty
+        <div class="text-center py-5 text-muted">
+            <i class="fas fa-calendar-times fa-3x mb-3 opacity-25"></i>
+            <p>Không có dữ liệu ca trực nào trong tháng này.</p>
+        </div>
+    @endforelse
 
 </div>
 @endsection

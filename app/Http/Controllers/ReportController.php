@@ -8,6 +8,7 @@ use App\Models\Invoice;
 use App\Models\Medicine;
 use App\Models\Appointment;
 use App\Models\Revenue;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 //use Barryvdh\DomPDF\Facade\Pdf;
@@ -15,8 +16,85 @@ use Barryvdh\DomPDF\Facade as PDF;
 class ReportController extends Controller
 {
     public function index()
-    {
-        return view('reports.index');
+    {// 1. Lấy tham số lọc (Mặc định tháng hiện tại)
+        $month = $request->month ?? Carbon::now()->month;
+        $year = $request->year ?? Carbon::now()->year;
+
+        // --- KHỐI 1: THỐNG KÊ TỔNG QUAN ---
+        
+        // Tổng doanh thu (Đã thanh toán)
+        $monthlyRevenue = Invoice::where('status', 'paid')
+            ->whereMonth('paid_at', $month)
+            ->whereYear('paid_at', $year)
+            ->sum('total');
+
+        // Tổng số ca khám hoàn thành
+        // Lưu ý: Đảm bảo trạng thái 'Hoàn thành' khớp với Database của bạn
+        $completedExams = Appointment::where('status', 'Hoàn thành') 
+            ->whereMonth('date', $month)
+            ->whereYear('date', $year)
+            ->count();
+
+        // Bệnh nhân mới
+        $newPatients = User::where('type', 'patient')
+            ->whereMonth('created_at', $month)
+            ->whereYear('created_at', $year)
+            ->count();
+
+        // --- KHỐI 2: BIỂU ĐỒ DOANH THU 12 THÁNG ---
+        $annualRevenueData = [];
+        for ($i = 1; $i <= 12; $i++) {
+            $revenue = Invoice::where('status', 'paid')
+                ->whereYear('paid_at', $year)
+                ->whereMonth('paid_at', $i)
+                ->sum('total');
+            $annualRevenueData[] = $revenue;
+        }
+
+        // --- KHỐI 3: DOANH THU THEO KHOA ---
+        $revenueByDept = DB::table('invoices')
+            ->join('appointments', 'invoices.appointment_id', '=', 'appointments.id')
+            ->join('users as doctors', 'appointments.doctor_id', '=', 'doctors.id')
+            ->join('doctor_sites', 'doctors.id', '=', 'doctor_sites.user_id')
+            ->join('departments', 'doctor_sites.department_id', '=', 'departments.id')
+            ->where('invoices.status', 'paid')
+            ->whereMonth('invoices.paid_at', $month)
+            ->whereYear('invoices.paid_at', $year)
+            ->select('departments.name', DB::raw('SUM(invoices.total) as total'))
+            ->groupBy('departments.name')
+            ->pluck('total', 'departments.name');
+
+        $deptLabels = $revenueByDept->keys();
+        $deptValues = $revenueByDept->values();
+
+        // --- KHỐI 4: TOP BÁC SĨ (SỬA LỖI TẠI ĐÂY) ---
+        // Sử dụng Eloquent Model để trả về Object, giúp View gọi được $item->doctor
+      // Chúng ta Join trực tiếp các bảng để lấy dữ liệu, không qua Model
+        $topDoctors = DB::table('appointments')
+            ->join('users', 'appointments.doctor_id', '=', 'users.id')
+            ->leftJoin('doctor_sites', 'users.id', '=', 'doctor_sites.user_id')
+            ->leftJoin('departments', 'doctor_sites.department_id', '=', 'departments.id')
+            ->where('appointments.status', 'Hoàn thành') // Đảm bảo đúng trạng thái trong DB
+            ->whereMonth('appointments.date', $month)
+            ->whereYear('appointments.date', $year)
+            ->select(
+                'users.name as doctor_name',            // Tên bác sĩ
+                'departments.name as department_name',  // Tên khoa
+                'departments.fee as exam_fee',          // Phí khám
+                DB::raw('count(appointments.id) as total_exams') // Số ca khám
+            )
+            ->groupBy('users.id', 'users.name', 'departments.name', 'departments.fee') // Group by đủ các cột select
+            ->orderByDesc('total_exams')
+            ->limit(5)
+            ->get(); 
+
+        return view('reports.index', compact(
+            'month', 'year',
+            'monthlyRevenue', 'completedExams', 'newPatients',
+            'annualRevenueData',
+            'deptLabels', 'deptValues',
+            'topDoctors'
+        ));
     }
 
     

@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Models\MedicalRecord;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -9,21 +10,22 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class PatientRescheduleMail extends Mailable implements ShouldQueue
+class MedicalRecordCompletedMail extends Mailable implements ShouldQueue
 {
-  
     use Queueable, SerializesModels;
-    public $appointment;
-    public $doctorName;
+public $record;
     /**
      * Create a new message instance.
      */
-    public function __construct($appointment, $doctorName) {
-        $this->appointment = $appointment;
-        $this->doctorName = $doctorName;
+    // hoàn tất hồ sơ khám
+   public function __construct(MedicalRecord $record)
+    {
+        $this->record = $record;
     }
-    public function build() {
-        return $this->subject('Thông báo thay đổi lịch khám - SmartHospital')->view('emails.patient_reschedule');
+public function build()
+    {
+        return $this->subject('Kết quả khám bệnh & Đơn thuốc - ' . $this->record->user->name)
+                    ->view('emails.medical_record_completed');
     }
     /**
      * Get the message envelope.
@@ -31,7 +33,7 @@ class PatientRescheduleMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Patient Reschedule Mail',
+            subject: 'Medical Record Completed Mail',
         );
     }
 

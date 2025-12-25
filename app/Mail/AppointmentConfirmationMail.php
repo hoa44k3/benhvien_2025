@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Models\Appointment;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -9,21 +10,23 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class PatientRescheduleMail extends Mailable implements ShouldQueue
+class AppointmentConfirmationMail extends Mailable implements ShouldQueue
 {
-  
     use Queueable, SerializesModels;
+
     public $appointment;
-    public $doctorName;
     /**
      * Create a new message instance.
      */
-    public function __construct($appointment, $doctorName) {
+    // xác nhận lịch khám
+   public function __construct(Appointment $appointment)
+    {
         $this->appointment = $appointment;
-        $this->doctorName = $doctorName;
     }
-    public function build() {
-        return $this->subject('Thông báo thay đổi lịch khám - SmartHospital')->view('emails.patient_reschedule');
+    public function build()
+    {
+        return $this->subject('Xác nhận lịch khám Online - Mã: ' . $this->appointment->code)
+                    ->view('emails.appointment_confirmation');
     }
     /**
      * Get the message envelope.
@@ -31,7 +34,7 @@ class PatientRescheduleMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Patient Reschedule Mail',
+            subject: 'Appointment Confirmation Mail',
         );
     }
 

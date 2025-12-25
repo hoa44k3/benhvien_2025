@@ -34,103 +34,39 @@
                             <input type="text" name="name" id="medicineName" class="form-control" value="{{ old('name') }}" required placeholder="Tên thương mại hoặc hoạt chất">
                         </div>
                     </div>
-                    
-                   {{-- Phân loại --}}
-{{-- Phân loại --}}
-<div class="col-md-6">
-    <label for="medicine_category_id" class="form-label fw-semibold">Phân loại</label>
-    <div class="input-group">
-        <span class="input-group-text"><i class="fas fa-layer-group"></i></span>
-        <select name="medicine_category_id" id="medicine_category_id" class="form-select">
-            <option value="">-- Chọn phân loại --</option>
-            @foreach($categories as $cat)
-                <option value="{{ $cat->id }}" {{ old('medicine_category_id') == $cat->id ? 'selected' : '' }}>
-                    {{ $cat->name }}
-                </option>
-            @endforeach
-        </select>
-    </div>
-</div>
-
-{{-- Đơn vị --}}
-<div class="col-md-6">
-    <label for="medicine_unit_id" class="form-label fw-semibold">Đơn vị</label>
-    <div class="input-group">
-        <span class="input-group-text"><i class="fas fa-box"></i></span>
-        <select name="medicine_unit_id" id="medicine_unit_id" class="form-select">
-            <option value="">-- Chọn đơn vị --</option>
-            @foreach($units as $unit)
-                <option value="{{ $unit->id }}" {{ old('medicine_unit_id') == $unit->id ? 'selected' : '' }}>
-                    {{ $unit->name }}
-                </option>
-            @endforeach
-        </select>
-    </div>
-</div>
-
-                </div>
-                
-                <h5 class="mt-4 mb-3 text-secondary">Quản lý kho & Giá</h5>
-                <hr>
-                <div class="row g-3">
-                    
-                    {{-- Số lượng tồn --}}
-                    <div class="col-md-4">
-                        <label for="stock" class="form-label fw-semibold">Số lượng tồn <span class="text-danger">*</span></label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="fas fa-warehouse"></i></span>
-                            <input type="number" name="stock" id="stock" class="form-control" value="{{ old('stock') }}" required min="0">
+                        {{-- Phân loại --}}
+                        <div class="col-md-6">
+                            <label for="medicine_category_id" class="form-label fw-semibold">Phân loại</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-layer-group"></i></span>
+                                <select name="medicine_category_id" id="medicine_category_id" class="form-select">
+                                    <option value="">-- Chọn phân loại --</option>
+                                    @foreach($categories as $cat)
+                                        <option value="{{ $cat->id }}" {{ old('medicine_category_id') == $cat->id ? 'selected' : '' }}>
+                                            {{ $cat->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
                         </div>
-                    </div>
 
-                    {{-- Tồn tối thiểu --}}
-                    <div class="col-md-4">
-                        <label for="minStock" class="form-label fw-semibold">Tồn tối thiểu (Cảnh báo)</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="fas fa-bell"></i></span>
-                            <input type="number" name="min_stock" id="minStock" class="form-control" value="{{ old('min_stock') }}" min="0">
-                        </div>
-                    </div>
-
-                    {{-- Giá --}}
-                    <div class="col-md-4">
-                        <label for="price" class="form-label fw-semibold">Giá bán (VNĐ)</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="fas fa-dollar-sign"></i></span>
-                            <input type="number" step="1" name="price" id="price" class="form-control" value="{{ old('price') }}" min="0">
-                        </div>
-                    </div>
-                    
-                    {{-- Hạn sử dụng --}}
+                    {{-- Đơn vị --}}
                     <div class="col-md-6">
-                        <label for="expiryDate" class="form-label fw-semibold">Hạn sử dụng</label>
+                        <label for="medicine_unit_id" class="form-label fw-semibold">Đơn vị</label>
                         <div class="input-group">
-                            <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
-                            <input type="date" name="expiry_date" id="expiryDate" class="form-control" value="{{ old('expiry_date') }}">
+                            <span class="input-group-text"><i class="fas fa-box"></i></span>
+                            <select name="medicine_unit_id" id="medicine_unit_id" class="form-select">
+                                <option value="">-- Chọn đơn vị --</option>
+                                @foreach($units as $unit)
+                                    <option value="{{ $unit->id }}" {{ old('medicine_unit_id') == $unit->id ? 'selected' : '' }}>
+                                        {{ $unit->name }}
+                                    </option>
+                                @endforeach
+                            </select>
                         </div>
-                    </div>
-                    
-                    {{-- Nhà cung cấp --}}
-                    <div class="col-md-6">
-                        <label for="supplier" class="form-label fw-semibold">Nhà cung cấp</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="fas fa-truck"></i></span>
-                            <input type="text" name="supplier" id="supplier" class="form-control" value="{{ old('supplier') }}" placeholder="Tên công ty hoặc đại lý">
-                        </div>
-                    </div>
-                    
-                    {{-- Trạng thái (Tạm thời không cần, vì trạng thái nên dựa vào Stock và Hạn sử dụng) --}}
-                    <div class="col-md-6 d-none">
-                        <label for="status" class="form-label fw-semibold">Trạng thái (Tự động)</label>
-                        <select name="status" id="status" class="form-select">
-                            <option value="Trống">Trống</option>
-                            <option value="Sắp hết">Sắp hết</option>
-                            <option value="Hết hạn">Hết hạn</option>
-                        </select>
                     </div>
 
                 </div>
-
                 <div class="mt-4 pt-3 border-top text-end">
                     <a href="{{ route('medicines.index') }}" class="btn btn-secondary me-2">
                         <i class="fas fa-times me-1"></i> Hủy bỏ

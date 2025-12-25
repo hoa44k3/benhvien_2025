@@ -80,36 +80,26 @@
                         {{-- 3. CHÍNH SÁCH TÀI CHÍNH --}}
                         <div class="bg-success bg-opacity-10 p-3 rounded mb-4 border border-success border-opacity-25">
                             <h6 class="text-success fw-bold text-uppercase border-bottom border-success border-opacity-25 pb-2 mb-3">
-                                <i class="fas fa-hand-holding-usd me-1"></i> Lương & Hoa hồng
+                                <i class="fas fa-hand-holding-usd me-1"></i> 3. Lương & Hoa hồng
                             </h6>
                             <div class="row">
-                                <div class="col-md-12 mb-3">
+                                <div class="col-md-6 mb-3">
                                     <label class="form-label fw-bold text-success">Lương cứng hàng tháng (VNĐ)</label>
                                     <input type="number" name="base_salary" class="form-control fw-bold text-success" 
                                            value="{{ old('base_salary', $doctor->base_salary) }}" min="0" step="1000">
                                 </div>
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label fw-semibold">Hoa hồng Khám (%)</label>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-semibold">Hoa hồng Khám bệnh (%)</label>
                                     <input type="number" name="commission_exam_percent" class="form-control" 
                                            value="{{ old('commission_exam_percent', $doctor->commission_exam_percent) }}" min="0" max="100" step="0.1">
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label fw-semibold">Hoa hồng Thuốc (%)</label>
-                                    <input type="number" name="commission_prescription_percent" class="form-control" 
-                                           value="{{ old('commission_prescription_percent', $doctor->commission_prescription_percent) }}" min="0" max="100" step="0.1">
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label fw-semibold">Hoa hồng Dịch vụ (%)</label>
-                                    <input type="number" name="commission_service_percent" class="form-control" 
-                                           value="{{ old('commission_service_percent', $doctor->commission_service_percent) }}" min="0" max="100" step="0.1">
                                 </div>
                             </div>
                         </div>
 
-                        {{-- 4. THÔNG TIN NGÂN HÀNG (MỚI) --}}
+                        {{-- 4. THÔNG TIN NGÂN HÀNG --}}
                         <div class="bg-info bg-opacity-10 p-3 rounded mb-4 border border-info border-opacity-25">
                             <h6 class="text-info fw-bold text-uppercase border-bottom border-info border-opacity-25 pb-2 mb-3">
-                                <i class="fas fa-university me-1"></i> Thông tin Ngân hàng (Nhận lương)
+                                <i class="fas fa-university me-1"></i> Thông tin Ngân hàng
                             </h6>
                             <div class="row">
                                 <div class="col-md-4 mb-3">
@@ -130,7 +120,50 @@
                             </div>
                         </div>
 
-                        {{-- 5. GIỚI THIỆU & ẢNH --}}
+                        {{-- 5. HỒ SƠ NĂNG LỰC & CHỨNG CHỈ (MỚI) --}}
+                        <div class="card mb-4 bg-warning bg-opacity-10 border-warning border-opacity-25">
+                            <div class="card-header bg-transparent border-warning border-opacity-25 fw-bold text-dark">
+                                <i class="fas fa-certificate me-2 text-warning"></i> Hồ sơ năng lực & Chứng chỉ
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold">Học vị / Bằng cấp</label>
+                                        <input type="text" name="degree" class="form-control" 
+                                               placeholder="VD: ThS.BS, Tiến sĩ, CKII..." 
+                                               value="{{ old('degree', $doctor->degree ?? '') }}">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold">Số chứng chỉ hành nghề (CCHN)</label>
+                                        <input type="text" name="license_number" class="form-control" 
+                                               placeholder="VD: 001234/BYT-CCHN" 
+                                               value="{{ old('license_number', $doctor->license_number ?? '') }}">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold">Nơi cấp / Đơn vị đào tạo</label>
+                                        <input type="text" name="license_issued_by" class="form-control" 
+                                               placeholder="VD: Đại học Y Hà Nội" 
+                                               value="{{ old('license_issued_by', $doctor->license_issued_by ?? '') }}">
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label fw-bold">Ảnh chụp chứng chỉ / Bằng cấp (Minh chứng)</label>
+                                        <input type="file" name="license_image" class="form-control" accept="image/*,.pdf">
+                                        
+                                        @if($doctor->license_image)
+                                            <div class="mt-2 p-2 bg-white rounded border d-inline-block">
+                                                <small class="d-block text-muted mb-1">Chứng chỉ hiện tại:</small>
+                                                <a href="{{ asset('storage/'.$doctor->license_image) }}" target="_blank" class="d-flex align-items-center text-decoration-none">
+                                                    <i class="fas fa-file-image text-danger fa-2x me-2"></i>
+                                                    <span class="fw-bold">Xem file đính kèm</span>
+                                                </a>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- 6. HÌNH ẢNH & GIỚI THIỆU --}}
                         <h6 class="text-secondary fw-bold text-uppercase border-bottom pb-2 mb-3">
                             <i class="fas fa-image me-1"></i> Hình ảnh & Giới thiệu
                         </h6>

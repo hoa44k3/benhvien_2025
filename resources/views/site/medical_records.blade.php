@@ -44,13 +44,6 @@
                         </div>
                         Đơn thuốc <span class="ml-auto bg-white px-2 py-0.5 rounded-md text-xs border border-slate-200 text-slate-500 font-bold shadow-sm">{{ $prescriptions->count() }}</span>
                     </button>
-                    
-                    <button class="tab-item flex items-center gap-3 px-4 py-3 text-sm font-semibold rounded-xl text-left text-slate-600 hover:bg-white hover:shadow-sm transition-all w-full whitespace-nowrap group" data-tab="test-results">
-                        <div class="w-8 h-8 rounded-lg bg-slate-200 text-slate-500 flex items-center justify-center group-[.active]:bg-purple-500 group-[.active]:text-white transition-colors">
-                            <i class="fas fa-microscope"></i>
-                        </div>
-                        Xét nghiệm <span class="ml-auto bg-white px-2 py-0.5 rounded-md text-xs border border-slate-200 text-slate-500 font-bold shadow-sm">{{ $testResults->count() }}</span>
-                    </button>
                 </nav>
             </div>
 
@@ -235,59 +228,6 @@
                     @endforeach
                 </div> 
 
-                {{-- TAB 3: XÉT NGHIỆM --}}
-                <div id="test-results" class="tab-content hidden space-y-6 animate-fade-in-up">
-                    <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
-                        <h3 class="text-xl font-bold text-slate-800">Kết quả cận lâm sàng</h3>
-                    </div>
-
-                    @if($testResults->isEmpty())
-                        <div class="flex flex-col items-center justify-center py-16 border-2 border-dashed border-slate-100 rounded-2xl bg-slate-50">
-                            <div class="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center text-slate-400 mb-4">
-                                <i class="fas fa-flask text-2xl"></i>
-                            </div>
-                            <p class="text-slate-500 font-medium">Chưa có kết quả xét nghiệm.</p>
-                        </div>
-                    @endif
-
-                    @foreach($testResults as $test)
-                     <div class="border border-slate-200 rounded-2xl p-6 hover:shadow-lg transition duration-300 relative overflow-hidden bg-white">
-                        <div class="absolute top-0 left-0 w-1.5 h-full bg-purple-500"></div>
-                        <div class="pl-2">
-                            <div class="flex justify-between items-start mb-4">
-                                <div>
-                                    <h4 class="font-bold text-slate-800 text-lg mb-1">{{ $test->test_name }}</h4>
-                                    <p class="text-xs text-slate-500 flex items-center gap-2">
-                                        <span><i class="far fa-clock"></i> {{ \Carbon\Carbon::parse($test->date)->format('d/m/Y H:i') }}</span>
-                                        <span class="w-1 h-1 bg-slate-300 rounded-full"></span>
-                                        <span>BS. {{ $test->doctor->user->name ?? '---' }}</span>
-                                    </p>
-                                </div>
-                                @if($test->file_path)
-                                    <a href="{{ asset('storage/'.$test->file_path) }}" target="_blank" 
-                                       class="px-3 py-2 bg-purple-50 text-purple-600 hover:bg-purple-600 hover:text-white rounded-lg transition text-sm font-semibold flex items-center gap-2">
-                                        <i class="fas fa-download"></i> Tải file
-                                    </a>
-                                @endif
-                            </div>
-                            
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-2">
-                                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                                    <span class="block text-[10px] uppercase text-slate-400 font-bold mb-1 tracking-wide">Kết quả định lượng</span>
-                                    <div class="flex items-baseline gap-2">
-                                        <span class="font-mono font-bold text-slate-800 text-xl">{{ $test->result ?? '--' }}</span> 
-                                        <span class="text-xs font-bold text-slate-500 bg-white px-1.5 py-0.5 rounded border border-slate-200">{{ $test->unit }}</span>
-                                    </div>
-                                </div>
-                                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                                    <span class="block text-[10px] uppercase text-slate-400 font-bold mb-1 tracking-wide">Kết luận / Đánh giá</span>
-                                    <span class="font-medium text-slate-700 text-sm leading-relaxed block">{{ $test->diagnosis ?? 'Chưa có kết luận' }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    @endforeach
-                </div>
             </div>
         </div>
     </div>

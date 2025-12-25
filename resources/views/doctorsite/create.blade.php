@@ -45,34 +45,20 @@
                 {{-- Phần 2: Cấu hình Lương & Hoa hồng --}}
                 <h6 class="fw-bold text-success border-bottom pb-2 mb-3">2. Lương & Hoa hồng</h6>
                 <div class="row g-3 mb-4 bg-light p-3 rounded">
-                    <div class="col-md-3">
-                        <label class="form-label fw-bold">Lương cứng (VNĐ)</label>
-                        <input type="number" name="base_salary" class="form-control" value="0" min="0">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-success">Lương cứng (VNĐ)</label>
+                        <input type="number" name="base_salary" class="form-control" value="0" min="0" step="1000">
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label">% HH Khám</label>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Hoa hồng Khám bệnh (%)</label>
                         <div class="input-group">
                             <input type="number" name="commission_exam_percent" class="form-control" value="0" min="0" max="100" step="0.1">
                             <span class="input-group-text">%</span>
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label">% HH Thuốc</label>
-                        <div class="input-group">
-                            <input type="number" name="commission_prescription_percent" class="form-control" value="0" min="0" max="100" step="0.1">
-                            <span class="input-group-text">%</span>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">% HH Dịch vụ</label>
-                        <div class="input-group">
-                            <input type="number" name="commission_service_percent" class="form-control" value="0" min="0" max="100" step="0.1">
-                            <span class="input-group-text">%</span>
-                        </div>
-                    </div>
                 </div>
 
-                {{-- Phần 3: Thông tin Ngân hàng (MỚI) --}}
+                {{-- Phần 3: Thông tin Ngân hàng --}}
                 <h6 class="fw-bold text-info border-bottom pb-2 mb-3">3. Thông tin Tài khoản Ngân hàng</h6>
                 <div class="row g-3 mb-4">
                     <div class="col-md-4">
@@ -89,8 +75,36 @@
                     </div>
                 </div>
 
-                {{-- Phần 4: Thông tin hiển thị --}}
-                <h6 class="fw-bold text-secondary border-bottom pb-2 mb-3">4. Thông tin hiển thị</h6>
+                {{-- Phần 4: Hồ sơ Năng lực & Chứng chỉ (MỚI) --}}
+                <h6 class="fw-bold text-warning text-uppercase border-bottom pb-2 mb-3">
+                    <i class="fas fa-certificate me-1"></i> 4. Hồ sơ Năng lực & Chứng chỉ
+                </h6>
+                <div class="card bg-warning bg-opacity-10 border-warning border-opacity-25 mb-4">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Học vị / Bằng cấp</label>
+                                <input type="text" name="degree" class="form-control" placeholder="VD: ThS.BS, Tiến sĩ, BS.CKII...">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Số chứng chỉ hành nghề (CCHN)</label>
+                                <input type="text" name="license_number" class="form-control" placeholder="VD: 001234/BYT-CCHN">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Nơi cấp / Đơn vị đào tạo</label>
+                                <input type="text" name="license_issued_by" class="form-control" placeholder="VD: Đại học Y Hà Nội">
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">Ảnh chụp chứng chỉ / Bằng cấp (Minh chứng)</label>
+                                <input type="file" name="license_image" class="form-control" accept="image/*,.pdf">
+                                <div class="form-text text-muted">Upload ảnh rõ nét hoặc file PDF để xác thực.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Phần 5: Thông tin hiển thị --}}
+                <h6 class="fw-bold text-secondary border-bottom pb-2 mb-3">5. Thông tin hiển thị</h6>
                 <div class="row g-3">
                     <div class="col-md-12">
                         <label class="form-label">Giới thiệu ngắn (Bio)</label>

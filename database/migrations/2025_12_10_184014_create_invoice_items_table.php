@@ -19,13 +19,6 @@ return new class extends Migration
     // Liên kết đến dịch vụ / thuốc / gói
     $table->enum('item_type', ['service','medicine','package','other'])->default('service');
     $table->unsignedBigInteger('item_id')->nullable();
-
-    // // Thông tin mục tính tiền
-    // $table->string('description'); 
-    // $table->integer('quantity')->default(1);
-    // $table->decimal('unit_price', 12, 2)->default(0);
-    // $table->decimal('total_price', 12, 2)->default(0);
-    // 🔥 SỬA: Đổi 'description' -> 'item_name' để khớp với Controller
             $table->string('item_name'); 
             
             $table->integer('quantity')->default(1);

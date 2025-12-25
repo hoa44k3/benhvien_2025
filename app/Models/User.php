@@ -46,7 +46,14 @@ protected $fillable = [
     'type'
 ];
 
- 
+ // Trong file App\Models\User.php
+
+public function hasRole($roleName)
+{
+    // Kiểm tra xem user có role nào có tên trùng với $roleName không
+    // Lưu ý: Giả định bạn đã có relation 'roles' (vì code cũ bạn dùng whereHas('roles') được)
+    return $this->roles->contains('name', $roleName);
+}
     public function roles() {
         return $this->belongsToMany(Role::class, 'user_roles', 'user_id', 'role_id');
     }
@@ -60,7 +67,11 @@ protected $fillable = [
     {
         return $this->hasMany(\App\Models\Appointment::class);
     }
-
+public function doctorSite()
+    {
+        // Quan hệ 1-1: User hasOne DoctorSite
+        return $this->hasOne(DoctorSite::class, 'user_id');
+    }
     /**
      * The attributes that should be hidden for serialization.
      *

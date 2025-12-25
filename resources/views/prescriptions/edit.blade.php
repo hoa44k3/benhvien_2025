@@ -165,7 +165,7 @@
                                     <th class="p-2">Số lượng</th>
                                     <th class="p-2">Liều dùng</th>
                                     <th class="p-2">Ghi chú</th>
-                                    <th class="p-2">Thành tiền</th>
+                                 
                                     <th class="p-2">Hành động</th>
                                 </tr>
                             </thead>
@@ -179,13 +179,7 @@
                                     <td class="p-3 text-center fw-bold text-success">{{ $item->quantity }}</td>
                                     <td class="p-3 text-start">{{ $item->dosage }}</td>
                                     <td class="p-3 text-start">{{ $item->note ? Str::limit($item->note, 40) : '-' }}</td>
-                                    <td class="p-3 text-center fw-bold text-danger">
-                                        @if(isset($item->price))
-                                            {{ number_format($item->price * $item->quantity) }} đ
-                                        @else
-                                            ---
-                                        @endif
-                                    </td>
+                                  
 
                                     <td class="p-3 text-center">
                                         <div class="d-flex justify-content-center">
@@ -211,18 +205,6 @@
                                 @endforelse
                             </tbody>
                             
-                            {{-- THÔNG TIN TỔNG CỘNG --}}
-                            @if($prescription->items->isNotEmpty())
-                            <tfoot>
-                                <tr>
-                                    <th colspan="6" class="text-end p-2 fs-6">TỔNG THÀNH TIỀN:</th>
-                                    <th class="p-2 fs-6 text-danger fw-bold text-center">
-                                        {{ number_format($prescription->items->sum(fn($item) => $item->price * $item->quantity)) }} đ
-                                    </th>
-                                    <th></th>
-                                </tr>
-                            </tfoot>
-                            @endif
                         </table>
                     </div>
                 </div>

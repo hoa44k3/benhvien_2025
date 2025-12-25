@@ -42,7 +42,6 @@
                             <th style="width: 250px;">Chẩn đoán</th>
                             <th style="width: 200px;">Ghi chú</th>
                             <th class="text-center" style="width: 110px;">SL Thuốc</th>
-                            <th class="text-center" style="width: 130px;">Tổng tiền</th>
                             <th class="text-center" style="width: 110px;">Trạng thái</th>
                             <th style="width: 150px;">Ngày tạo</th>
                             <th style="width: 150px;">Ngày cập nhật</th>
@@ -74,12 +73,6 @@
                             {{-- Số lượng thuốc --}}
                             <td class="text-center fw-bold">
                                 {{ $p->items->count() ?? 0 }}
-                            </td>
-
-                            {{-- Tổng tiền --}}
-               
-                            <td class="text-center fw-bold text-danger">
-                                {{ number_format($p->total_amount, 0, ',', '.') }} đ
                             </td>
 
                             {{-- Trạng thái --}}

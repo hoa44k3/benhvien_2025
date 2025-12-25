@@ -116,7 +116,7 @@
                                     <th class="p-2">Lần/ngày</th>
                                     <th class="p-2">Thời gian</th>
                                     <th class="p-2">Cách dùng</th>
-                                    <th class="p-2">Thành tiền</th>
+                                    
                                     <th class="p-2">Hành động</th>
                                 </tr>
                             </thead>
@@ -132,16 +132,16 @@
                                     <td class="p-2">{{ $item->times_per_day ?? '-' }}</td>
                                     <td class="p-2">{{ $item->duration ?? '-' }}</td>
                                     <td class="p-2 text-start">{{ $item->instruction ?? '-' }}</td>
-                                    <td class="p-2 fw-bold text-danger">
-                                        {{ $item->price ? number_format($item->price * $item->quantity) . ' đ' : '---' }}
-                                    </td>
+                                    
                                     <td class="p-2">
                                         <div class="d-flex justify-content-center">
                                             <a href="{{ route('prescription_items.edit', $item->id) }}"
                                                 class="btn btn-sm btn-warning me-1">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-
+<a href="{{ route('prescriptions.downloadPdf', $prescription->id) }}" class="btn btn-danger shadow-sm fw-bold">
+    <i class="fas fa-file-pdf me-1"></i> Xuất PDF
+</a>
                                             <form action="{{ route('prescription_items.destroy', $item->id) }}" 
                                                 method="POST"
                                                 onsubmit="return confirm('Xác nhận xóa {{ $item->medicine_name }}?')">
@@ -164,17 +164,7 @@
                                 @endforelse
                             </tbody>
 
-                            @if($prescription->items->isNotEmpty())
-                            <tfoot>
-                                <tr>
-                                    <th colspan="8" class="text-end p-2 fs-6">TỔNG TIỀN:</th>
-                                    <th class="p-2 fs-6 text-danger fw-bold">
-                                        {{ number_format($prescription->items->sum(fn($i)=>$i->price * $i->quantity)) }} đ
-                                    </th>
-                                    <th></th>
-                                </tr>
-                            </tfoot>
-                            @endif
+                          
 
                         </table>
                     </div>

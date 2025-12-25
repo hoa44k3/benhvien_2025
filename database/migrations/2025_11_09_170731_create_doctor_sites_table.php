@@ -35,7 +35,11 @@ return new class extends Migration
     $table->string('bank_name')->nullable(); // Ví dụ: Vietcombank
     $table->string('bank_account_number')->nullable(); // STK: 0011...
     $table->string('bank_account_holder')->nullable(); // Tên chủ TK
-
+// Thêm sau cột image
+            $table->string('degree')->nullable()->after('image')->comment('Học vị: TS, ThS, BS.CKII...');
+            $table->string('license_number')->nullable()->after('degree')->comment('Số chứng chỉ hành nghề');
+            $table->string('license_issued_by')->nullable()->after('license_number')->comment('Nơi cấp chứng chỉ/đào tạo');
+            $table->string('license_image')->nullable()->after('license_issued_by')->comment('Ảnh chụp chứng chỉ');
             $table->timestamps();
         });
     }

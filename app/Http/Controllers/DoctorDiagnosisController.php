@@ -14,7 +14,7 @@ use Illuminate\Support\Str;
 class DoctorDiagnosisController extends Controller
 {
     /**
-     * 📋 Danh sách bệnh nhân có lịch hẹn đã xác nhận hoặc đang chờ
+     * Danh sách bệnh nhân có lịch hẹn đã xác nhận hoặc đang chờ
      */
     public function index()
     {
@@ -30,7 +30,7 @@ class DoctorDiagnosisController extends Controller
 
 
     /**
-     * 🧑‍⚕️ Trang khám bệnh & kê đơn
+     *  Trang khám bệnh & kê đơn
      */
     // 2. Giao diện khám bệnh
     public function show($id)
@@ -46,7 +46,7 @@ class DoctorDiagnosisController extends Controller
     }
 
     /**
-     * 💊 Lưu chẩn đoán & đơn thuốc
+     *  Lưu chẩn đoán & đơn thuốc
      */
    // 3. Lưu kết quả khám
    public function store(Request $request, $id)
@@ -103,7 +103,7 @@ class DoctorDiagnosisController extends Controller
     }
     
     /**
-     * 🧾 Xem chi tiết đơn thuốc
+     *  Xem chi tiết đơn thuốc
      */
     public function viewPrescription(Appointment $appointment)
     {
@@ -123,7 +123,7 @@ class DoctorDiagnosisController extends Controller
         // 1. Tạo tên phòng (nếu chưa có)
         $roomName = 'SmartHospital_' . $appointment->code;
 
-        // 2. 🔥 CẬP NHẬT VÀO DB ĐỂ BỆNH NHÂN BIẾT
+        // 2.  CẬP NHẬT VÀO DB ĐỂ BỆNH NHÂN BIẾT
         $appointment->update([
             'meeting_room' => $roomName
         ]);
@@ -166,7 +166,7 @@ class DoctorDiagnosisController extends Controller
             }
         }
 
-        // 2. 🔥 QUAN TRỌNG: Xóa phòng (Ưu tiên lấy ID từ Frontend gửi lên)
+        // 2. QUAN TRỌNG: Xóa phòng (Ưu tiên lấy ID từ Frontend gửi lên)
         // Nếu Frontend gửi 'appointment_id' thì dùng nó, nếu không thì dùng từ log cũ
         $apptId = $request->appointment_id ?? $apptIdFromCall;
 

@@ -31,19 +31,6 @@ class MedicineController extends Controller
         if ($request->filled('medicine_category_id')) {
             $query->where('medicine_category_id', $request->medicine_category_id);
         }
-        // 4. Xử lý Lọc theo Cảnh báo (Tồn kho thấp / Hết hạn)
-        if ($request->filled('alert')) {
-            if ($request->alert == 'low_stock') {
-                // Lọc thuốc có tồn kho <= tồn tối thiểu (hoặc mặc định là 10)
-                $query->whereRaw('stock <= COALESCE(min_stock, 10)');
-            } elseif ($request->alert == 'expired') {
-                // Lọc thuốc đã hết hạn hoặc sắp hết hạn (trong 60 ngày)
-                $query->where(function($q) {
-                    $q->whereDate('expiry_date', '<', now()) // Đã hết hạn
-                      ->orWhereDate('expiry_date', '<=', now()->addDays(60)); // Sắp hết hạn
-                });
-            }
-        }
 
         // Lấy dữ liệu thuốc đã lọc và phân trang (10 item/trang)
         $medicines = $query->orderBy('id', 'desc')->paginate(10)->withQueryString();
@@ -52,43 +39,13 @@ class MedicineController extends Controller
         $allMedicines = Medicine::all(); // Lấy tất cả để tính toán thống kê chung
         // 1. Tổng số loại thuốc
         $totalMedicines = $allMedicines->count();
-        // 2. Tổng giá trị tồn kho
-        $totalStockValue = $allMedicines->sum(fn($m) => ($m->price ?? 0) * ($m->stock ?? 0));
-        $formattedTotalStock = $this->formatCurrency($totalStockValue);
-
-        // 3. Giá trị thuốc sắp hết kho (Stock <= Min Stock)
-        $lowStockValue = $allMedicines->filter(function ($m) {
-            return $m->stock <= ($m->min_stock ?? 10);
-        })->sum(fn($m) => ($m->price ?? 0) * ($m->stock ?? 0));
-        $formattedLowStockValue = $this->formatCurrency($lowStockValue);
-
-        // 4. Số lượng thuốc hết hạn
-        $expiredCount = $allMedicines->where('expiry_date', '<', now())->count();
-
-        // Lấy danh sách Categories để đổ vào Select Box lọc
-        // $categories = Medicine::select('category')->distinct()->whereNotNull('category')->pluck('category');
-        // Lấy danh sách Category để đổ vào Select Box lọc ở View Index
         $categories = MedicineCategory::all();
         return view('medicines.index', compact(
             'medicines',
             'categories',
             'totalMedicines',
-            'formattedTotalStock',
-            'formattedLowStockValue',
-            'expiredCount'
         ));
     }
-    // Hàm phụ trợ để format tiền tệ (Tỷ/Triệu/VNĐ)
-    private function formatCurrency($value)
-    {
-        if ($value >= 1_000_000_000) {
-            return number_format($value / 1_000_000_000, 1) . ' tỷ VNĐ';
-        } elseif ($value >= 1_000_000) {
-            return number_format($value / 1_000_000, 1) . ' triệu VNĐ';
-        }
-        return number_format($value) . ' VNĐ';
-    }
-
    public function create()
     {
         // Lấy danh sách để đổ vào dropdown
@@ -106,12 +63,8 @@ class MedicineController extends Controller
                 'name' => 'required',
               'medicine_category_id' => 'nullable|exists:medicine_categories,id', 
                 'medicine_unit_id'     => 'nullable|exists:medicine_units,id',
-                'stock' => 'required|integer|min:0',
-                'min_stock' => 'nullable|integer|min:0',
-                'price' => 'required|numeric|min:0',
-                'expiry_date' => 'nullable|date',
-                'status' => 'required|string',
-                'supplier' => 'nullable|string',
+                'category' => 'nullable|string',
+               
         ]);
 
         Medicine::create($validated);
@@ -139,13 +92,7 @@ class MedicineController extends Controller
                 'name' => 'required',
               'medicine_category_id' => 'nullable|exists:medicine_categories,id',
                 'medicine_unit_id'     => 'nullable|exists:medicine_units,id',
-                'stock' => 'required|integer|min:0',
-                'min_stock' => 'nullable|integer|min:0',
-                
-                'price' => 'required|numeric|min:0',
-                'expiry_date' => 'nullable|date',
-                'status' => 'required|string',
-                'supplier' => 'nullable|string',
+                'category' => 'nullable|string',
         ]);
 
         $medicine->update($validated);

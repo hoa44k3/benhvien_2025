@@ -6,7 +6,7 @@
     <div class="bg-white border-b border-slate-200 py-12">
         <div class="container mx-auto max-w-7xl px-4 text-center">
             <h1 class="text-3xl font-extrabold text-slate-800 mb-2">Cổng Thanh Toán Trực Tuyến</h1>
-            <p class="text-slate-500">Thanh toán viện phí an toàn, nhanh chóng qua các cổng thanh toán uy tín</p>
+            <p class="text-slate-500">Thanh toán phí khám & tư vấn an toàn, nhanh chóng</p>
         </div>
     </div>
 

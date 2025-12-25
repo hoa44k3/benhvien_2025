@@ -226,12 +226,31 @@ public function showPost($id)
 
         return view('site.schedule', compact('departments', 'doctors', 'timeSlots', 'selectedDeptId'));
     }
+/**
+     * API AJAX: Lấy danh sách các khung giờ ĐÃ BỊ ĐẶT của một bác sĩ vào ngày cụ thể
+     */
+    public function getBookedSlots(Request $request)
+    {
+        $request->validate([
+            'doctor_id' => 'required',
+            'date' => 'required|date',
+        ]);
 
+        // Tìm các lịch hẹn của bác sĩ này vào ngày này
+        // Loại trừ các lịch đã bị Hủy hoặc Từ chối
+        $bookedTimes = Appointment::where('doctor_id', $request->doctor_id)
+            ->where('date', $request->date)
+            ->whereNotIn('status', ['Hủy', 'Đã hủy', 'Từ chối']) // Chỉ lấy lịch đang active
+            ->pluck('time') // Chỉ lấy cột giờ
+            ->toArray();
+
+        return response()->json([
+            'booked_slots' => $bookedTimes
+        ]);
+    }
     // --- HÀM XỬ LÝ ĐẶT LỊCH (Tên chuẩn: storeFromSite) ---
     public function storeFromSite(Request $request)
     {
-        // ... (Giữ nguyên kiểm tra đăng nhập)
-
         // 1. CHỈ VALIDATE NHỮNG CÁI NGƯỜI DÙNG CHẮC CHẮN CHỌN
         // (Bỏ department_id khỏi required, ta sẽ tự tìm nó)
         $request->validate([
@@ -248,8 +267,18 @@ public function showPost($id)
             // 2. TỰ TÌM BÁC SĨ VÀ KHOA
             $doctorSite = DoctorSite::with('user')->find($request->doctor_id);
             if (!$doctorSite) return back()->with('error', 'Bác sĩ không tồn tại');
+//  KIỂM TRA TRÙNG LỊCH (Double Check) ---
+            // Đề phòng 2 người bấm cùng 1 giây
+            $isTaken = Appointment::where('doctor_id', $doctorSite->user->id) // Chú ý: doctor_id trong appointment là user_id của bác sĩ
+                ->where('date', $request->date)
+                ->where('time', $request->time)
+                ->whereNotIn('status', ['Hủy', 'Đã hủy'])
+                ->exists();
 
-            // 🔥 LOGIC THÔNG MINH:
+            if ($isTaken) {
+                return back()->with('error', 'Rất tiếc! Khung giờ ' . $request->time . ' vừa có người đặt xong. Vui lòng chọn giờ khác.');
+            }
+            //  LOGIC THÔNG MINH:
             // Nếu form không gửi department_id (do lỗi JS), ta lấy từ Bác sĩ luôn
             $deptId = $request->department_id;
             if (!$deptId) {
@@ -265,7 +294,7 @@ public function showPost($id)
                 'user_id' => $user->id,
                 'doctor_id' => $doctorSite->user->id,
                 
-                'department_id' => $deptId, // Dùng ID khoa đã tự tìm được
+                'department_id' => $deptId, 
                 
                 'patient_code' => $patientCode,
                 'patient_name' => $request->patient_name,
@@ -290,6 +319,25 @@ public function showPost($id)
             return back()->with('error', 'Lỗi: ' . $e->getMessage());
         }
 
+    }
+    /**
+     * TRANG CHI TIẾT BÁC SĨ (PROFILE PUBLIC)
+     */
+    public function doctorShow($id)
+    {
+        // Lấy thông tin bác sĩ, kèm User, Khoa và Đánh giá
+        $doctor = DoctorSite::with(['user', 'department', 'reviews.user'])
+            ->where('status', 1) // Chỉ lấy bác sĩ đang hoạt động
+            ->findOrFail($id);
+
+        // Lấy các bác sĩ khác cùng khoa để gợi ý (nếu cần)
+        $relatedDoctors = DoctorSite::with('user')
+            ->where('department_id', $doctor->department_id)
+            ->where('id', '!=', $id)
+            ->take(3)
+            ->get();
+
+        return view('site.doctor_show', compact('doctor', 'relatedDoctors'));
     }
     public function search(Request $request)
         {
@@ -317,92 +365,115 @@ public function showPost($id)
         }
     
    // --- CHATBOT AI (HYBRID MODE: ONLINE AI + OFFLINE BACKUP) ---
-   public function askBot(Request $request)
+  /**
+     * CHATBOT AI (UPDATE: HỖ TRỢ TRẢ VỀ HÌNH ẢNH)
+     */
+    public function askBot(Request $request)
     {
         $userQuestion = $request->input('message');
 
-        // 1. LẤY DỮ LIỆU BỆNH VIỆN
-        $services = Service::where('status', 1)->take(15)->get()->map(function ($s) {
-            return "{$s->name} ({$s->price}đ)";
+        // 1. LẤY DỮ LIỆU BÀI VIẾT (Kèm link ảnh)
+        // Chỉ lấy bài đã publish, tối đa 5 bài mới nhất
+        $posts = Post::where('status', 'published')->latest()->take(5)->get()->map(function ($p) {
+            $imgUrl = $p->image ? asset('storage/' . $p->image) : asset('assets/img/default-post.png');
+            return "[Bài viết: {$p->title} | Link ảnh: {$imgUrl}]";
         })->implode(', ');
 
-        $doctors = DoctorSite::with('user', 'department')->where('status', 1)->take(10)->get()->map(function ($d) {
-            return "BS.{$d->user->name}-{$d->department->name}";
+        // 2. LẤY DỮ LIỆU DỊCH VỤ (Kèm link ảnh)
+        $services = Service::where('status', 1)->take(5)->get()->map(function ($s) {
+            $imgUrl = $s->image ? asset('storage/' . $s->image) : asset('assets/img/default-service.png');
+            return "[Dịch vụ: {$s->name} ({$s->price} VNĐ) | Link ảnh: {$imgUrl}]";
         })->implode(', ');
 
-        // 2. TẠO "NHÂN CÁCH" CHO AI
+        // 3. LẤY DỮ LIỆU BÁC SĨ (Tên + Khoa)
+        $doctors = DoctorSite::with('user', 'department')->where('status', 1)->take(5)->get()->map(function ($d) {
+            $name = $d->user->name ?? 'BS';
+            $dept = $d->department->name ?? 'Tổng quát';
+            return "{$name} ({$dept})";
+        })->implode(', ');
+
+        // 4. TẠO SYSTEM PROMPT (Kịch bản hướng dẫn AI)
         $systemContext = "
-            VAI TRÒ: Bạn là 'Trợ lý ảo SmartHospital' - một nhân viên y tế thân thiện, thông minh và thấu hiểu.
+            VAI TRÒ: Bạn là Trợ lý ảo AI của phòng khám 'SmartHospital'.
             
+            DỮ LIỆU CỦA PHÒNG KHÁM (CHỈ ĐƯỢC DÙNG THÔNG TIN NÀY):
+            - Danh sách Bài viết sức khỏe: $posts
+            - Danh sách Dịch vụ y tế: $services
+            - Danh sách Bác sĩ tiêu biểu: $doctors
+            - Địa chỉ: 123 Nguyễn Văn Cừ, TP Vinh. Hotline: 1900 1234.
+
             NHIỆM VỤ:
-            1. Trò chuyện tự nhiên, vui vẻ với người dùng về MỌI CHỦ ĐỀ (sức khỏe, đời sống, chào hỏi...).
-            2. Nếu người dùng hỏi về Bệnh viện, hãy dùng dữ liệu sau để trả lời chính xác:
-               - Dịch vụ hiện có: $services
-               - Bác sĩ tiêu biểu: $doctors
-               - Địa chỉ: 123 Lê Mao, TP Vinh. Hotline: 1900-1234.
+            1. Trả lời ngắn gọn, thân thiện, xưng 'em' và 'quý khách'.
+            2. QUAN TRỌNG: Nếu người dùng hỏi về vấn đề sức khỏe, bài viết, hoặc dịch vụ có trong dữ liệu trên:
+               - Hãy tóm tắt nội dung.
+               - BẮT BUỘC chèn ảnh minh họa bằng cú pháp Markdown chuẩn: ![Tên](Link ảnh).
+               - Ví dụ: Đây là bài viết bạn cần ạ: \n ![Tập thể dục](https://domain.com/img.jpg)
+            3. Nếu không có dữ liệu, hãy khuyên khách đặt lịch gặp bác sĩ.
             
-            NGUYÊN TẮC TRẢ LỜI:
-            - Giọng văn: Gần gũi, dùng từ ngữ đời thường (dạ, vâng, ạ, nhé...), không máy móc.
-            - Nếu khách hỏi về bệnh tật/triệu chứng: Hãy tư vấn dựa trên kiến thức y khoa tổng quát, đưa ra lời khuyên hữu ích, nhưng LUÔN nhắc khách đi khám.
-            - Không bao giờ nói 'Tôi không có thông tin'. Hãy dùng kiến thức xã hội để trả lời.
-            
-            Hãy trả lời câu hỏi sau của khách một cách ngắn gọn (dưới 150 từ):
+            CÂU HỎI CỦA KHÁCH:
         ";
 
         try {
             $apiKey = env('GEMINI_API_KEY');
-
-            // --- SỬA LỖI Ở ĐÂY: Truyền đủ 3 tham số ---
-            if (!$apiKey) return $this->offlineFallback($userQuestion, $services, $doctors);
+            if (!$apiKey) return $this->offlineFallback($userQuestion);
 
             $apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={$apiKey}";
 
             $response = Http::withoutVerifying()
-                ->timeout(5) // Timeout 5s
+                ->timeout(8) // Tăng timeout chút vì xử lý nhiều dữ liệu hơn
                 ->withHeaders(['Content-Type' => 'application/json'])
                 ->post($apiUrl, [
-                    'contents' => [['parts' => [['text' => $systemContext . "\n\nKhách hỏi: " . $userQuestion]]]]
+                    'contents' => [['parts' => [['text' => $systemContext . "\n" . $userQuestion]]]]
                 ]);
 
             if ($response->successful()) {
                 $data = $response->json();
                 $reply = $data['candidates'][0]['content']['parts'][0]['text'] ?? '';
+                
+                // --- XỬ LÝ FORMAT ---
+                // 1. Bỏ dấu in đậm ** thừa
+                $cleanReply = str_replace(['**', '##'], '', $reply);
+                
+                // 2. Chuyển đổi cú pháp ảnh Markdown ![Alt](URL) thành thẻ HTML <img ...>
+                // Regex tìm: ![...](...)
+                $cleanReply = preg_replace(
+                    '/!\[(.*?)\]\((.*?)\)/', 
+                    '<div class="my-2 p-1 bg-white border rounded-lg shadow-sm"><img src="$2" alt="$1" class="w-full h-32 object-cover rounded-md mb-1"><div class="text-[10px] text-center text-slate-500 font-medium truncate">$1</div></div>', 
+                    $cleanReply
+                );
 
-                if ($reply) {
-                    $cleanReply = str_replace(['**', '*'], '', $reply);
-                    return response()->json(['reply' => nl2br($cleanReply)]);
-                }
+                return response()->json(['reply' => nl2br($cleanReply)]);
             }
 
             throw new \Exception('API Error');
+
         } catch (\Exception $e) {
-            // --- SỬA LỖI Ở ĐÂY: Truyền đủ 3 tham số ---
-            return $this->offlineFallback($userQuestion, $services, $doctors);
+            return $this->offlineFallback($userQuestion);
         }
     }
-
-    // --- HÀM PHỤ TRỢ: TRẢ LỜI OFFLINE (KHI AI LỖI) ---
-    private function offlineFallback($question, $services, $doctors)
+/**
+     * CHẾ ĐỘ OFFLINE (TRẢ LỜI THEO TỪ KHÓA)
+     */
+    private function offlineFallback($question)
     {
-       $msg = mb_strtolower($question, 'UTF-8');
-        $reply = "Hiện tại kết nối AI đang gián đoạn, nhưng em vẫn ở đây ạ! ";
+        $msg = mb_strtolower($question, 'UTF-8');
+        $reply = "Hiện tại kết nối AI đang bận, nhưng em có thể hỗ trợ nhanh ạ: ";
 
-        if (str_contains($msg, 'chào') || str_contains($msg, 'hi')) {
-            $reply = "Chào bạn! SmartHospital có thể giúp gì cho bạn ạ? (Hệ thống đang hoạt động chế độ hỗ trợ nhanh)";
-        } elseif (str_contains($msg, 'giá') || str_contains($msg, 'phí') || str_contains($msg, 'tiền') || str_contains($msg, 'dịch vụ')) {
-            $reply = "Dạ đây là một số dịch vụ bên em:<br>" . nl2br($services) . "<br>Bạn cần tư vấn kỹ hơn vui lòng gọi 1900-1234 nhé!";
-        } elseif (str_contains($msg, 'bác sĩ') || str_contains($msg, 'khám') || str_contains($msg, 'lịch')) {
-            $reply = "Đội ngũ bác sĩ bên em gồm:<br>" . nl2br($doctors) . "<br>Bạn vào mục <b>'Đặt lịch khám'</b> để chọn bác sĩ nhé.";
-        } elseif (str_contains($msg, 'địa chỉ') || str_contains($msg, 'ở đâu')) {
-            $reply = "Bệnh viện SmartHospital nằm tại: 123 Đường Lê Mao, TP Vinh, Nghệ An ạ.";
-        } elseif (str_contains($msg, 'giờ') || str_contains($msg, 'làm việc')) {
-            $reply = "Bên em làm việc từ 7:00 - 17:00 (Thứ 2 đến Thứ 7). Cấp cứu trực 24/7 ạ.";
+        if (str_contains($msg, 'chào')) {
+            $reply = "Dạ chào bạn! SmartHospital rất hân hạnh được hỗ trợ ạ.";
+        } elseif (str_contains($msg, 'giá') || str_contains($msg, 'tiền')) {
+            $reply = "Giá khám bên em dao động từ 150.000đ - 300.000đ tùy chuyên khoa. Bạn xem chi tiết ở mục Dịch vụ nhé.";
+        } elseif (str_contains($msg, 'lịch') || str_contains($msg, 'khám')) {
+            $reply = "Dạ để đặt lịch, bạn vui lòng chọn menu 'Đặt lịch' phía trên, chọn bác sĩ và giờ khám phù hợp ạ.";
+        } elseif (str_contains($msg, 'địa chỉ') || str_contains($msg, 'đâu')) {
+            $reply = "Phòng khám ở 123 Nguyễn Văn Cừ, TP Vinh, Nghệ An ạ.";
         } else {
-            $reply = "Câu hỏi này cần chuyên viên tư vấn. Vui lòng gọi hotline 1900-1234 để được hỗ trợ ngay lập tức ạ!";
+            $reply = "Câu hỏi này em xin phép chuyển đến bộ phận CSKH. Bạn vui lòng gọi hotline 1900 1234 nhé!";
         }
 
         return response()->json(['reply' => $reply]);
     }
+   
 
     // Hàm làm sạch văn bản AI trả về (bỏ dấu **)
     private function cleanText($text)
@@ -549,7 +620,7 @@ public function downloadInvoice($id)
         // Kiểm tra đúng chủ sở hữu hóa đơn mới cho tải
         $invoice = Invoice::where('id', $id)
             ->where('user_id', Auth::id())
-            ->with(['user', 'items'])
+            ->with(['user', 'items', 'medicalRecord']) // Load đủ data để in
             ->firstOrFail();
 
         $pdf = Pdf::loadView('invoices.pdf', compact('invoice'));

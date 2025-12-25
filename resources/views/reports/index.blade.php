@@ -1,313 +1,229 @@
 @extends('admin.master')
+@section('title', 'Báo cáo thống kê')
 
 @section('body')
 <div class="container-fluid mt-4">
+
+    {{-- 1. THANH CÔNG CỤ & BỘ LỌC --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="text-primary fw-bold">
-            <i class="fas fa-chart-pie me-2"></i>Báo cáo & Thống kê
+        <h3 class="fw-bold text-dark mb-0">
+            <i class="fas fa-chart-pie me-2 text-primary"></i> Báo cáo Hoạt động
         </h3>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="#">Admin</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Báo cáo</li>
-            </ol>
-        </nav>
+        
+        <form action="{{ route('reports.index') }}" method="GET" class="d-flex gap-2 shadow-sm p-2 bg-white rounded">
+            <select name="month" class="form-select border-0 bg-light fw-bold text-primary">
+                @for($m=1; $m<=12; $m++)
+                    <option value="{{ $m }}" {{ $m == $month ? 'selected' : '' }}>Tháng {{ $m }}</option>
+                @endfor
+            </select>
+            <select name="year" class="form-select border-0 bg-light fw-bold text-primary">
+                @for($y=2024; $y<=2030; $y++)
+                    <option value="{{ $y }}" {{ $y == $year ? 'selected' : '' }}>Năm {{ $y }}</option>
+                @endfor
+            </select>
+            <button type="submit" class="btn btn-primary fw-bold px-3">
+                <i class="fas fa-filter"></i> Lọc
+            </button>
+        </form>
     </div>
 
-    <div class="card shadow-sm mb-4 border-0">
-        <div class="card-body bg-light rounded-3">
-            <div class="row g-3 align-items-end">
-                {{-- Chọn loại báo cáo --}}
-                <div class="col-md-4">
-                    <label for="reportType" class="form-label fw-bold text-secondary">Loại báo cáo</label>
-                    <select id="reportType" class="form-select border-primary shadow-sm">
-                        <option value="service_revenue">💰 Doanh thu: Khám vs Thuốc</option>
-                        <option value="doctor_kpi">👨‍⚕️ KPI Bác sĩ (Số ca & Doanh thu)</option>
-                        <option value="medicine_stock">💊 Cảnh báo Kho thuốc (Top 10 sắp hết)</option>
-                    </select>
-                </div>
-
-                {{-- Chọn thời gian --}}
-                <div class="col-md-3">
-                    <label for="timeType" class="form-label fw-bold text-secondary">Thời gian</label>
-                    <select id="timeType" class="form-select border-primary shadow-sm">
-                        <option value="month">Tháng này</option>
-                        <option value="quarter">Quý này</option>
-                        <option value="year">Năm nay</option>
-                    </select>
-                </div>
-
-                {{-- Nút Xem --}}
-                <div class="col-md-3">
-                    <button class="btn btn-primary w-100 fw-bold shadow-sm" id="btnView">
-                        <i class="fas fa-eye me-2"></i> Xem biểu đồ
-                    </button>
-                </div>
-
-                {{-- Nút Xuất PDF --}}
-                 <div class="col-md-2">
-                    <a href="{{ route('reports.export') }}" class="btn btn-outline-danger w-100 fw-bold shadow-sm">
-                        <i class="fas fa-file-pdf me-2"></i> Xuất PDF
-                    </a>
+    {{-- 2. CARDS THỐNG KÊ (OVERVIEW) --}}
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100 border-start border-4 border-success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 small text-uppercase fw-bold">Tổng Doanh Thu (Tháng {{ $month }})</p>
+                            <h3 class="fw-bold text-success mb-0">{{ number_format($monthlyRevenue, 0, ',', '.') }} <small class="fs-6">đ</small></h3>
+                        </div>
+                        <div class="bg-success bg-opacity-10 p-3 rounded-circle text-success">
+                            <i class="fas fa-sack-dollar fa-2x"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="card shadow-lg border-0">
-        <div class="card-header bg-white py-3 border-0">
-            <h5 class="card-title mb-0 fw-bold text-dark" id="chartTitle">Kết quả thống kê</h5>
-        </div>
-        <div class="card-body">
-            <div class="position-relative" style="height: 450px; width: 100%;">
-                <canvas id="reportChart"></canvas>
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100 border-start border-4 border-info">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 small text-uppercase fw-bold">Ca Khám Hoàn Thành</p>
+                            <h3 class="fw-bold text-info mb-0">{{ $completedExams }} <small class="fs-6">ca</small></h3>
+                        </div>
+                        <div class="bg-info bg-opacity-10 p-3 rounded-circle text-info">
+                            <i class="fas fa-user-md fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
             </div>
-            
-            <div id="summarySection" class="mt-4 row g-3 text-center d-none">
-                <div class="col-md-12">
-                    <div class="p-3 bg-soft-success rounded-3 border border-success border-opacity-25">
-                        <h6 class="text-success text-uppercase fw-bold mb-1">Tổng Doanh thu ước tính</h6>
-                        <h2 class="fw-bolder text-dark mb-0" id="totalRevenueDisplay">0 ₫</h2>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100 border-start border-4 border-warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 small text-uppercase fw-bold">Bệnh Nhân Mới</p>
+                            <h3 class="fw-bold text-warning mb-0">{{ $newPatients }} <small class="fs-6">người</small></h3>
+                        </div>
+                        <div class="bg-warning bg-opacity-10 p-3 rounded-circle text-warning">
+                            <i class="fas fa-user-plus fa-2x"></i>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    {{-- 3. BIỂU ĐỒ (CHARTS) --}}
+    <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+            <div class="card shadow border-0 h-100">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0 fw-bold"><i class="fas fa-chart-line me-2"></i> Biểu đồ doanh thu năm {{ $year }}</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="annualRevenueChart" style="height: 300px;"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow border-0 h-100">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0 fw-bold"><i class="fas fa-chart-pie me-2"></i> Tỷ trọng theo Khoa (Tháng {{ $month }})</h6>
+                </div>
+                <div class="card-body">
+                    @if(count($deptLabels) > 0)
+                        <canvas id="deptRevenueChart" style="height: 250px;"></canvas>
+                    @else
+                        <div class="text-center text-muted py-5">
+                            <i class="fas fa-chart-pie fa-3x mb-3 opacity-25"></i>
+                            <p>Chưa có dữ liệu doanh thu khoa tháng này.</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- 4. BẢNG TOP BÁC SĨ --}}
+    <div class="card shadow border-0">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h6 class="mb-0 fw-bold text-primary"><i class="fas fa-medal me-2"></i> Top 5 Bác sĩ tiêu biểu (Tháng {{ $month }})</h6>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Hạng</th>
+                            <th>Bác sĩ</th>
+                            <th>Chuyên khoa</th>
+                            <th class="text-center">Số ca khám</th>
+                            <th class="text-end pe-4">Ước tính Doanh thu</th>
+                        </tr>
+                    </thead>
+                  {{-- Tìm đến phần hiển thị bảng Top Bác sĩ và sửa lại tbody --}}
+<tbody>
+    @forelse($topDoctors as $index => $item)
+        @php
+            // Lấy trực tiếp từ thuộc tính đã select (doctor_name, department_name...)
+            $fee = $item->exam_fee ?? 200000;
+            $estimatedRev = $item->total_exams * $fee;
+        @endphp
+        <tr>
+            <td class="ps-4">
+                @if($index == 0) <span class="badge bg-warning text-dark">#1 👑</span>
+                @elseif($index == 1) <span class="badge bg-secondary">#2</span>
+                @elseif($index == 2) <span class="badge bg-brown" style="background:#cd7f32;color:white">#3</span>
+                @else <span class="fw-bold text-muted">#{{ $index + 1 }}</span>
+                @endif
+            </td>
+            <td>
+                {{-- SỬA: Gọi trực tiếp doctor_name --}}
+                <div class="fw-bold text-dark">{{ $item->doctor_name }}</div>
+            </td>
+            <td>
+                {{-- SỬA: Gọi trực tiếp department_name --}}
+                <span class="badge bg-light text-dark border">
+                    {{ $item->department_name ?? 'Chưa rõ khoa' }}
+                </span>
+            </td>
+            <td class="text-center fw-bold">{{ $item->total_exams }}</td>
+            <td class="text-end pe-4 text-success fw-bold">{{ number_format($estimatedRev) }} đ</td>
+        </tr>
+    @empty
+        <tr>
+            <td colspan="5" class="text-center py-4 text-muted">Chưa có dữ liệu bác sĩ trong tháng này.</td>
+        </tr>
+    @endforelse
+</tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
 </div>
 
-{{-- Thư viện Chart.js --}}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-
+{{-- SCRIPT VẼ BIỂU ĐỒ --}}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    let chartInstance = null; // Biến lưu instance của biểu đồ để destroy khi vẽ lại
-
-    // Sự kiện click nút Xem
-    document.getElementById('btnView').addEventListener('click', async function() {
-        const reportType = document.getElementById('reportType').value;
-        const timeType = document.getElementById('timeType').value;
-        const btn = this;
-        const summarySection = document.getElementById('summarySection');
-        const chartTitle = document.getElementById('chartTitle');
-        
-        // 1. Loading State
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Đang tải...';
-        btn.disabled = true;
-
-        try {
-            // 2. Gọi API lấy dữ liệu
-            const response = await fetch('{{ route('reports.view') }}', {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ report_type: reportType, time_type: timeType })
-            });
-
-            if (!response.ok) throw new Error('Lỗi kết nối server');
-
-            const data = await response.json();
-
-            // 3. Xử lý dữ liệu và vẽ biểu đồ
-            if (data.length === 0) {
-                alert("Không có dữ liệu nào trong khoảng thời gian này!");
-                summarySection.classList.add('d-none');
-            } else {
-                renderChart(reportType, data);
-                renderSummary(data);
-                summarySection.classList.remove('d-none');
-                
-                // Cập nhật tiêu đề card
-                const reportName = document.getElementById('reportType').options[document.getElementById('reportType').selectedIndex].text;
-                chartTitle.innerText = reportName;
+    // 1. Biểu đồ Doanh thu năm (Line Chart)
+    const ctxAnnual = document.getElementById('annualRevenueChart').getContext('2d');
+    new Chart(ctxAnnual, {
+        type: 'line',
+        data: {
+            labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'],
+            datasets: [{
+                label: 'Doanh thu (VNĐ)',
+                data: @json($annualRevenueData),
+                borderColor: '#0d6efd',
+                backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                tension: 0.3,
+                fill: true,
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true, ticks: { callback: function(value) { return value.toLocaleString() + ' đ'; } } }
             }
-
-        } catch (error) {
-            console.error('Error:', error);
-            alert('Có lỗi xảy ra khi tải dữ liệu báo cáo.');
-        } finally {
-            // 4. Reset nút bấm
-            btn.innerHTML = '<i class="fas fa-eye me-2"></i> Xem biểu đồ';
-            btn.disabled = false;
         }
     });
 
-    // Hàm vẽ biểu đồ chính
-    function renderChart(type, data) {
-        const ctx = document.getElementById('reportChart').getContext('2d');
-        
-        // Hủy biểu đồ cũ nếu tồn tại
-        if (chartInstance) {
-            chartInstance.destroy();
-        }
-
-        const labels = data.map(item => item.label);
-        let datasets = [];
-        let options = {};
-
-        // Cấu hình chung cho tooltip tiền tệ
-        const currencyTooltip = {
-            callbacks: {
-                label: function(context) {
-                    let label = context.dataset.label || '';
-                    if (label) label += ': ';
-                    if (context.parsed.y !== null) {
-                        // Nếu là trục tiền tệ thì format VNĐ
-                        if(context.dataset.yAxisID === 'y1' || type === 'service_revenue') {
-                            label += new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(context.parsed.y);
-                        } else {
-                            label += context.parsed.y;
-                        }
-                    }
-                    return label;
+    // 2. Biểu đồ Khoa (Pie Chart) - Chỉ vẽ nếu có dữ liệu
+    const ctxDept = document.getElementById('deptRevenueChart');
+    if (ctxDept) {
+        new Chart(ctxDept, {
+            type: 'doughnut',
+            data: {
+                labels: @json($deptLabels),
+                datasets: [{
+                    data: @json($deptValues),
+                    backgroundColor: [
+                        '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796'
+                    ],
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' }
                 }
             }
-        };
-
-        // --- CẤU HÌNH THEO LOẠI BÁO CÁO ---
-
-        if (type === 'doctor_kpi') {
-            // TRƯỜNG HỢP 1: KPI BÁC SĨ (Dual Axis - 2 Trục)
-            datasets = [
-                {
-                    label: 'Số ca khám (Ca)',
-                    data: data.map(item => item.total_appointments),
-                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1,
-                    type: 'bar',
-                    yAxisID: 'y', // Trục trái
-                    order: 2
-                },
-                {
-                    label: 'Doanh thu (VNĐ)',
-                    data: data.map(item => item.total_revenue),
-                    borderColor: 'rgba(255, 99, 132, 1)',
-                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                    pointBackgroundColor: 'rgba(255, 99, 132, 1)',
-                    borderWidth: 2,
-                    type: 'line',
-                    yAxisID: 'y1', // Trục phải
-                    tension: 0.4, // Đường cong mềm mại
-                    order: 1
-                }
-            ];
-
-            options = {
-                responsive: true,
-                maintainAspectRatio: false,
-                interaction: { mode: 'index', intersect: false },
-                plugins: { tooltip: currencyTooltip },
-                scales: {
-                    y: {
-                        type: 'linear',
-                        display: true,
-                        position: 'left',
-                        title: { display: true, text: 'Số lượng (Ca)' },
-                        grid: { drawOnChartArea: true }
-                    },
-                    y1: {
-                        type: 'linear',
-                        display: true,
-                        position: 'right',
-                        title: { display: true, text: 'Doanh thu (VNĐ)' },
-                        grid: { drawOnChartArea: false }, // Ẩn lưới trục phải cho đỡ rối
-                        ticks: {
-                            callback: function(value) {
-                                return new Intl.NumberFormat('vi-VN', { notation: "compact" }).format(value) + '₫';
-                            }
-                        }
-                    }
-                }
-            };
-
-        } else if (type === 'service_revenue') {
-            // TRƯỜNG HỢP 2: DOANH THU DỊCH VỤ (Bar Chart đơn giản)
-            datasets = [{
-                label: 'Doanh thu',
-                data: data.map(item => item.total),
-                backgroundColor: [
-                    'rgba(75, 192, 192, 0.6)', // Xanh ngọc
-                    'rgba(255, 206, 86, 0.6)', // Vàng
-                    'rgba(153, 102, 255, 0.6)' // Tím
-                ],
-                borderWidth: 1
-            }];
-
-            options = {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { tooltip: currencyTooltip },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return new Intl.NumberFormat('vi-VN', { notation: "compact" }).format(value) + '₫';
-                            }
-                        }
-                    }
-                }
-            };
-
-        } else {
-            // TRƯỜNG HỢP 3: KHO THUỐC (Mặc định)
-            datasets = [{
-                label: 'Số lượng tồn kho',
-                data: data.map(item => item.total),
-                backgroundColor: data.map(item => item.total <= 10 ? 'rgba(255, 99, 132, 0.7)' : 'rgba(54, 162, 235, 0.7)'), // Đỏ nếu < 10
-                borderColor: data.map(item => item.total <= 10 ? 'rgba(255, 99, 132, 1)' : 'rgba(54, 162, 235, 1)'),
-                borderWidth: 1
-            }];
-
-            options = {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: { y: { beginAtZero: true } }
-            };
-        }
-
-        // Tạo biểu đồ mới
-        chartInstance = new Chart(ctx, {
-            type: 'bar', // Mặc định là bar
-            data: { labels: labels, datasets: datasets },
-            options: options
         });
-    }
-
-    // Hàm hiển thị tổng kết dưới biểu đồ
-    function renderSummary(data) {
-        let totalVal = 0;
-        
-        data.forEach(d => {
-            // Cộng dồn doanh thu (ưu tiên trường total_revenue, nếu ko có thì dùng total)
-            totalVal += parseFloat(d.total_revenue || d.total || 0);
-        });
-
-        const display = document.getElementById('totalRevenueDisplay');
-        
-        // Nếu là báo cáo kho thuốc thì hiển thị label khác (Số lượng)
-        const type = document.getElementById('reportType').value;
-        if(type === 'medicine_stock') {
-            display.innerText = new Intl.NumberFormat('vi-VN').format(totalVal) + ' Sản phẩm';
-            display.previousElementSibling.innerText = "Tổng tồn kho các thuốc top đầu";
-        } else {
-            display.innerText = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(totalVal);
-            display.previousElementSibling.innerText = "Tổng Doanh thu trong kỳ";
-        }
     }
 </script>
-
-<style>
-    /* Một chút CSS bổ trợ */
-    .bg-soft-success {
-        background-color: #d1e7dd;
-    }
-    .card {
-        transition: all 0.3s ease;
-    }
-    .card:hover {
-        transform: translateY(-2px);
-    }
-</style>
 @endsection

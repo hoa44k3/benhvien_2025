@@ -3,83 +3,87 @@
 namespace App\Http\Controllers;
 
 use App\Models\Invoice;
+use App\Models\InvoiceItem;
 use App\Models\User;
 use App\Models\Appointment;
-use App\Models\MedicalRecord;
-use App\Models\Prescription;
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail; // Thêm
-use App\Mail\InvoicePaid; // Thêm
-use Illuminate\Support\Facades\Log;
+use Barryvdh\DomPDF\Facade\Pdf; // Thư viện PDF
 
 class InvoiceController extends Controller
 {
+    // 1. Danh sách hóa đơn
     public function index()
     {
-        $invoices = \App\Models\Invoice::with(['user', 'medicalRecord', 'items'])
-        ->orderBy('created_at', 'desc')
-        ->paginate(10);
+        $invoices = Invoice::with(['user', 'appointment', 'items'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
         return view('invoices.index', compact('invoices'));
     }
 
+    // 2. Form tạo thủ công (ít dùng, chủ yếu tạo từ lịch hẹn)
     public function create()
     {
-        $users = User::all(); // Nên lọc theo role patient
-        $records = MedicalRecord::all();
-        return view('invoices.create', compact('users', 'records'));
+        $users = User::where('status', 'active')->get(); 
+        return view('invoices.create', compact('users'));
     }
 
+    // 3. Lưu hóa đơn thủ công
     public function store(Request $request)
     {
-        $data = $request->validate([
+        $request->validate([
             'user_id' => 'required|exists:users,id',
-            'total' => 'required|numeric',
+            'total_amount' => 'required|numeric|min:0',
             'status' => 'required|in:unpaid,paid,refunded',
-            'note' => 'nullable|string',
+            'items' => 'required|array|min:1',
         ]);
 
-        $data['code'] = 'HD-' . strtoupper(Str::random(8));
-        $data['created_by'] = auth()->id();
-        $data['issued_date'] = now();
+        DB::beginTransaction();
+        try {
+            $invoice = Invoice::create([
+                'code' => 'HD-' . strtoupper(Str::random(8)),
+                'user_id' => $request->user_id,
+                'total' => $request->total_amount,
+                'status' => $request->status,
+                'note' => $request->note,
+                'created_by' => auth()->id(),
+                'issued_date' => now(),
+            ]);
 
-        Invoice::create($data);
+            foreach ($request->items as $item) {
+                InvoiceItem::create([
+                    'invoice_id' => $invoice->id,
+                    'item_name' => $item['description'],
+                    'item_type' => 'service',
+                    'quantity' => $item['quantity'],
+                    'price' => $item['unit_price'],
+                    'total' => $item['quantity'] * $item['unit_price']
+                ]);
+            }
 
-        return redirect()->route('invoices.index')->with('success', 'Tạo hóa đơn thủ công thành công.');
+            DB::commit();
+            return redirect()->route('invoices.show', $invoice->id)->with('success', 'Tạo hóa đơn thành công.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Lỗi: ' . $e->getMessage());
+        }
     }
 
+    // 4. Xem chi tiết
     public function show(Invoice $invoice)
     {
-        // Load chi tiết hóa đơn (items) để hiển thị bảng giá
-        $invoice->load(['user', 'items', 'medicalRecord', 'createdBy']); 
+        $invoice->load(['user', 'items', 'appointment', 'createdBy']); 
         return view('invoices.show', compact('invoice'));
     }
 
+    // 5. Form sửa
     public function edit(Invoice $invoice)
     {
-        $users = User::all();
-        return view('invoices.edit', compact('invoice', 'users'));
+        return view('invoices.edit', compact('invoice'));
     }
 
-    // public function update(Request $request, Invoice $invoice)
-    // {
-    //     $data = $request->validate([
-    //         'status' => 'required|in:unpaid,paid,refunded',
-    //         'payment_method' => 'nullable|in:cash,bank,momo,vnpay',
-    //         'note' => 'nullable|string',
-    //     ]);
-
-    //     // Nếu chuyển sang đã thanh toán thì cập nhật ngày trả
-    //     if ($data['status'] == 'paid' && $invoice->status != 'paid') {
-    //         $data['paid_at'] = now();
-    //     }
-
-    //     $invoice->update($data);
-
-    //     return redirect()->route('invoices.show', $invoice->id)->with('success', 'Cập nhật trạng thái hóa đơn thành công.');
-    // }
+    // 6. Cập nhật trạng thái
     public function update(Request $request, Invoice $invoice)
     {
         $data = $request->validate([
@@ -88,66 +92,77 @@ class InvoiceController extends Controller
             'note' => 'nullable|string',
         ]);
 
-        // Logic gửi mail khi Admin xác nhận thanh toán
-        // Nếu chuyển từ TRẠNG THÁI KHÁC sang PAID
         if ($data['status'] == 'paid' && $invoice->status != 'paid') {
             $data['paid_at'] = now();
-            
-            // Gửi mail cho bệnh nhân
-            if ($invoice->user && $invoice->user->email) {
-                try {
-                    Mail::to($invoice->user->email)->send(new InvoicePaid($invoice));
-                } catch (\Exception $e) {
-                    Log::error('Admin update invoice - Mail error: ' . $e->getMessage());
-                }
-            }
         }
 
         $invoice->update($data);
-
-        return redirect()->route('invoices.show', $invoice->id)->with('success', 'Cập nhật trạng thái hóa đơn thành công.');
+        return redirect()->route('invoices.show', $invoice->id)->with('success', 'Cập nhật thành công.');
     }
 
+    // 7. Xóa hóa đơn
     public function destroy(Invoice $invoice)
     {
         $invoice->delete();
         return redirect()->route('invoices.index')->with('success', 'Đã xóa hóa đơn.');
     }
 
-    /**
-     * Logic tạo hóa đơn riêng từ Đơn thuốc (Nếu dùng nút "Tạo hóa đơn" ở trang đơn thuốc)
-     */
-    public function createFromPrescription($prescriptionId)
+    // 8. LOGIC QUAN TRỌNG: TẠO HÓA ĐƠN TỪ LỊCH HẸN (THU PHÍ KHÁM)
+    public function createFromAppointment($appointmentId)
     {
-        $prescription = Prescription::with('items')->findOrFail($prescriptionId);
+        $appointment = Appointment::findOrFail($appointmentId);
 
-        // Tính tiền thuốc
-        $totalAmount = $prescription->items->sum(fn($item) => ($item->price ?? 0) * ($item->quantity ?? 1));
-
-        // Tạo Hóa đơn
-        $invoice = Invoice::create([
-            'code' => 'HD-DT-' . strtoupper(Str::random(6)),
-            'user_id' => $prescription->patient_id,
-            'prescription_id' => $prescription->id,
-            'total' => $totalAmount,
-            'status' => 'unpaid',
-            'created_by' => auth()->id(),
-            'issued_date' => now(),
-        ]);
-
-        // Copy thuốc sang chi tiết hóa đơn
-        foreach ($prescription->items as $item) {
-            DB::table('invoice_items')->insert([
-                'invoice_id' => $invoice->id,
-                'item_name' => $item->medicine_name,
-                'quantity' => $item->quantity,
-                'price' => $item->price,
-                'total' => ($item->price * $item->quantity),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+        // Check trùng
+        $existing = Invoice::where('appointment_id', $appointmentId)->first();
+        if ($existing) {
+            return redirect()->route('invoices.show', $existing->id)->with('warning', 'Hóa đơn cho lịch hẹn này đã tồn tại.');
         }
 
-        return redirect()->route('invoices.show', $invoice->id)->with('success', 'Đã tạo hóa đơn từ đơn thuốc.');
+        // Lấy phí khám (Mặc định 200k hoặc lấy từ DB Bác sĩ)
+        $fee = 200000; 
+        // Code mở rộng nếu muốn lấy đúng giá bác sĩ:
+        // $doctorSite = \App\Models\DoctorSite::where('user_id', $appointment->doctor_id)->first();
+        // if($doctorSite && $doctorSite->department) $fee = $doctorSite->department->fee;
+
+        DB::beginTransaction();
+        try {
+            $invoice = Invoice::create([
+                'code' => 'HD-KB-' . strtoupper(Str::random(6)),
+                'user_id' => $appointment->user_id ?? 0, // ID bệnh nhân (nếu có)
+                'appointment_id' => $appointment->id,
+                'total' => $fee,
+                'status' => 'unpaid',
+                'created_by' => auth()->id(),
+                'issued_date' => now(),
+                'note' => 'Thu phí khám bệnh ngày ' . \Carbon\Carbon::parse($appointment->date)->format('d/m/Y')
+            ]);
+
+            InvoiceItem::create([
+                'invoice_id' => $invoice->id,
+                'item_name' => 'Phí khám & Tư vấn chuyên khoa',
+                'item_type' => 'service',
+                'quantity' => 1,
+                'price' => $fee,
+                'total' => $fee,
+            ]);
+
+            DB::commit();
+            return redirect()->route('invoices.show', $invoice->id)->with('success', 'Đã tạo hóa đơn phí khám.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Lỗi: ' . $e->getMessage());
+        }
+    }
+
+    // 9. XUẤT FILE PDF
+    public function print($id)
+    {
+        $invoice = Invoice::with(['user', 'items'])->findOrFail($id);
+        
+        // Load view pdf và truyền biến data
+        $pdf = Pdf::loadView('invoices.pdf', compact('invoice'));
+        
+        // Stream (Mở xem trước) hoặc Download
+        return $pdf->stream('Hoa-don-' . $invoice->code . '.pdf');
     }
 }

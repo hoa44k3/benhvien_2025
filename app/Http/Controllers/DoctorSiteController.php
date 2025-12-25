@@ -7,7 +7,6 @@ use App\Models\DoctorSite;
 use App\Models\User;
 use App\Models\Department;
 use App\Models\DoctorAttendance;
-use App\Models\Prescription;
 use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -19,66 +18,37 @@ class DoctorSiteController extends Controller
 {
     public function index()
     {
-        // === PHẦN MỚI THÊM: TỰ ĐỘNG ĐỒNG BỘ ===
-        // 1. Lấy role 'doctor'
+        // === TỰ ĐỘNG ĐỒNG BỘ USER -> DOCTOR_SITE ===
         $doctorRole = Role::where('name', 'doctor')->first();
-    if ($doctorRole) {
-            // --- SỬA LỖI TẠI ĐÂY ---
-            // Thay vì pluck('id') gây lỗi ambiguous
-            // Hãy đổi thành pluck('users.id') để chỉ định rõ lấy ID từ bảng users
+        if ($doctorRole) {
             $doctorUserIds = $doctorRole->users()->pluck('users.id'); 
-
             $existingSiteIds = DoctorSite::pluck('user_id');
-
             $missingIds = $doctorUserIds->diff($existingSiteIds);
 
             foreach ($missingIds as $id) {
                 DoctorSite::create([
                     'user_id' => $id,
-                    'department_id' => null,
-                    'specialization' => 'Chưa cập nhật',
-                    'bio' => null,
-                    'rating' => 0,
-                    'reviews_count' => 0,
                     'status' => 1, 
                     'base_salary' => 0,
                     'commission_exam_percent' => 0,
-                    'commission_prescription_percent' => 0,
-                    'commission_service_percent' => 0,
-                    'experience_years' => 0,
-                    'image' => null,
-                    'bank_name' => null,
-                    'bank_account_number' => null,
-                    'bank_account_holder' => null,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-
-                    
                 ]);
             }
-        // === KẾT THÚC PHẦN ĐỒNG BỘ ===
+        }
+        // ===========================================
 
-        // Code cũ giữ nguyên: Lấy danh sách hiển thị ra view
         $doctors = DoctorSite::with('user', 'department')
             ->latest()
             ->paginate(10);
 
         return view('doctorsite.index', compact('doctors'));
     }
-}
 
     public function create()
     {
-        // Lấy danh sách user có role là doctor nhưng CHƯA có trong bảng doctor_sites
         $doctorRole = Role::where('name', 'doctor')->first();
-        
-        // Lấy tất cả user là doctor
         $allDoctorUsers = $doctorRole ? $doctorRole->users : collect();
-
-        // Lọc ra những người chưa được tạo hồ sơ bác sĩ
         $existingDoctorIds = DoctorSite::pluck('user_id')->toArray();
         $users = $allDoctorUsers->whereNotIn('id', $existingDoctorIds);
-
         $departments = Department::all();
 
         return view('doctorsite.create', compact('users', 'departments'));
@@ -97,12 +67,18 @@ class DoctorSiteController extends Controller
             'review_count' => 'nullable|integer|min:0',
             'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'status' => 'sometimes|boolean',
-            
-            // --- THÔNG TIN TÀI CHÍNH ---
+            // --- THÔNG TIN UY TÍN (MỚI) ---
+            'degree' => 'nullable|string|max:50', // VD: ThS.BS
+            'license_number' => 'nullable|string|max:50', // Số CCHN
+            'license_issued_by' => 'nullable|string|max:255', // Nơi cấp
+            'license_image' => 'nullable|image|mimes:jpg,jpeg,png,pdf|max:2048', // Ảnh chứng chỉ
+            // --- TÀI CHÍNH (Bỏ hoa hồng thuốc) ---
             'base_salary' => 'nullable|numeric|min:0',
             'commission_exam_percent' => 'nullable|numeric|min:0|max:100',
-            'commission_prescription_percent' => 'nullable|numeric|min:0|max:100',
-            'commission_service_percent' => 'nullable|numeric|min:0|max:100',
+            // 'commission_prescription_percent' -> ĐÃ BỎ
+            // 'commission_service_percent' -> Có thể giữ nếu có dịch vụ khác, ở đây tôi tạm giữ
+            // 'commission_service_percent' => 'nullable|numeric|min:0|max:100',
+            
             'bank_name' => 'nullable|string|max:255',
             'bank_account_number' => 'nullable|string|max:50',
             'bank_account_holder' => 'nullable|string|max:255',
@@ -110,10 +86,10 @@ class DoctorSiteController extends Controller
 
         $data['status'] = $request->has('status') ? (bool)$request->input('status') : 0;
         
-        // Gán mặc định nếu không nhập
+        // Mặc định giá trị
         $data['base_salary'] = $data['base_salary'] ?? 0;
         $data['commission_exam_percent'] = $data['commission_exam_percent'] ?? 0;
-        $data['commission_prescription_percent'] = $data['commission_prescription_percent'] ?? 0;
+        $data['commission_prescription_percent'] = 0; // Luôn bằng 0
         $data['commission_service_percent'] = $data['commission_service_percent'] ?? 0;
 
         DB::beginTransaction();
@@ -121,21 +97,21 @@ class DoctorSiteController extends Controller
             if ($request->hasFile('image')) {
                 $data['image'] = $request->file('image')->store('uploads/doctors', 'public');
             }
-
+            if ($request->hasFile('license_image')) {
+                $data['license_image'] = $request->file('license_image')->store('uploads/certificates', 'public');
+            }
             DoctorSite::create($data);
 
             DB::commit();
             return redirect()->route('doctorsite.index')->with('success', 'Thêm hồ sơ bác sĩ thành công!');
         } catch (\Throwable $e) {
             DB::rollBack();
-            Log::error('[DoctorSite][store] error: '.$e->getMessage());
-            return back()->withInput()->with('error', 'Lỗi khi thêm bác sĩ: '.$e->getMessage());
+            return back()->withInput()->with('error', 'Lỗi: '.$e->getMessage());
         }
     }
 
     public function edit(DoctorSite $doctor)
     {
-        // Khi edit thì không cần chọn lại User, chỉ hiển thị tên
         $departments = Department::all();
         return view('doctorsite.edit', compact('doctor', 'departments'));
     }
@@ -143,53 +119,55 @@ class DoctorSiteController extends Controller
     public function update(Request $request, DoctorSite $doctor)
     {
         $data = $request->validate([
-            // DoctorSite Info
             'department_id' => 'nullable|exists:departments,id',
             'specialization' => 'nullable|string|max:255',
             'bio' => 'nullable|string',
             'experience_years' => 'nullable|integer|min:0',
-            'rating' => 'nullable|numeric|min:0|max:5',
-            'review_count' => 'nullable|integer|min:0',
-            'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'status' => 'sometimes|boolean',
-            
-            // --- THÔNG TIN TÀI CHÍNH ---
+            // --- THÔNG TIN UY TÍN (MỚI) ---
+            'degree' => 'nullable|string|max:50',
+            'license_number' => 'nullable|string|max:50',
+            'license_issued_by' => 'nullable|string|max:255',
+            'license_image' => 'nullable|image|mimes:jpg,jpeg,png,pdf|max:2048',
+            // Tài chính (Bỏ hoa hồng thuốc)
             'base_salary' => 'nullable|numeric|min:0',
             'commission_exam_percent' => 'nullable|numeric|min:0|max:100',
-            'commission_prescription_percent' => 'nullable|numeric|min:0|max:100',
             'commission_service_percent' => 'nullable|numeric|min:0|max:100',
+            
             'bank_name' => 'nullable|string|max:255',
             'bank_account_number' => 'nullable|string|max:50',
             'bank_account_holder' => 'nullable|string|max:255',
 
-            // User Info (cập nhật tên/email nếu cần)
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,'.$doctor->user_id,
+            'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
         DB::beginTransaction();
         try {
-            // 1. Cập nhật bảng users
             $doctor->user->update([
                 'name' => $data['name'],
                 'email' => $data['email'],
             ]);
 
-            // 2. Chuẩn bị dữ liệu cập nhật doctor_sites
             $doctorData = [
                 'department_id' => $data['department_id'] ?? null,
                 'specialization' => $data['specialization'] ?? null,
                 'bio' => $data['bio'] ?? null,
                 'experience_years' => $data['experience_years'] ?? 0,
-                'rating' => $data['rating'] ?? 0,
-                'review_count' => $data['review_count'] ?? 0,
                 'status' => $request->has('status') ? (bool)$request->input('status') : 0,
-                
-                // Tài chính
+                // Update Uy tín
+                'degree' => $data['degree'] ?? null,
+                'license_number' => $data['license_number'] ?? null,
+                'license_issued_by' => $data['license_issued_by'] ?? null,
+                // Tài chính update
                 'base_salary' => $data['base_salary'] ?? 0,
                 'commission_exam_percent' => $data['commission_exam_percent'] ?? 0,
-                'commission_prescription_percent' => $data['commission_prescription_percent'] ?? 0,
-                'commission_service_percent' => $data['commission_service_percent'] ?? 0,
+                // Thuốc giữ nguyên cũ hoặc set 0
+              // Các trường khác set 0
+                'commission_prescription_percent' => 0, 
+                'commission_service_percent' => 0,
+                
                 'bank_name' => $data['bank_name'] ?? null,
                 'bank_account_number' => $data['bank_account_number'] ?? null,
                 'bank_account_holder' => $data['bank_account_holder'] ?? null,
@@ -199,93 +177,171 @@ class DoctorSiteController extends Controller
                 if ($doctor->image) Storage::disk('public')->delete($doctor->image);
                 $doctorData['image'] = $request->file('image')->store('uploads/doctors', 'public');
             }
-
+// Xử lý upload ảnh chứng chỉ (MỚI)
+            if ($request->hasFile('license_image')) {
+                if ($doctor->license_image) Storage::disk('public')->delete($doctor->license_image);
+                $doctorData['license_image'] = $request->file('license_image')->store('uploads/certificates', 'public');
+            }
             $doctor->update($doctorData);
 
             DB::commit();
-            return redirect()->route('doctorsite.index')->with('success', 'Cập nhật thông tin bác sĩ thành công!');
+            return redirect()->route('doctorsite.index')->with('success', 'Cập nhật thành công!');
         } catch (\Throwable $e) {
             DB::rollBack();
-            return back()->withInput()->with('error', 'Lỗi khi cập nhật: '.$e->getMessage());
+            return back()->withInput()->with('error', 'Lỗi: '.$e->getMessage());
         }
     }
 
+    // --- HÀM TÍNH LƯƠNG ĐÃ SỬA ---
+    // public function finance(Request $request, DoctorSite $doctor)
+    // {
+    //     $month = $request->input('month', Carbon::now()->month);
+    //     $year = $request->input('year', Carbon::now()->year);
+
+    //     // 1. TÍNH LƯƠNG CỨNG (Dựa trên chấm công)
+    //     $standardWorkDays = 26; 
+    //     $actualWorkDays = DoctorAttendance::where('doctor_id', $doctor->user_id)
+    //         ->whereMonth('date', $month)
+    //         ->whereYear('date', $year)
+    //         ->whereIn('status', ['present', 'late'])
+    //         ->count();
+
+    //     $realBaseSalary = 0;
+    //     if ($doctor->base_salary > 0) {
+    //         // lương cứng
+    //         $salaryPerDay = $doctor->base_salary / $standardWorkDays;
+    //         $realBaseSalary = $salaryPerDay * $actualWorkDays;
+    //         if ($realBaseSalary > $doctor->base_salary) $realBaseSalary = $doctor->base_salary;
+    //     }
+    //     $deductedSalary = $doctor->base_salary - $realBaseSalary;
+
+    //     // 2. TÍNH HOA HỒNG KHÁM BỆNH (Chỉ tính ca ĐÃ HOÀN THÀNH)
+    //     $completedAppointments = Appointment::where('doctor_id', $doctor->user_id)
+    //         ->whereMonth('date', $month)
+    //         ->whereYear('date', $year)
+    //         ->where('status', 'Hoàn thành') // Quan trọng: Chỉ tính ca xong
+    //         ->get();
+
+    //     // Lấy giá khám từ khoa (hoặc mặc định 200k nếu chưa set)
+    //     $examFee = $doctor->department ? $doctor->department->fee : 200000; 
+    //     // HOA HỒNG
+    //     $totalExamRevenue = $completedAppointments->count() * $examFee;
+    //     $commissionExam = $totalExamRevenue * ($doctor->commission_exam_percent / 100);
+
+    //     // 3. HOA HỒNG THUỐC -> ĐÃ BỎ (Set = 0)
+    //     // $totalDrugRevenue = 0;
+    //     // $commissionDrug = 0;
+
+    //     // 4. TỔNG THU NHẬP
+    //     $totalIncome = $realBaseSalary + $commissionExam;
+
+    //     return view('doctorsite.finance', compact(
+    //         'doctor', 'month', 'year', 'totalIncome',
+    //         'standardWorkDays', 'actualWorkDays', 'realBaseSalary', 'deductedSalary',
+    //         'completedAppointments', 'examFee', 'totalExamRevenue', 'commissionExam'
+           
+    //     ));
+    // }
+    // // --- HÀM TÍNH LƯƠNG (SỬA LẠI: TÍNH THEO GIỜ LÀM VIỆC THỰC TẾ) ---
+    // public function finance(Request $request, DoctorSite $doctor)
+    // {
+    //     $month = $request->input('month', Carbon::now()->month);
+    //     $year = $request->input('year', Carbon::now()->year);
+
+    //     // 1. TÍNH LƯƠNG CỨNG DỰA TRÊN TỔNG GIỜ LÀM (SHIFT)
+    //     // Quy ước: 1 tháng chuẩn = 26 ngày * 8 giờ = 208 giờ công
+    //     $standardHours = 208; 
+
+    //     // Lấy tổng số giờ bác sĩ đã online/trực trong tháng
+    //     $actualHours = DoctorAttendance::where('doctor_id', $doctor->user_id)
+    //         ->whereMonth('date', $month)
+    //         ->whereYear('date', $year)
+    //         ->sum('total_hours'); // 🔥 QUAN TRỌNG: Cộng tổng giờ (số thập phân)
+
+    //     $realBaseSalary = 0;
+    //     if ($doctor->base_salary > 0) {
+    //         // Tính lương theo giờ: (Lương cứng / Giờ chuẩn) * Giờ thực tế
+    //         $salaryPerHour = $doctor->base_salary / $standardHours;
+    //         $realBaseSalary = $salaryPerHour * $actualHours;
+
+    //         // Nếu làm vượt giờ chuẩn thì vẫn tính thêm (hoặc cap trần tùy bạn, ở đây tôi cho vượt)
+    //         // Nếu muốn giới hạn không quá lương cứng:
+    //         // if ($realBaseSalary > $doctor->base_salary) $realBaseSalary = $doctor->base_salary;
+    //     }
+        
+    //     // Số tiền bị trừ (nếu làm ít hơn chuẩn) hoặc số dư (nếu làm nhiều hơn - hiển thị cho vui)
+    //     $diffSalary = $doctor->base_salary - $realBaseSalary; 
+
+    //     // 2. TÍNH HOA HỒNG KHÁM BỆNH (Chỉ tính ca ĐÃ HOÀN THÀNH)
+    //     $completedAppointments = Appointment::where('doctor_id', $doctor->user_id)
+    //         ->whereMonth('date', $month)
+    //         ->whereYear('date', $year)
+    //         ->where('status', 'Hoàn thành')
+    //         ->get();
+
+    //     $examFee = $doctor->department ? $doctor->department->fee : 200000; 
+    //     $totalExamRevenue = $completedAppointments->count() * $examFee;
+    //     $commissionExam = $totalExamRevenue * ($doctor->commission_exam_percent / 100);
+
+    //     // 3. TỔNG THU NHẬP
+    //     $totalIncome = $realBaseSalary + $commissionExam;
+
+    //     return view('doctorsite.finance', compact(
+    //         'doctor', 'month', 'year', 'totalIncome',
+    //         'standardHours', 'actualHours', 'realBaseSalary', 'diffSalary',
+    //         'completedAppointments', 'examFee', 'totalExamRevenue', 'commissionExam'
+    //     ));
+    // }
+    // --- HÀM TÍNH LƯƠNG (ĐÃ SỬA: LƯƠNG CỨNG CỐ ĐỊNH + HOA HỒNG) ---
     public function finance(Request $request, DoctorSite $doctor)
     {
-    // 1. Lấy tháng/năm
-    $month = $request->input('month', Carbon::now()->month);
-    $year = $request->input('year', Carbon::now()->year);
-    $daysInMonth = Carbon::createFromDate($year, $month)->daysInMonth; // Tổng số ngày trong tháng
+        $month = $request->input('month', Carbon::now()->month);
+        $year = $request->input('year', Carbon::now()->year);
 
-    // 2. XỬ LÝ CHẤM CÔNG (ATTENDANCE)
-    // Giả sử quy định chuẩn là 26 công/tháng
-    $standardWorkDays = 26; 
+        // 1. THỐNG KÊ HIỆU SUẤT (Chỉ để xem, không ảnh hưởng tiền lương)
+        // Tổng giờ online
+        $actualHours = DoctorAttendance::where('doctor_id', $doctor->user_id)
+            ->whereMonth('date', $month)
+            ->whereYear('date', $year)
+            ->sum('total_hours');
+            
+        // Số ngày có hoạt động
+        $activeDays = DoctorAttendance::where('doctor_id', $doctor->user_id)
+            ->whereMonth('date', $month)
+            ->whereYear('date', $year)
+            ->distinct('date')
+            ->count();
 
-    // Đếm số ngày bác sĩ có đi làm (status = present hoặc check_in có dữ liệu)
-   $actualWorkDays = DoctorAttendance::where('doctor_id', $doctor->user_id)
-    ->whereMonth('date', $month)
-    ->whereYear('date', $year)
-    ->whereIn('status', ['present', 'late'])
-    ->count();
+        // 2. TÍNH LƯƠNG CỨNG (CỐ ĐỊNH)
+        // Lấy nguyên lương cứng đã set, không trừ
+        $fixedSalary = $doctor->base_salary; 
 
-    // Tính lương cứng thực tế (Lương thỏa thuận / 26 * Số ngày làm)
-    // Nếu làm đủ hoặc dư 26 công thì nhận full lương, nếu thiếu thì bị trừ
-    $realBaseSalary = 0;
-    if ($doctor->base_salary > 0) {
-        $salaryPerDay = $doctor->base_salary / $standardWorkDays;
-        $realBaseSalary = $salaryPerDay * $actualWorkDays;
+        // 3. TÍNH HOA HỒNG KHÁM BỆNH
+        $completedAppointments = Appointment::where('doctor_id', $doctor->user_id)
+            ->whereMonth('date', $month)
+            ->whereYear('date', $year)
+            ->where('status', 'Hoàn thành')
+            ->get();
 
-        // Không được vượt quá lương cứng (nếu lỡ chấm công > 26 ngày)
-        if ($realBaseSalary > $doctor->base_salary) {
-            $realBaseSalary = $doctor->base_salary;
-        }
+        $examFee = $doctor->department ? $doctor->department->fee : 200000; 
+        $totalExamRevenue = $completedAppointments->count() * $examFee;
+        $commissionExam = $totalExamRevenue * ($doctor->commission_exam_percent / 100);
+
+        // 4. TỔNG THU NHẬP
+        $totalIncome = $fixedSalary + $commissionExam;
+
+        return view('doctorsite.finance', compact(
+            'doctor', 'month', 'year', 'totalIncome',
+            'actualHours', 'activeDays', 'fixedSalary',
+            'completedAppointments', 'examFee', 'totalExamRevenue', 'commissionExam'
+        ));
     }
 
-    // Tính số tiền bị trừ (để hiển thị cho rõ)
-    $deductedSalary = $doctor->base_salary - $realBaseSalary;
-
-
-    // 3. TÍNH HOA HỒNG KHÁM BỆNH & LẤY DANH SÁCH BỆNH NHÂN
-    // Chỉ lấy ca đã HOÀN THÀNH (completed) -> Đây là tiền thật
-    $completedAppointments = Appointment::where('doctor_id', $doctor->user_id)
-        ->whereMonth('date', $month)
-        ->whereYear('date', $year)
-        ->where('status', 'completed') // 🔥 QUAN TRỌNG: Chỉ tính ca đã xong
-        ->orderBy('date', 'asc')
-        ->get();
-
-    // Phí khám & Hoa hồng
-    $examFee = $doctor->department ? $doctor->department->fee : 0; 
-    $totalExamRevenue = $completedAppointments->count() * $examFee;
-    $commissionExam = $totalExamRevenue * ($doctor->commission_exam_percent / 100);
-
-
-    // 4. TÍNH HOA HỒNG ĐƠN THUỐC
-    $prescriptions = Prescription::where('doctor_id', $doctor->user_id)
-        ->whereMonth('created_at', $month)
-        ->whereYear('created_at', $year)
-        ->get();
-
-    $totalDrugRevenue = $prescriptions->sum('total_amount'); 
-    $commissionDrug = $totalDrugRevenue * ($doctor->commission_prescription_percent / 100);
-
-    // 5. TỔNG THU NHẬP CUỐI CÙNG
-    $totalIncome = $realBaseSalary + $commissionExam + $commissionDrug;
-
-    return view('doctorsite.finance', compact(
-        'doctor', 'month', 'year', 'totalIncome',
-        'standardWorkDays', 'actualWorkDays', 'realBaseSalary', 'deductedSalary', // Biến cho chấm công
-        'completedAppointments', 'examFee', 'totalExamRevenue', 'commissionExam',
-        'prescriptions', 'totalDrugRevenue', 'commissionDrug'
-    ));
-    }
     public function destroy(DoctorSite $doctor)
     {
-        if ($doctor->image) {
-            Storage::disk('public')->delete($doctor->image);
-        }
+        if ($doctor->image) Storage::disk('public')->delete($doctor->image);
         $doctor->delete();
-        return redirect()->route('doctorsite.index')->with('success', 'Đã xóa bác sĩ thành công!');
+        return redirect()->route('doctorsite.index')->with('success', 'Đã xóa bác sĩ!');
     }
     
      public function show(DoctorSite $doctor)
@@ -293,4 +349,3 @@ class DoctorSiteController extends Controller
         return view('doctorsite.show', compact('doctor'));
     }
 }
-            

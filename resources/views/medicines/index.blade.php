@@ -23,48 +23,6 @@
                 </div>
             </div>
         </div>
-
-        <div class="col-xl-3 col-md-6">
-            <div class="card bg-success text-white shadow-lg h-100 border-0 rounded-3">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <div class="text-uppercase fw-semibold mb-1 opacity-75">Tổng giá trị tồn kho</div>
-                            <h3 class="fw-bolder fs-4">{{ $formattedTotalStock }}</h3>
-                        </div>
-                        <i class="fas fa-warehouse fa-3x opacity-50"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-md-6">
-            <div class="card bg-warning text-dark shadow-lg h-100 border-0 rounded-3">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <div class="text-uppercase fw-semibold mb-1 opacity-75">Giá trị sắp hết kho</div>
-                            <h3 class="fw-bolder fs-4">{{ $formattedLowStockValue }}</h3>
-                        </div>
-                        <i class="fas fa-exclamation-triangle fa-3x opacity-50"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-md-6">
-            <div class="card bg-danger text-white shadow-lg h-100 border-0 rounded-3">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <div class="text-uppercase fw-semibold mb-1 opacity-75">Số loại đã hết hạn</div>
-                            <h3 class="display-6 fw-bolder">{{ number_format($expiredCount) }}</h3> 
-                        </div>
-                        <i class="fas fa-calendar-times fa-3x opacity-50"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
     
     {{-- Thanh công cụ & Tìm kiếm --}}
@@ -89,20 +47,13 @@
 
                     {{-- Lọc theo Phân loại --}}
                 {{-- Lọc theo Phân loại --}}
-<select class="form-select w-auto" name="medicine_category_id" onchange="this.form.submit()">
-    <option value="">-- Tất cả Phân loại --</option>
-    @foreach($categories as $cat)
-        <option value="{{ $cat->id }}" {{ request('medicine_category_id') == $cat->id ? 'selected' : '' }}>
-            {{ $cat->name }}
-        </option>
-    @endforeach
-</select>
-
-                    {{-- Lọc theo Cảnh báo --}}
-                    <select class="form-select w-auto" name="alert" onchange="this.form.submit()">
-                        <option value="">-- Tất cả Trạng thái --</option>
-                        <option value="low_stock" {{ request('alert') == 'low_stock' ? 'selected' : '' }}>Tồn kho thấp</option>
-                        <option value="expired" {{ request('alert') == 'expired' ? 'selected' : '' }}>Sắp/Hết hạn</option>
+                    <select class="form-select w-auto" name="medicine_category_id" onchange="this.form.submit()">
+                        <option value="">-- Tất cả Phân loại --</option>
+                        @foreach($categories as $cat)
+                            <option value="{{ $cat->id }}" {{ request('medicine_category_id') == $cat->id ? 'selected' : '' }}>
+                                {{ $cat->name }}
+                            </option>
+                        @endforeach
                     </select>
                     
                     {{-- Nút Reset --}}
@@ -134,42 +85,13 @@
                             <th>Tên thuốc</th>
                             <th>Phân loại</th>
                             <th class="text-center">Đơn vị</th>
-                            <th class="text-center">Tồn kho</th>
-                            <th class="text-center">Tồn Min</th>
-                            <th class="text-end">Giá bán (VNĐ)</th>
-                            <th class="text-center">Hạn sử dụng</th>
-                            <th>Nhà cung cấp</th>
                             <th class="text-center">Trạng thái</th>
                             <th class="text-center">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse ($medicines as $medicine)
-                       @php
-            // 1. RESET BIẾN CẨN THẬN Ở ĐẦU VÒNG LẶP
-            $daysLeft = 0;
-            $isExpired = false;
-            $isExpiringSoon = false;
-            $expiryText = '';
-
-            if ($medicine->expiry_date) {
-                // Parse ngày hết hạn
-                $expiry = \Carbon\Carbon::parse($medicine->expiry_date)->startOfDay();
-                $now = \Carbon\Carbon::now()->startOfDay();
-                
-                // Tính khoảng cách ngày (Số âm: Đã qua, Số dương: Còn lại)
-                // Lưu ý: dùng tham số false để lấy số âm/dương
-                $daysLeft = $now->diffInDays($expiry, false); 
-
-                // Logic xác định trạng thái
-                if ($daysLeft < 0) {
-                    $isExpired = true; // Đã qua ngày
-                } elseif ($daysLeft <= 90) {
-                    $isExpiringSoon = true; // Còn dương và dưới 90 ngày
-                }
-            }
-        @endphp
-                            <tr>
+                       
                                 <td class="fw-bold text-primary">{{ $medicine->code }}</td>
                                 
                                 <td>
@@ -190,49 +112,6 @@
                                     {{-- Sửa $medicine->unit thành $medicine->medicineUnit --}}
                                     {{ $medicine->medicineUnit ? $medicine->medicineUnit->name : '-' }}
                                 </td>
-
-                                <td class="text-center {{ $medicine->stock <= ($medicine->min_stock ?? 0) ? 'text-danger fw-bold' : '' }}">
-                                    {{ number_format($medicine->stock) }}
-                                </td>
-
-                                <td class="text-center text-muted">
-                                    {{ number_format($medicine->min_stock) }}
-                                </td>
-
-                                <td class="text-end fw-bold text-success">{{ number_format($medicine->price) }}</td>
-
-                              <td class="text-center">
-                @if($medicine->expiry_date)
-                    <div class="{{ $isExpired ? 'text-danger fw-bold' : ($isExpiringSoon ? 'text-warning fw-bold' : '') }}">
-                        {{ \Carbon\Carbon::parse($medicine->expiry_date)->format('d/m/Y') }}
-                    </div>
-                    
-                    {{-- Hiển thị debug: Còn bao nhiêu ngày --}}
-                    @if($isExpiringSoon)
-                        <small class="text-danger fst-italic" style="font-size: 0.75rem;">
-                            (Còn {{ intval($daysLeft) }} ngày)
-                        </small>
-                    @elseif(!$isExpired)
-                         <small class="text-muted" style="font-size: 0.75rem;">(Còn {{ intval($daysLeft) }} ngày)</small>
-                    @endif
-                @else
-                    <span class="text-muted">-</span>
-                @endif
-            </td>
-
-                                <td>{{ Str::limit($medicine->supplier, 20) }}</td>
-
-                             <td class="text-center">
-                @if($isExpired)
-                    <span class="badge bg-danger">Hết Hạn</span>
-                @elseif($isExpiringSoon)
-                    <span class="badge bg-warning text-dark border border-danger">Sắp Hết Hạn</span>
-                @elseif($medicine->stock <= ($medicine->min_stock ?? 10))
-                    <span class="badge bg-warning text-dark">Sắp Hết Hàng</span>
-                @else
-                    <span class="badge bg-success">Hoạt động</span>
-                @endif
-            </td>f
                             </td>
 
                                 <td class="text-center">

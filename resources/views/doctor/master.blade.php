@@ -49,13 +49,13 @@
                 <i data-lucide="flask-round" class="w-5 h-5"></i>
                 <span>Xin nghỉ phép</span>
             </a>
-
+{{-- 
             <a href="{{ route('doctor.test_results.index') }}" 
                class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 
                {{ request()->routeIs('doctor.test_results.*') ? 'bg-white text-blue-700 shadow-md font-bold' : 'text-white hover:bg-white/20' }}">
                 <i data-lucide="flask-round" class="w-5 h-5"></i>
                 <span>Kết quả Xét nghiệm</span>
-            </a>
+            </a> --}}
 
             <a href="{{ route('doctor.statistics.index') }}" 
                class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 

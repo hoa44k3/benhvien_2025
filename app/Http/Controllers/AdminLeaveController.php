@@ -20,8 +20,7 @@ class AdminLeaveController extends Controller
     // Xử lý Duyệt/Từ chối
     public function updateStatus(Request $request, $id) {
         $leave = DoctorLeave::with('user')->findOrFail($id);
-        $status = $request->input('status'); // 'approved' hoặc 'rejected'
-        
+        $status = $request->input('status'); 
         $leave->update([
             'status' => $status,
             'admin_note' => $request->input('admin_note')

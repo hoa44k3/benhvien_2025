@@ -63,5 +63,9 @@ public function getTimeAttribute($value)
 {
     return Carbon::parse($value)->format('H:i');
 }
-
+public function doctorSite()
+    {
+        // Quan hệ 1-1: User hasOne DoctorSite
+        return $this->hasOne(DoctorSite::class, 'user_id');
+    }
 }

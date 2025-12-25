@@ -255,56 +255,64 @@
     </footer>
 
     {{-- CHATBOT AI (Refined UI) --}}
-    <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end">
-        <div id="chatWindow" class="chat-container w-[350px] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden mb-4 hidden transform transition-all duration-300 origin-bottom-right scale-95 opacity-0">
-            {{-- Chat Header --}}
-            <div class="bg-gradient-to-r from-primary to-blue-600 p-4 flex justify-between items-center text-white shadow-md">
+    <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end font-sans">
+        
+        {{-- Cửa sổ Chat --}}
+        <div id="chatWindow" class="w-[360px] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden mb-4 hidden transform transition-all duration-300 origin-bottom-right scale-95 opacity-0 flex flex-col">
+            
+            {{-- Header --}}
+            <div class="bg-gradient-to-r from-blue-600 to-primary p-4 flex justify-between items-center text-white shadow">
                 <div class="flex items-center gap-3">
-                    <div class="relative">
-                        <div class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white border border-white/30">
-                            <i class="fas fa-robot text-lg"></i>
-                        </div>
-                        <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-400 border-2 border-primary rounded-full"></span>
+                    <div class="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/40">
+                        <i class="fas fa-robot text-lg"></i>
                     </div>
                     <div>
-                        <h4 class="font-bold text-sm">Trợ lý ảo AI</h4>
-                        <span class="text-[10px] text-blue-100 opacity-90">Hỗ trợ tự động 24/7</span>
+                        <h4 class="font-bold text-sm">Trợ lý SmartHospital</h4>
+                        <span class="text-[11px] text-blue-100 flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></span> Online 24/7
+                        </span>
                     </div>
                 </div>
-                <button onclick="toggleChat()" class="text-white/80 hover:text-white hover:bg-white/10 p-2 rounded-full transition"><i class="fas fa-times"></i></button>
+                <button onclick="toggleChat()" class="text-white/80 hover:text-white hover:bg-white/10 p-2 rounded-full transition">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
 
-            {{-- Chat Messages --}}
+            {{-- Nội dung Chat --}}
             <div id="chatMessages" class="h-80 p-4 overflow-y-auto bg-slate-50 space-y-4 text-sm scroll-smooth">
-                {{-- Bot Greeting --}}
                 <div class="flex items-start gap-2.5">
                     <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-primary flex-shrink-0 mt-1">
                         <i class="fas fa-robot text-xs"></i>
                     </div>
-                    <div class="flex flex-col gap-1 max-w-[85%]">
-                        <div class="bg-white p-3.5 rounded-2xl rounded-tl-none shadow-sm border border-slate-100 text-slate-700">
-                            <p>Xin chào! Tôi có thể giúp gì cho bạn hôm nay? 👋</p>
-                        </div>
-                        <div class="flex flex-wrap gap-2 mt-1">
-                            <button onclick="fillChat('Đặt lịch khám thế nào?')" class="text-xs bg-white border border-slate-200 px-3 py-1.5 rounded-full hover:bg-primary hover:text-white hover:border-primary transition cursor-pointer">Đặt lịch khám</button>
-                            <button onclick="fillChat('Chi phí dịch vụ?')" class="text-xs bg-white border border-slate-200 px-3 py-1.5 rounded-full hover:bg-primary hover:text-white hover:border-primary transition cursor-pointer">Chi phí</button>
-                        </div>
+                    <div class="bg-white p-3 rounded-2xl rounded-tl-none shadow-sm border border-slate-100 text-slate-700 max-w-[85%]">
+                        <p>Xin chào! Em là trợ lý AI. Em có thể giúp gì cho anh/chị ạ? 👋</p>
                     </div>
+                </div>
+                
+                <div class="pl-11 flex flex-wrap gap-2">
+                    <button onclick="fillAndSend('Làm sao để đặt lịch khám?')" class="text-xs bg-white border border-slate-200 px-3 py-1.5 rounded-full hover:bg-primary hover:text-white hover:border-primary transition text-slate-600">📅 Đặt lịch khám</button>
+                    <button onclick="fillAndSend('Chi phí khám bệnh thế nào?')" class="text-xs bg-white border border-slate-200 px-3 py-1.5 rounded-full hover:bg-primary hover:text-white hover:border-primary transition text-slate-600">💰 Chi phí</button>
+                    <button onclick="fillAndSend('Bệnh viện ở đâu?')" class="text-xs bg-white border border-slate-200 px-3 py-1.5 rounded-full hover:bg-primary hover:text-white hover:border-primary transition text-slate-600">📍 Địa chỉ</button>
                 </div>
             </div>
 
-            {{-- Chat Input --}}
+            {{-- Input --}}
             <div class="p-3 bg-white border-t border-slate-100">
-                <form id="chatForm" onsubmit="sendMessage(event)" class="flex items-center gap-2">
-                    <input type="text" id="userMessage" class="flex-1 bg-slate-100 border-none rounded-full px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 focus:bg-white transition" placeholder="Nhập câu hỏi của bạn..." autocomplete="off">
-                    <button type="submit" class="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center hover:bg-blue-600 transition shadow-md hover:shadow-lg transform active:scale-95"><i class="fas fa-paper-plane text-xs"></i></button>
+                <form id="chatForm" onsubmit="sendMessage(event)" class="relative">
+                    <input type="text" id="userMessage" 
+                           class="w-full bg-slate-100 border-none rounded-full pl-4 pr-12 py-3 text-sm focus:ring-2 focus:ring-primary/50 focus:bg-white transition" 
+                           placeholder="Nhập câu hỏi..." autocomplete="off">
+                    <button type="submit" id="sendBtn" class="absolute right-1.5 top-1.5 w-9 h-9 bg-primary text-white rounded-full flex items-center justify-center hover:bg-blue-600 transition shadow-sm">
+                        <i class="fas fa-paper-plane text-xs"></i>
+                    </button>
                 </form>
             </div>
         </div>
 
-        <button onclick="toggleChat()" class="group flex items-center gap-2">
-            <span class="bg-white text-slate-700 px-3 py-1.5 rounded-lg shadow-md text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300 -translate-x-2 pointer-events-none">Cần hỗ trợ?</span>
-            <div class="w-14 h-14 bg-gradient-to-r from-primary to-blue-600 text-white rounded-full shadow-glow hover:shadow-lg hover:scale-110 transition-all duration-300 flex items-center justify-center text-2xl relative">
+        {{-- Nút Mở Chat --}}
+        <button onclick="toggleChat()" class="group flex items-center gap-2 focus:outline-none">
+            <span class="bg-white text-slate-800 px-3 py-1.5 rounded-lg shadow-lg text-xs font-bold opacity-0 group-hover:opacity-100 transition-all duration-300 -translate-x-2 pointer-events-none border border-slate-100">Chat ngay!</span>
+            <div class="w-14 h-14 bg-gradient-to-tr from-primary to-blue-600 text-white rounded-full shadow-lg hover:shadow-primary/50 hover:scale-110 transition-all duration-300 flex items-center justify-center text-2xl relative z-10">
                 <i class="fas fa-comment-dots"></i>
                 <span class="absolute top-0 right-0 flex h-3 w-3">
                   <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
@@ -344,11 +352,10 @@
 
     {{-- SCRIPTS --}}
     <script>
+        // Hàm bật tắt Chat
         function toggleChat() {
             const chatWindow = document.getElementById('chatWindow');
-            const isHidden = chatWindow.classList.contains('hidden');
-            
-            if (isHidden) {
+            if (chatWindow.classList.contains('hidden')) {
                 chatWindow.classList.remove('hidden');
                 setTimeout(() => {
                     chatWindow.classList.remove('opacity-0', 'scale-95');
@@ -358,39 +365,44 @@
             } else {
                 chatWindow.classList.remove('opacity-100', 'scale-100');
                 chatWindow.classList.add('opacity-0', 'scale-95');
-                setTimeout(() => {
-                    chatWindow.classList.add('hidden');
-                }, 300);
+                setTimeout(() => { chatWindow.classList.add('hidden'); }, 300);
             }
         }
 
-        function fillChat(text) {
+        // Gợi ý nhanh
+        function fillAndSend(text) {
             document.getElementById('userMessage').value = text;
+            document.getElementById('chatForm').dispatchEvent(new Event('submit'));
         }
 
+        // Gửi tin nhắn
         async function sendMessage(e) {
             e.preventDefault();
             const input = document.getElementById('userMessage');
+            const btn = document.getElementById('sendBtn');
             const message = input.value.trim();
             const chatBox = document.getElementById('chatMessages');
 
             if (!message) return;
 
-            // 1. User Message
+            // 1. Hiện tin nhắn người dùng
             chatBox.innerHTML += `
-                <div class="flex items-end justify-end gap-2 fade-in-up">
-                    <div class="bg-primary text-white p-3 rounded-2xl rounded-tr-none shadow-md max-w-[85%] text-sm">
+                <div class="flex justify-end mb-4 animate-fade-in-up">
+                    <div class="bg-primary text-white px-4 py-2 rounded-2xl rounded-tr-none shadow-md max-w-[85%] text-sm">
                         ${message}
                     </div>
                 </div>`;
+            
             input.value = '';
+            input.disabled = true; // Khóa ô nhập
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin text-xs"></i>'; // Icon loading
             chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
 
-            // 2. Typing Indicator
+            // 2. Hiện trạng thái "Đang gõ..."
             const loadingId = 'loading-' + Date.now();
             chatBox.innerHTML += `
-                <div id="${loadingId}" class="flex items-start gap-2 fade-in-up">
-                     <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-primary flex-shrink-0 mt-1">
+                <div id="${loadingId}" class="flex items-start gap-2 mb-4 animate-fade-in-up">
+                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-primary flex-shrink-0">
                         <i class="fas fa-robot text-xs"></i>
                     </div>
                     <div class="bg-white p-3 rounded-2xl rounded-tl-none shadow-sm border border-slate-100">
@@ -402,9 +414,7 @@
                     </div>
                 </div>`;
             chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
-
-            // 3. Send AJAX
-            try {
+                        try {
                 const response = await fetch("{{ route('chatbot.ask') }}", {
                     method: "POST",
                     headers: {
@@ -413,25 +423,35 @@
                     },
                     body: JSON.stringify({ message: message })
                 });
-                
                 const data = await response.json();
-                document.getElementById(loadingId).remove();
 
-                // Bot Response
+                document.getElementById(loadingId).remove();
+                // 3. HIỆN CÂU TRẢ LỜI TỪ AI (CÓ HỖ TRỢ ẢNH)
                 chatBox.innerHTML += `
-                    <div class="flex items-start gap-2 fade-in-up">
-                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-primary flex-shrink-0 mt-1">
-                            <i class="fas fa-robot text-xs"></i>
-                        </div>
-                        <div class="bg-white p-3.5 rounded-2xl rounded-tl-none shadow-sm border border-slate-100 max-w-[85%] text-slate-700 text-sm leading-relaxed">
-                            ${data.reply}
-                        </div>
-                    </div>`;
-                chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
 
+                    <div class="flex items-start gap-2 mb-4 animate-fade-in-up">
+
+                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-primary flex-shrink-0 mt-1">
+
+                            <i class="fas fa-robot text-xs"></i>
+
+                        </div>
+
+                        <div class="bg-white p-3.5 rounded-2xl rounded-tl-none shadow-sm border border-slate-100 max-w-[90%] text-slate-700 text-sm leading-relaxed overflow-hidden">
+
+                            ${data.reply}
+
+                        </div>
+
+                    </div>`;
             } catch (error) {
-                console.error(error);
                 document.getElementById(loadingId).remove();
+                chatBox.innerHTML += `<div class="text-center text-xs text-red-400 mb-4">Lỗi kết nối máy chủ!</div>`;
+            } finally {
+                input.disabled = false;
+                input.focus();
+                btn.innerHTML = '<i class="fas fa-paper-plane text-xs"></i>';
+                chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
             }
         }
 
