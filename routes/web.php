@@ -219,14 +219,15 @@ Route::prefix('appointments')->group(function () {
     Route::get('/{appointment}/edit', [AppointmentController::class, 'edit'])->name('appointments.edit');
     Route::put('/{appointment}', [AppointmentController::class, 'update'])->name('appointments.update');
     Route::delete('/{appointment}', [AppointmentController::class, 'destroy'])->name('appointments.destroy');
+    Route::post('/appointments/{id}/checkin', [AppointmentController::class, 'checkIn'])->name('appointments.checkin');
   Route::post('/{id}/approve', [AppointmentController::class, 'approve'])
         ->name('appointments.approve')
         ->middleware('auth');
-Route::post('/appointments/{id}/check-in', 
-    [AppointmentController::class, 'checkIn'])
-    ->name('appointments.checkin');
-
-
+// Route::post('/appointments/{id}/check-in', 
+//     [AppointmentController::class, 'checkIn'])
+//     ->name('appointments.checkin');
+// Route::post('/appointments/{id}/checkin', [AppointmentController::class, 'checkIn'])->name('appointments.checkin');
+Route::post('/appointments/{appointment}/cancel', [AppointmentController::class, 'cancel'])->name('appointments.cancel');
 });
 
 Route::prefix('admin/medical_records')->group(function () {

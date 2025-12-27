@@ -13,43 +13,65 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth; 
 use App\Mail\AppointmentConfirmationMail;
 use Illuminate\Support\Facades\Mail;
-
+use App\Models\Role;
 
 class AppointmentController extends Controller
 {
-//     public function index()
-//     {
-//         $appointments = Appointment::with(['doctor', 'department', 'user', 'approver', 'checkinUser'])
-//         //  ->where('status','Đang chờ')    
-//         ->orderBy('id', 'desc')
-          
-// ->paginate(10);
-//         return view('appointments.index', compact('appointments'));
-//     }
-public function index(Request $request)
-{
-    // 1. Khởi tạo Query
-    $query = Appointment::with(['doctor', 'department', 'user', 'approver', 'checkinUser']);
+    public function index(Request $request)
+    {
+        // 1. Khởi tạo Query
+        $query = Appointment::with(['doctor', 'department', 'user', 'approver', 'checkinUser']);
+        // Tìm theo từ khóa (Mã, Tên BN, SĐT)
+        if ($request->filled('keyword')) {
+            $kw = $request->keyword;
+            $query->where(function($q) use ($kw) {
+                $q->where('code', 'like', "%$kw%")
+                ->orWhere('patient_name', 'like', "%$kw%")
+                ->orWhere('patient_phone', 'like', "%$kw%");
+            });
+        }
 
-    // 2. Bộ lọc (Giữ lại nếu bạn muốn phát triển thêm sau này)
-    if ($request->filled('status')) {
-        $query->where('status', $request->status);
-    }
+        // Lọc theo Ngày (Mặc định là hôm nay nếu không chọn gì, hoặc chọn 'all' để xem hết)
+        if ($request->filled('date')) {
+            $query->whereDate('date', $request->date);
+        } 
+        // Mẹo: Nếu bạn muốn mặc định vào là hiện lịch hôm nay luôn thì mở comment dòng dưới:
+        // else { $query->whereDate('date', now()); }
 
-    // 3. SẮP XẾP QUAN TRỌNG:
-    // Sắp xếp theo department_id trước để gom nhóm
-    $query->orderBy('department_id', 'asc'); 
+        // Lọc theo Trạng thái
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
+        }
+
+        // Lọc theo Bác sĩ
+        if ($request->filled('doctor_id')) {
+            $query->where('doctor_id', $request->doctor_id);
+        }
+
+        // 3. Sắp xếp: Ưu tiên Ngày giảm dần -> Giờ tăng dần
+        $query->orderBy('date', 'desc')->orderBy('time', 'asc');
+
+        // 4. Phân trang
+        $appointments = $query->paginate(15)->withQueryString(); // withQueryString để giữ tham số lọc khi chuyển trang
+// 2. LẤY DANH SÁCH NHÂN VIÊN THEO ROLE (CẬP NHẬT MỚI)
     
-    // Sau đó sắp xếp theo ngày giảm dần (mới nhất lên đầu)
-    $query->orderBy('date', 'desc');
-    $query->orderBy('time', 'asc');
+    // Lấy Bác sĩ (Role = doctor)
+    // Cách viết này an toàn nếu bạn dùng bảng roles riêng như trong DoctorSiteController
+    $doctorRole = Role::where('name', 'doctor')->first();
+    $doctors = $doctorRole ? $doctorRole->users : collect();
 
-    // 4. Phân trang (Tăng lên 20 để hiển thị được nhiều nhóm hơn trên 1 trang)
-    $appointments = $query->paginate(20);
+    // Lấy Lễ tân (Role = receptionist) -> BIẾN NÀY ĐANG THIẾU
+    // $recepRole = Role::where('name', 'receptionist')->first();
+    $receptionists = User::whereHas('roles', fn($q) => $q->where('name', 'receptionist'))->get();
 
-    return view('appointments.index', compact('appointments'));
-}
+    // Lấy Y tá (Role = nurse) -> Dùng cho check-in
+    // $nurseRole = Role::where('name', 'nurse')->first();
+  $nurses = User::whereHas('roles', fn($q) => $q->where('name', 'nurse'))->get();
+        // Lấy danh sách bác sĩ để đổ vào Select Box lọc
+        // $doctors = User::whereHas('roles', fn($q) => $q->where('name', 'doctor'))->get();
 
+        return view('appointments.index', compact('appointments', 'doctors', 'receptionists', 'nurses'));
+    }
     public function create()
     {
         $doctors = User::whereHas('roles', fn($q) => $q->where('name','doctor'))->get();
@@ -229,42 +251,53 @@ public function index(Request $request)
             return redirect()->back()->with('error', '❌ Lỗi khi cập nhật lịch hẹn: ' . $e->getMessage());
         }
     }
+   
+    // --- CẬP NHẬT: DUYỆT LỊCH (Nhận ID người duyệt từ form popup) ---
     public function approve(Request $request, $id)
     {
         $app = Appointment::findOrFail($id);
+        
+        // Lấy ID người được chọn từ popup, nếu không chọn thì lấy người đang login
+        $approverId = $request->input('approver_id', Auth::id());
 
         $app->update([
             'status' => 'Đã xác nhận',
-            'approved_by' => auth()->id(),
+            'approved_by' => $approverId,
         ]);
 
-        return back()->with('success', 'Duyệt lịch khám thành công!');
+        return back()->with('success', 'Đã duyệt lịch thành công!');
     }
-    public function checkIn($id)
+
+    public function checkIn(Request $request, $id)
     {
         $app = Appointment::findOrFail($id);
+        
+        // Lấy ID người check-in từ popup
+        $checkerId = $request->input('checked_in_by', Auth::id());
 
-        // Tạo medical_record nếu chưa có
-    $record = MedicalRecord::firstOrCreate(
-        [
-            'appointment_id' => $app->id,
-        ],
-        [
-            'user_id' => $app->user_id,
-            'doctor_id' => $app->doctor_id,
-            'department_id' => $app->department_id,
-            'title' => 'Hồ sơ khám - ' . now()->format('d/m/Y'),
-            'date' => $app->date ?? now()->toDateString(), 
-        ]
-    );
+        // 1. Tạo Medical Record (Hồ sơ bệnh án)
+        MedicalRecord::firstOrCreate(
+            ['appointment_id' => $app->id],
+            [
+                'user_id' => $app->user_id,
+                'doctor_id' => $app->doctor_id,
+                'department_id' => $app->department_id,
+                'title' => 'Khám bệnh ngày ' . now()->format('d/m/Y'),
+                'date' => $app->date ?? now()->toDateString(),
+                
+                // --- SỬA LỖI TẠI ĐÂY ---
+                // Đổi 'pending' thành 0 (vì cột này trong DB chắc chắn là kiểu số hoặc boolean)
+                'status' => '0' 
+            ]
+        );
 
-    $app->update([
-        'status' => 'Đang khám',
-        'checked_in_by' => auth()->id()
-    ]);
+        // 2. Cập nhật trạng thái Lịch hẹn -> Đang khám
+        $app->update([
+            'status' => 'Đang khám',
+            'checked_in_by' => $checkerId
+        ]);
 
-
-        return back()->with('success', 'Check-in thành công!');
+        return back()->with('success', 'Check-in thành công! Bệnh nhân đã vào hàng chờ.');
     }
 
     public function confirm(Request $r, Appointment $appointment){

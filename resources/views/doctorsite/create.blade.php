@@ -41,7 +41,13 @@
                         <input type="number" name="experience_years" class="form-control" value="0">
                     </div>
                 </div>
-
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label">Số bệnh nhân tối đa mỗi ngày</label>
+                        <input type="number" name="max_patients" class="form-control" value="20" min="1">
+                    </div>  
+                </div>
+                
                 {{-- Phần 2: Cấu hình Lương & Hoa hồng --}}
                 <h6 class="fw-bold text-success border-bottom pb-2 mb-3">2. Lương & Hoa hồng</h6>
                 <div class="row g-3 mb-4 bg-light p-3 rounded">

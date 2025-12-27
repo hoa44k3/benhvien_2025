@@ -95,6 +95,12 @@
                                 </div>
                             </div>
                         </div>
+<div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label">Số bệnh nhân tối đa mỗi ngày</label>
+                        <input type="number" name="max_patients" class="form-control" value="20" min="1">
+                    </div>  
+                </div>
 
                         {{-- 4. THÔNG TIN NGÂN HÀNG --}}
                         <div class="bg-info bg-opacity-10 p-3 rounded mb-4 border border-info border-opacity-25">

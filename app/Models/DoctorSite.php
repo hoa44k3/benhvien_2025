@@ -30,7 +30,7 @@ class DoctorSite extends Model
         'license_issued_by',
         'license_image',
 
-        
+        'max_patients',
     ];
 /**
      * Relationship: Bác sĩ có nhiều đánh giá
@@ -45,7 +45,12 @@ class DoctorSite extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
-
+// Vào file app/Models/DoctorSite.php
+public function appointments()
+{
+    // Liên kết: DoctorSite(user_id) -> Appointment(doctor_id)
+    return $this->hasMany(Appointment::class, 'doctor_id', 'user_id');
+}
     public function department()
     {
         return $this->belongsTo(Department::class);

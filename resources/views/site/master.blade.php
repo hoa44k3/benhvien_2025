@@ -107,20 +107,23 @@
                     @endguest
 
                     @auth
-                        <div class="relative group z-50">
-                            <button class="flex items-center gap-3 focus:outline-none pl-2 border-l border-slate-200">
+                        {{-- User Dropdown Container (Đã thêm ID để xử lý JS) --}}
+                        <div class="relative z-50" id="user-menu-container">
+                            
+                            {{-- Button Trigger (Thêm sự kiện onclick) --}}
+                            <button onclick="toggleUserDropdown()" class="flex items-center gap-3 focus:outline-none pl-2 border-l border-slate-200">
                                 <div class="text-right hidden xl:block">
                                     <p class="text-sm font-bold text-slate-800">{{ auth()->user()->name }}</p>
                                     <p class="text-[10px] text-slate-500 uppercase">Thành viên</p>
                                 </div>
                                 <div class="relative">
-                                    <img src="https://ui-avatars.com/api/?name={{ urlencode(auth()->user()->name) }}&background=0ea5e9&color=fff" class="w-10 h-10 rounded-full border-2 border-white shadow-md">
+                                    <img src="https://ui-avatars.com/api/?name={{ urlencode(auth()->user()->name) }}&background=0ea5e9&color=fff" class="w-10 h-10 rounded-full border-2 border-white shadow-md hover:shadow-glow transition-shadow duration-300">
                                     <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></span>
                                 </div>
                             </button>
                             
-                            {{-- User Dropdown --}}
-                            <div class="absolute right-0 mt-3 w-60 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden hidden group-hover:block animate-fade-in-up origin-top-right">
+                            {{-- User Dropdown Menu (Xóa group-hover, thêm ID) --}}
+                            <div id="user-dropdown" class="hidden absolute right-0 mt-3 w-60 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden animate-fade-in-up origin-top-right">
                                 <div class="bg-slate-50 px-4 py-3 border-b border-slate-100">
                                     <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Tài khoản của bạn</p>
                                 </div>
@@ -502,6 +505,22 @@
                     if (currentId) ignoredCallId = currentId;
                 }
             @endif
+        });
+        // --- Xử lý User Dropdown (Mới) ---
+        function toggleUserDropdown() {
+            const dropdown = document.getElementById('user-dropdown');
+            dropdown.classList.toggle('hidden');
+        }
+
+        // Sự kiện click ra ngoài để đóng dropdown
+        window.addEventListener('click', function(e) {
+            const container = document.getElementById('user-menu-container');
+            const dropdown = document.getElementById('user-dropdown');
+            
+            // Nếu click bên ngoài container và menu đang mở thì đóng lại
+            if (container && !container.contains(e.target) && !dropdown.classList.contains('hidden')) {
+                dropdown.classList.add('hidden');
+            }
         });
     </script>
     @yield('scripts')

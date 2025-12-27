@@ -1,42 +1,38 @@
-@extends('site.master')
+{{-- @extends('site.master')
 
 @section('title','Trang chủ')
 @section('body')
-    
-    {{-- 1. HERO SECTION (GIỮ NGUYÊN - VÌ ĐÃ ĐẸP) --}}
-    <section class="relative h-[650px] flex items-center bg-cover bg-center overflow-hidden group">
+    <!-- Hero Section (Clean & Modern) -->
+    <section class="relative h-[600px] flex items-center bg-cover bg-center overflow-hidden group">
+        <!-- Background Image with Parallax Effect -->
         <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')] bg-cover bg-center transition-transform duration-[10s] group-hover:scale-105"></div>
+        
+        <!-- Gradient Overlay -->
         <div class="absolute inset-0 bg-gradient-to-r from-slate-900/90 via-slate-900/70 to-transparent z-10"></div>
         
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 w-full">
-            <div class="max-w-3xl animate-fade-in-up">
-                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/20 border border-blue-400/30 text-sky-300 text-sm font-bold mb-6 backdrop-blur-md">
-                    <span class="relative flex h-3 w-3">
-                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
-                      <span class="relative inline-flex rounded-full h-3 w-3 bg-sky-500"></span>
-                    </span>
-                    Hệ thống y tế 4.0 - Kết nối O2O
+            <div class="max-w-2xl animate-fade-in-up">
+                <div class="inline-block px-4 py-1.5 rounded-full bg-primary/20 border border-primary/30 text-sky-300 text-sm font-semibold mb-6 backdrop-blur-sm">
+                    <i class="fas fa-shield-alt mr-2"></i> Hệ thống y tế đạt chuẩn quốc tế
                 </div>
-                <h1 class="text-5xl lg:text-7xl font-extrabold text-white mb-6 leading-tight">
+                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white mb-6 leading-tight tracking-tight">
                     Chăm sóc sức khỏe <br>
-                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-blue-500">Chủ động & Thông minh</span>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-blue-500">Toàn diện & Tận tâm</span>
                 </h1>
-                <p class="text-lg text-slate-300 mb-8 leading-relaxed max-w-xl">
-                    Đặt lịch khám dễ dàng, quản lý hồ sơ bệnh án điện tử trọn đời và kết nối trực tiếp với bác sĩ chuyên khoa mọi lúc, mọi nơi.
+                <p class="text-lg text-slate-300 mb-8 leading-relaxed max-w-lg">
+                    Trải nghiệm đặt lịch khám online tiện lợi, hồ sơ bệnh án điện tử bảo mật và đội ngũ bác sĩ chuyên khoa hàng đầu luôn sẵn sàng hỗ trợ bạn.
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4">
-                    <a href="{{ route('schedule') }}" class="flex items-center justify-center py-4 px-10 bg-primary hover:bg-blue-600 text-white font-bold rounded-full shadow-lg shadow-blue-500/40 transition-all transform hover:-translate-y-1">
-                        Đặt lịch ngay <i class="fas fa-calendar-check ml-2"></i>
+                    <a href="{{ route('schedule') }}" class="flex items-center justify-center py-4 px-8 bg-primary text-white font-bold rounded-full shadow-lg shadow-sky-500/30 hover:bg-sky-600 transition-all duration-300 transform hover:-translate-y-1">
+                        Đặt lịch khám ngay <i class="fas fa-arrow-right ml-2"></i>
                     </a>
-                    <a href="{{ route('contact') }}" class="flex items-center justify-center py-4 px-10 bg-white/10 backdrop-blur-md text-white border border-white/20 font-bold rounded-full hover:bg-white hover:text-slate-900 transition-all">
-                        Tư vấn miễn phí
+                    <a href="{{ route('contact') }}" class="flex items-center justify-center py-4 px-8 bg-white/10 backdrop-blur-md text-white border border-white/20 font-bold rounded-full hover:bg-white hover:text-slate-900 transition-all duration-300">
+                        <i class="fas fa-phone-alt mr-2"></i> Tư vấn miễn phí
                     </a>
                 </div>
             </div>
         </div>
-    </section>
-
-    {{-- 2. [MỚI] TẠI SAO CHỌN CHÚNG TÔI (FEATURES) --}}
+        {{-- 2. [MỚI] TẠI SAO CHỌN CHÚNG TÔI (FEATURES) --}}
     <section class="py-16 bg-white relative -mt-16 z-30">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -64,7 +60,6 @@
             </div>
         </div>
     </section>
-
     {{-- 3. [MỚI] QUY TRÌNH KHÁM BỆNH (HOW IT WORKS) --}}
     <section class="py-20 bg-slate-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -168,68 +163,88 @@
             </div>
         </div>
     </section>
-
-    {{-- 5. CHUYÊN KHOA (GIỮ NGUYÊN CODE CŨ NHƯNG THÊM NỀN) --}}
-    <section class="py-20 bg-slate-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-3xl font-extrabold text-slate-800 mb-4">Chuyên khoa & Dịch vụ</h2>
-                <p class="text-slate-500 max-w-2xl mx-auto">Đa dạng các chuyên khoa với trang thiết bị hiện đại, đáp ứng mọi nhu cầu thăm khám và điều trị của bệnh nhân.</p>
+        <!-- Decoration Bubbles -->
+        <div class="absolute bottom-10 right-10 z-20 hidden lg:block animate-bounce duration-[3000ms]">
+            <div class="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/10 text-white flex items-center gap-3 shadow-lg max-w-xs">
+                <div class="bg-green-500 rounded-full p-2"><i class="fas fa-user-md"></i></div>
+                <div>
+                    <p class="font-bold text-sm">200+ Bác sĩ</p>
+                    <p class="text-xs opacity-70">Luôn sẵn sàng hỗ trợ</p>
+                </div>
             </div>
-            
-            {{-- Grid Chuyên Khoa (Code cũ của bạn đặt ở đây) --}}
+        </div>
+    </section>
+
+    <!-- Services / Departments Grid -->
+    <section class="py-20 bg-slate-50 relative overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="text-center mb-16 max-w-3xl mx-auto">
+                <h2 class="text-3xl font-extrabold text-slate-800 mb-4">Chuyên khoa & Dịch vụ</h2>
+                <div class="h-1 w-20 bg-primary mx-auto rounded-full mb-4"></div>
+                <p class="text-slate-500 text-lg">Đa dạng các chuyên khoa với trang thiết bị hiện đại, đáp ứng mọi nhu cầu thăm khám và điều trị của bệnh nhân.</p>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 @foreach($departments as $department)
-                    {{-- COPY LẠI ĐOẠN CARD DEPARTMENT CŨ VÀO ĐÂY --}}
                     <div class="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-slate-100 flex flex-col h-full hover:-translate-y-1">
+                        {{-- Image Area --}}
                         <div class="relative h-48 overflow-hidden">
                             <a href="{{ route('services', ['department' => $department->id]) }}">
-                                <img src="{{ $department->image ? asset('storage/' . $department->image) : asset('images/default-department.jpg') }}" alt="{{ $department->name }}" class="w-full h-full object-cover transition duration-700 group-hover:scale-110">
+                                <img src="{{ $department->image ? asset('storage/' . $department->image) : asset('images/default-department.jpg') }}" 
+                                     alt="{{ $department->name }}" 
+                                     class="w-full h-full object-cover transition duration-700 group-hover:scale-110">
                             </a>
+                            <div class="absolute top-3 right-3">
+                                @if($department->status === 'active')
+                                    <span class="bg-white/90 backdrop-blur text-green-600 text-[10px] font-bold px-2 py-1 rounded-full shadow-sm flex items-center gap-1">
+                                        <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span> Hoạt động
+                                    </span>
+                                @else
+                                    <span class="bg-gray-100 text-gray-500 text-[10px] font-bold px-2 py-1 rounded-full">Tạm ngưng</span>
+                                @endif
+                            </div>
                         </div>
-                        <div class="p-5">
-                            <h3 class="text-lg font-bold text-slate-800 mb-2 group-hover:text-primary transition"><a href="{{ route('services', ['department' => $department->id]) }}">{{ $department->name }}</a></h3>
-                            <p class="text-slate-500 text-sm mb-4 line-clamp-2">{{ Str::limit($department->description, 80) }}</p>
-                            <a href="{{ route('schedule', ['department_id' => $department->id]) }}" class="text-sm font-bold text-primary hover:underline">Đặt lịch ngay <i class="fas fa-arrow-right ml-1"></i></a>
+
+                        {{-- Content --}}
+                        <div class="p-5 flex flex-col flex-grow">
+                            <h3 class="text-lg font-bold text-slate-800 mb-2 group-hover:text-primary transition line-clamp-1">
+                                <a href="{{ route('services', ['department' => $department->id]) }}">{{ $department->name }}</a>
+                            </h3>
+                            
+                            <div class="flex items-center text-xs text-slate-500 mb-3 bg-slate-50 p-2 rounded-lg">
+                                <i class="fas fa-user-tie text-primary mr-2"></i>
+                                <span class="truncate">Trưởng khoa: <strong class="text-slate-700">{{ $department->user->name ?? 'Đang cập nhật' }}</strong></span>
+                            </div>
+
+                            <p class="text-slate-500 text-sm mb-4 line-clamp-2 h-10">
+                                {{ Str::limit($department->description ?? 'Chuyên khoa hàng đầu...', 80) }}
+                            </p>
+
+                            <div class="mt-auto flex items-center justify-between border-t border-slate-50 pt-4">
+                                <div>
+                                    <p class="text-[10px] text-slate-400 uppercase">Phí khám</p>
+                                    <p class="text-base font-bold text-red-500 font-mono">{{ $department->fee > 0 ? number_format($department->fee, 0, ',', '.') . 'đ' : 'Liên hệ' }}</p>
+                                </div>
+                                <a href="{{ route('schedule', ['department_id' => $department->id]) }}" 
+                                   class="w-10 h-10 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-primary hover:text-white transition shadow-sm group-hover:shadow-md" title="Đặt lịch ngay">
+                                    <i class="fas fa-plus"></i>
+                                </a>
+                            </div>
                         </div>
                     </div>
                 @endforeach
             </div>
-        </div>
-    </section>
-
-    {{-- 6. [MỚI] ĐÁNH GIÁ KHÁCH HÀNG (TESTIMONIALS) --}}
-    @if($topReviews->count() > 0)
-    <section class="py-20 bg-white overflow-hidden">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 class="text-3xl font-extrabold text-slate-800 text-center mb-12">Bệnh nhân nói gì về chúng tôi?</h2>
             
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                @foreach($topReviews->take(3) as $review)
-                    <div class="bg-slate-50 p-8 rounded-2xl border border-slate-100 relative">
-                        <i class="fas fa-quote-right absolute top-6 right-6 text-4xl text-slate-200"></i>
-                        <div class="flex text-yellow-400 mb-4 text-sm">
-                            @for($i=1; $i<=5; $i++) <i class="fas fa-star"></i> @endfor
-                        </div>
-                        <p class="text-slate-600 italic mb-6 leading-relaxed">"{{ Str::limit($review->comment, 150) }}"</p>
-                        <div class="flex items-center gap-4">
-                            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center font-bold text-primary">
-                                {{ substr($review->user->name ?? 'A', 0, 1) }}
-                            </div>
-                            <div>
-                                <h5 class="font-bold text-slate-800 text-sm">{{ $review->user->name ?? 'Khách hàng ẩn danh' }}</h5>
-                                <p class="text-xs text-slate-500">Khám BS. {{ $review->doctor->user->name ?? '...' }}</p>
-                            </div>
-                        </div>
-                    </div>
-                @endforeach
+            <div class="text-center mt-12">
+                 <a href="{{ route('services') }}" class="inline-flex items-center text-primary font-semibold hover:underline">
+                    Xem tất cả dịch vụ <i class="fas fa-arrow-right ml-2"></i>
+                </a>
             </div>
         </div>
     </section>
-    @endif
 
-    {{-- 7. TIN TỨC (GIỮ NGUYÊN NHƯ CŨ NHƯNG LÀM ĐẸP HƠN) --}}
-     <section class="py-20 bg-white">
+    <!-- News & Blog Section -->
+    <section class="py-20 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-4">
                 <div>
@@ -300,30 +315,35 @@
         </div>
     </section>
 
-    {{-- 8. STATS SECTION (SỬ DỤNG LẠI NHƯNG ĐỔI MÀU CHO NỔI) --}}
-    <section class="bg-gradient-to-r from-blue-600 to-sky-500 py-16 text-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Stats Section -->
+    <section class="bg-primary py-16 relative overflow-hidden">
+        <div class="absolute top-0 right-0 p-10 opacity-10">
+            <i class="fas fa-hospital-alt text-9xl text-white"></i>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x divide-white/20">
                 <div class="px-4">
-                    <div class="text-4xl lg:text-5xl font-extrabold mb-2">50k+</div>
+                    <div class="text-4xl lg:text-5xl font-extrabold text-white mb-2">50k+</div>
                     <div class="text-blue-100 text-sm font-medium">Bệnh nhân tin tưởng</div>
                 </div>
                 <div class="px-4">
-                    <div class="text-4xl lg:text-5xl font-extrabold mb-2">200+</div>
+                    <div class="text-4xl lg:text-5xl font-extrabold text-white mb-2">200+</div>
                     <div class="text-blue-100 text-sm font-medium">Bác sĩ chuyên khoa</div>
                 </div>
                 <div class="px-4">
-                    <div class="text-4xl lg:text-5xl font-extrabold mb-2">15+</div>
+                    <div class="text-4xl lg:text-5xl font-extrabold text-white mb-2">15+</div>
                     <div class="text-blue-100 text-sm font-medium">Chuyên khoa</div>
                 </div>
                 <div class="px-4">
-                    <div class="text-4xl lg:text-5xl font-extrabold mb-2">24/7</div>
+                    <div class="text-4xl lg:text-5xl font-extrabold text-white mb-2">24/7</div>
                     <div class="text-blue-100 text-sm font-medium">Hỗ trợ khẩn cấp</div>
                 </div>
             </div>
         </div>
     </section>
-<section class="py-24 bg-white">
+
+    <!-- Call to Action -->
+    <section class="py-24 bg-white">
         <div class="max-w-5xl mx-auto px-4 text-center">
             <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-6">Sức khỏe của bạn là ưu tiên hàng đầu</h2>
             <p class="text-xl text-slate-500 mb-10 max-w-2xl mx-auto">Đăng ký tài khoản ngay hôm nay để quản lý hồ sơ sức khỏe cho cả gia đình một cách thông minh và tiện lợi nhất.</p>

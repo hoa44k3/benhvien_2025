@@ -35,6 +35,7 @@
                             <th>Chuyên môn & Bằng cấp</th> {{-- Cột này hiển thị cả Chuyên khoa và Học vị --}}
                             <th>Tài chính </th>
                             <th>Ngân hàng</th>
+                            <th class="text-center">Số bệnh nhân tối đa</th>
                             <th class="text-center">Đánh giá</th>
                             <th class="text-center">Trạng thái</th>
                             <th class="text-center">Hành động</th>
@@ -105,6 +106,7 @@
                                 </div>
                             </td>
 
+
                             {{-- 4. Ngân hàng --}}
                             <td>
                                 @if($doctor->bank_account_number)
@@ -114,6 +116,42 @@
                                 @else
                                     <span class="text-muted small fst-italic">---</span>
                                 @endif
+                            </td>
+                            {{-- Số bệnh nhân tối đa --}}
+                           <td class="text-center align-middle">
+                                @php
+                                    $max = $doctor->max_patients ?? 20;
+                                    // Đếm số khách hôm nay (loại trừ đơn hủy)
+                                    // Lưu ý: Nếu dữ liệu lớn, nên eager load count từ Controller để tối ưu
+                                    $todayCount = $doctor->appointments()
+                                        ->whereDate('date', now())
+                                        ->whereNotIn('status', ['Hủy', 'Đã hủy', 'Từ chối'])
+                                        ->count();
+                                        
+                                    $percent = ($max > 0) ? ($todayCount / $max) * 100 : 0;
+                                    
+                                    // Màu sắc trạng thái
+                                    $statusColor = 'bg-success';
+                                    if($percent >= 100) $statusColor = 'bg-danger';
+                                    else if($percent >= 75) $statusColor = 'bg-warning';
+                                @endphp
+
+                                <div class="d-flex flex-column align-items-center">
+                                    <div class="fw-bold {{ $percent >= 100 ? 'text-danger' : 'text-dark' }} mb-1">
+                                        {{ $todayCount }} / {{ $max }}
+                                    </div>
+                                    <div class="progress w-100" style="height: 6px; width: 80px !important;">
+                                        <div class="progress-bar {{ $statusColor }}" role="progressbar" 
+                                             style="width: {{ $percent > 100 ? 100 : $percent }}%" 
+                                             aria-valuenow="{{ $percent }}" aria-valuemin="0" aria-valuemax="100">
+                                        </div>
+                                    </div>
+                                    <small class="text-muted mt-1" style="font-size: 0.65rem;">
+                                        {{ $percent >= 100 ? 'Đã kín lịch' : 'Đang nhận khách' }}
+                                    </small>
+                                </div>
+                            </td> <td class="text-center">
+                                <span class="fw-bold text-dark">{{ $doctor->max_patients }}</span>
                             </td>
 
                             {{-- 5. Đánh giá --}}
@@ -207,5 +245,6 @@
     .bg-soft-primary { background-color: rgba(13, 110, 253, 0.1); color: #0d6efd; }
     /* Hover effect cho dòng */
     tbody tr:hover { background-color: rgba(0,0,0,0.02); }
+    .progress { background-color: #e9ecef; border-radius: 10px; }
 </style>
 @endsection

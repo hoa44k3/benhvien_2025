@@ -1,186 +1,212 @@
 @extends('admin.master')
 
-@section('title','Quản lý bình luận')
+@section('title', 'Quản lý bình luận')
 
-{{-- Đồng bộ CSS và thư viện SweetAlert2 với trang Bài viết --}}
+{{-- CSS Tùy chỉnh làm đẹp giao diện --}}
 @section('head')
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <style>
+        /* Avatar chữ cái đầu */
         .avatar-initial {
-            width: 35px; height: 35px;
-            background-color: #f0f2f5; color: #5e6c84;
-            border-radius: 50%; display: flex;
-            align-items: center; justify-content: center;
-            font-weight: 700; font-size: 14px; margin-right: 10px;
+            width: 40px; height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 16px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
         }
-        .table td { vertical-align: middle; }
-        .post-link { font-weight: 500; color: #495057; text-decoration: none; }
-        .post-link:hover { color: #0d6efd; text-decoration: underline; }
         
-        /* Badge mềm mại (Soft Badges) giống trang bài viết */
-        .badge-soft-success { background-color: rgba(40, 167, 69, 0.1); color: #28a745; }
-        .badge-soft-warning { background-color: rgba(255, 193, 7, 0.1); color: #ffc107; }
-        .badge-soft-danger { background-color: rgba(220, 53, 69, 0.1); color: #dc3545; }
-        .badge-soft-secondary { background-color: rgba(108, 117, 125, 0.1); color: #6c757d; }
+        /* Căn giữa nội dung bảng */
+        .table td { vertical-align: middle; }
+        
+        /* Link bài viết */
+        .post-link { 
+            font-weight: 600; color: #4e73df; text-decoration: none; 
+            transition: all 0.2s;
+        }
+        .post-link:hover { text-decoration: underline; color: #224abe; }
+        
+        /* Badges mềm mại (Soft Badges) */
+        .badge-soft-success { background-color: #d1e7dd; color: #0f5132; padding: 6px 12px; border-radius: 20px; }
+        .badge-soft-warning { background-color: #fff3cd; color: #664d03; padding: 6px 12px; border-radius: 20px; }
+        .badge-soft-danger { background-color: #f8d7da; color: #842029; padding: 6px 12px; border-radius: 20px; }
+        .badge-soft-secondary { background-color: #e2e3e5; color: #41464b; padding: 6px 12px; border-radius: 20px; }
+
+        /* Hiệu ứng dòng bảng */
+        tbody tr { transition: background-color 0.2s; }
+        tbody tr:hover { background-color: #f8f9fc; }
+        
+        /* Highlight dòng chưa duyệt */
+        .row-pending { background-color: #fffdf0 !important; border-left: 4px solid #ffc107; }
     </style>
 @endsection
 
 @section('body')
-<div class="card shadow-sm border-0">
-    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-        <h5 class="m-0 font-weight-bold text-primary"><i class="fas fa-comments me-2"></i>Danh sách bình luận</h5>
-        {{-- Nút làm mới hoặc bộ lọc có thể đặt ở đây --}}
-        <button class="btn btn-light btn-sm border" onclick="location.reload()">
-            <i class="fas fa-sync-alt"></i> Tải lại
-        </button>
-    </div>
-
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead class="bg-light text-secondary">
-                    <tr>
-                        <th class="ps-4" width="5%">#</th>
-                        <th width="20%">Người gửi</th>
-                        <th width="30%">Nội dung</th>
-                        <th width="20%">Bài viết</th>
-                        <th width="10%" class="text-center">Trạng thái</th>
-                        <th width="5%" class="text-center">Hiển thị</th>
-                        <th width="10%" class="text-center">Hành động</th>
-                    </tr>
-                </thead>
-                <tbody>
-@forelse($comments as $comment)
-<tr id="comment-{{ $comment->id }}" class="{{ $comment->status == 'pending' ? 'table-warning' : '' }}">
-    {{-- Tô màu vàng nhạt nếu đang chờ duyệt để dễ thấy --}}
+<div class="container-fluid py-4">
     
-    <td class="ps-4 fw-bold text-muted">{{ $comment->id }}</td>
-    
-    {{-- Cột Người gửi --}}
-    <td>
-        <div class="d-flex align-items-center">
-            <div class="avatar-initial">
-                {{ strtoupper(substr($comment->name, 0, 1)) }}
-            </div>
-            <div>
-                <div class="fw-bold text-dark small">
-                    {{ $comment->name }}
-                    @if($comment->user_id) <i class="fas fa-check-circle text-primary small" title="Thành viên"></i> @endif
-                </div>
-                <small class="text-muted" style="font-size: 0.75rem;">{{ $comment->email }}</small>
-            </div>
-        </div>
-    </td>
-
-    {{-- Cột Nội dung (CÓ SỬA ĐỔI) --}}
-    <td>
-        {{-- Nếu có parent_id => Đây là câu trả lời --}}
-        @if($comment->parent_id)
-            <div class="text-muted small mb-1 fst-italic">
-                <i class="fas fa-reply fa-rotate-180 me-1"></i> Trả lời cho: 
-                <strong>{{ $comment->parent->name ?? 'Người dùng cũ' }}</strong>
-            </div>
-        @endif
-
-        <div class="text-dark small mb-1" title="{{ $comment->content }}">
-            {{ Str::limit($comment->content, 60) }}
-        </div>
-        <small class="text-muted">
-            <i class="far fa-clock me-1"></i>{{ $comment->created_at->format('d/m/Y H:i') }}
-        </small>
-    </td>
-
-    {{-- Cột Bài viết --}}
-    <td>
-        @if($comment->post)
-            <a href="{{ route('site.postshow', $comment->post->id) }}" target="_blank" class="post-link small">
-                <i class="far fa-file-alt me-1"></i>{{ Str::limit($comment->post->title, 25) }}
-            </a>
-        @else
-            <span class="badge badge-soft-secondary">Bài viết đã xóa</span>
-        @endif
-    </td>
-
-    {{-- Cột Trạng thái (Duyệt) --}}
-    <td class="text-center">
-        @if($comment->status == 'pending')
-            <form method="POST" action="{{ route('comments.approve', $comment->id) }}">
-                @csrf
-                <button class="btn btn-sm btn-warning py-0 px-2 small font-weight-bold shadow-sm" title="Bấm để duyệt ngay">
-                    <i class="fas fa-check me-1"></i>Duyệt
-                </button>
-            </form>
-        @elseif($comment->status == 'approved')
-            <span class="badge badge-soft-success">Đã duyệt</span>
-        @else
-            <span class="badge badge-soft-danger">Spam</span>
-        @endif
-    </td>
-
-    {{-- Cột Ẩn/Hiện --}}
-    <td class="text-center">
-        <form method="POST" action="{{ route('comments.toggle', $comment->id) }}">
-            @csrf
-            <button class="btn btn-sm border-0 text-secondary">
-                @if($comment->is_visible)
-                    <i class="fas fa-toggle-on text-success fa-lg"></i>
-                @else
-                    <i class="fas fa-toggle-off text-muted fa-lg"></i>
-                @endif
-            </button>
-        </form>
-    </td>
-
-    {{-- Cột Hành động --}}
-    <td class="text-center">
-        <div class="btn-group" role="group">
-            <a href="{{ route('comments.show', $comment->id) }}" class="btn btn-light text-info btn-sm" title="Chi tiết / Trả lời">
-                <i class="fas fa-comment-dots"></i>
-            </a>
-            {{-- Nút xóa (Code của bạn đã đúng, giữ nguyên) --}}
-            <button class="btn btn-light text-danger btn-sm btn-delete" 
-                    data-url="{{ route('comments.destroy', $comment->id) }}" 
-                    title="Xóa vĩnh viễn">
-                <i class="fas fa-trash-alt"></i>
+    {{-- Header Card --}}
+    <div class="card shadow mb-4 border-0 rounded-3">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h5 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-comments me-2"></i> Quản lý bình luận
+            </h5>
+            <button class="btn btn-light btn-sm shadow-sm border" onclick="location.reload()">
+                <i class="fas fa-sync-alt me-1"></i> Tải lại
             </button>
         </div>
-    </td>
-</tr>
-@empty
-<tr>
-    <td colspan="7" class="text-center py-5 text-muted">Không có dữ liệu.</td>
-</tr>
-@endforelse
-</tbody>
-            </table>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-borderless mb-0">
+                    <thead class="bg-light text-secondary text-uppercase small font-weight-bold border-bottom">
+                        <tr>
+                            <th class="ps-4 py-3" width="5%">#</th>
+                            <th width="20%">Người gửi</th>
+                            <th width="35%">Nội dung</th>
+                            <th width="20%">Bài viết liên quan</th>
+                            <th width="10%" class="text-center">Trạng thái</th>
+                            <th width="10%" class="text-center">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($comments as $comment)
+                        <tr id="comment-{{ $comment->id }}" class="border-bottom {{ $comment->status == 'pending' ? 'row-pending' : '' }}">
+                            
+                            <td class="ps-4 fw-bold text-secondary">{{ $comment->id }}</td>
+                            
+                            {{-- Cột Người gửi --}}
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="avatar-initial">
+                                        {{ strtoupper(substr($comment->name ?? 'A', 0, 1)) }}
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark text-truncate" style="max-width: 150px;">
+                                            {{ $comment->name }}
+                                            @if($comment->user_id) 
+                                                <i class="fas fa-check-circle text-info small ms-1" title="Thành viên đã đăng ký"></i> 
+                                            @endif
+                                        </div>
+                                        <small class="text-muted d-block">{{ $comment->email }}</small>
+                                    </div>
+                                </div>
+                            </td>
+
+                            {{-- Cột Nội dung --}}
+                            <td>
+                                @if($comment->parent_id)
+                                    <div class="text-muted small mb-1 fst-italic bg-light d-inline-block px-2 rounded border">
+                                        <i class="fas fa-reply fa-rotate-180 me-1"></i> Trả lời: 
+                                        <strong>{{ $comment->parent->name ?? 'Người dùng cũ' }}</strong>
+                                    </div>
+                                @endif
+
+                                <div class="text-dark mb-1" style="font-size: 0.95rem;">
+                                    {{ Str::limit($comment->content, 80) }}
+                                </div>
+                                <small class="text-muted">
+                                    <i class="far fa-clock me-1"></i>{{ $comment->created_at->format('d/m/Y H:i') }}
+                                </small>
+                            </td>
+
+                            {{-- Cột Bài viết --}}
+                            <td>
+                                @if($comment->post)
+                                    <a href="{{ route('site.postshow', $comment->post->id) }}" target="_blank" class="post-link small d-flex align-items-center">
+                                        <i class="far fa-file-alt me-2 text-secondary"></i>
+                                        <span class="text-truncate" style="max-width: 180px;">{{ $comment->post->title }}</span>
+                                        <i class="fas fa-external-link-alt ms-1 text-xs opacity-50"></i>
+                                    </a>
+                                @else
+                                    <span class="badge badge-soft-secondary">Bài viết đã xóa</span>
+                                @endif
+                            </td>
+
+                            {{-- Cột Trạng thái & Toggle --}}
+                            <td class="text-center">
+                                <div class="d-flex flex-col align-items-center gap-2">
+                                    {{-- Nút duyệt --}}
+                                    @if($comment->status == 'pending')
+                                        <form method="POST" action="{{ route('comments.approve', $comment->id) }}">
+                                            @csrf
+                                            <button class="btn btn-warning btn-sm fw-bold shadow-sm text-dark" style="font-size: 0.75rem;">
+                                                <i class="fas fa-check me-1"></i> Duyệt ngay
+                                            </button>
+                                        </form>
+                                    @elseif($comment->status == 'approved')
+                                        <span class="badge badge-soft-success"><i class="fas fa-check me-1"></i> Đã duyệt</span>
+                                    @else
+                                        <span class="badge badge-soft-danger">Spam</span>
+                                    @endif
+
+                                    {{-- Toggle Ẩn/Hiện --}}
+                                    <form method="POST" action="{{ route('comments.toggle', $comment->id) }}">
+                                        @csrf
+                                        <button class="btn btn-sm border-0 bg-transparent p-0" title="Bấm để Ẩn/Hiện">
+                                            @if($comment->is_visible)
+                                                <i class="fas fa-toggle-on text-success fa-2x"></i>
+                                            @else
+                                                <i class="fas fa-toggle-off text-secondary fa-2x opacity-50"></i>
+                                            @endif
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+
+                            {{-- Cột Hành động --}}
+                            <td class="text-center">
+                                <div class="btn-group shadow-sm" role="group">
+                                    {{-- Xóa --}}
+                                    <button class="btn btn-white border text-danger btn-sm btn-delete hover-bg-light" 
+                                            data-url="{{ route('comments.destroy', $comment->id) }}" 
+                                            title="Xóa vĩnh viễn">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <img src="https://cdn-icons-png.flaticon.com/512/7486/7486747.png" width="60" class="mb-3 opacity-25">
+                                <p class="text-muted">Chưa có bình luận nào.</p>
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
+        
+        {{-- Footer Phân trang --}}
+        @if($comments->hasPages())
+        <div class="card-footer bg-white py-3 d-flex justify-content-end">
+            {{-- 🔥 QUAN TRỌNG: Sửa lỗi mũi tên khổng lồ bằng cách dùng view Bootstrap --}}
+            {{ $comments->links('pagination::bootstrap-5') }}
+        </div>
+        @endif
     </div>
-    
-    @if($comments->hasPages())
-    <div class="card-footer bg-white d-flex justify-content-end">
-        {{ $comments->links() }}
-    </div>
-    @endif
 </div>
 
-{{-- Script xóa đồng bộ với trang Bài Viết --}}
+{{-- Script xử lý xóa (SweetAlert2) --}}
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> 
 <script>
     $(document).ready(function() {
-        // Sử dụng class chung btn-delete để bắt sự kiện
         $('.btn-delete').click(function (e) {
             e.preventDefault();
-            let url = $(this).data('url'); // Lấy link xóa từ attribute data-url
+            let url = $(this).data('url'); 
             let row = $(this).closest('tr');
 
             Swal.fire({
                 title: 'Xóa bình luận này?',
-                text: "Bạn sẽ không thể khôi phục lại!",
+                text: "Hành động này không thể hoàn tác!",
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Vâng, xóa đi!',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Xóa ngay',
                 cancelButtonText: 'Hủy'
             }).then((result) => {
                 if (result.isConfirmed) {
@@ -192,8 +218,6 @@
                         },
                         success: function (res) {
                             row.fadeOut(300, function(){ $(this).remove(); });
-                            
-                            // Toast thông báo nhỏ góc trên
                             const Toast = Swal.mixin({
                                 toast: true,
                                 position: 'top-end',
@@ -203,7 +227,7 @@
                             });
                             Toast.fire({
                                 icon: 'success',
-                                title: 'Đã xóa bình luận thành công'
+                                title: 'Đã xóa thành công'
                             });
                         },
                         error: function(err) {

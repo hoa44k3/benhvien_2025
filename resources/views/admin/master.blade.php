@@ -184,12 +184,12 @@
                         <span>Báo cáo</span>
                     </a>
                 </li>
-                <li class="nav-item">
+                {{-- <li class="nav-item">
                     <a href="{{ route('video_calls.index') }}" class="nav-link {{ request()->is('video_calls*') ? 'active' : '' }}">
                         <i class="fas fa-video"></i> 
                         <span>Lịch sử cuộc gọi</span>
                     </a>
-                </li>
+                </li> --}}
 
                 <!-- Quản lý Dữ liệu -->
                 <li class="nav-section-title">Quản lý Dữ liệu</li>

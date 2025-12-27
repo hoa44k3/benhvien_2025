@@ -118,6 +118,31 @@
                             </div>
                         </div>
 
+                        @if($record->files && $record->files->count() > 0)
+                        <div class="mt-5 pt-4 border-t border-slate-100 border-dashed">
+                            <h4 class="text-xs font-bold text-slate-500 uppercase mb-3 flex items-center gap-2">
+                                <i class="fas fa-images text-blue-500"></i> Kết quả Xét nghiệm & Minh chứng
+                            </h4>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                                @foreach($record->files as $file)
+                                    <a href="{{ asset('storage/' . $file->file_path) }}" target="_blank" class="group/file relative block bg-slate-50 border border-slate-200 rounded-lg overflow-hidden hover:border-primary transition">
+                                        <div class="aspect-video w-full bg-slate-200 flex items-center justify-center overflow-hidden">
+                                            @if(Str::contains($file->file_type ?? $file->mime_type, ['image', 'jpg', 'png', 'jpeg']))
+                                                <img src="{{ asset('storage/' . $file->file_path) }}" class="w-full h-full object-cover group-hover/file:scale-110 transition duration-500" alt="Evidence">
+                                            @else
+                                                <i class="fas fa-file-pdf text-3xl text-slate-400 group-hover/file:text-red-500 transition"></i>
+                                            @endif
+                                        </div>
+                                        <div class="p-1.5 bg-white">
+                                            <p class="text-[10px] text-slate-600 truncate font-medium" title="{{ $file->original_name }}">
+                                                {{ $file->original_name }}
+                                            </p>
+                                        </div>
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                        @endif
                         {{-- REVIEW SECTION --}}
                         @if($record->status == 'completed' || $record->diagnosis)
                             <div class="border-t border-slate-100 pt-4 mt-2">

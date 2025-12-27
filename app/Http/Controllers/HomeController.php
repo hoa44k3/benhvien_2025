@@ -24,28 +24,35 @@ use Illuminate\Support\Facades\Http;
 
 class HomeController extends Controller
 {
-    public function index()
+   public function index()
     {
         $categories = Category::where('status', 1)->latest()->get();
         $departments = Department::where('status', 'active')->latest()->get();
 
-        // 1. Lấy bài viết nổi bật (Để hiển thị cột bên phải)
-    $featuredPosts = Post::where('status', 'published')
-                         ->where('is_featured', true)
-                         ->latest()
-                         ->take(3)
-                         ->get();
+        // 1. Bài viết nổi bật
+        $featuredPosts = Post::where('status', 'published')->where('is_featured', true)->latest()->take(3)->get();
 
-    // 2. Lấy bài viết mới nhất (Hiển thị cột bên trái)
-    // Loại trừ các bài đã nằm trong top nổi bật để tránh trùng lặp (tuỳ chọn)
-    $latestPosts = Post::where('status', 'published')
-                       ->whereNotIn('id', $featuredPosts->pluck('id')) 
-                       ->latest()
-                       ->take(4)
-                       ->get();
-        return view('site.home', compact('categories','departments', 'featuredPosts', 'latestPosts'));
+        // 2. Bài viết mới nhất
+        $latestPosts = Post::where('status', 'published')->whereNotIn('id', $featuredPosts->pluck('id'))->latest()->take(3)->get();
+
+        // 3. [MỚI] Bác sĩ tiêu biểu (Lấy theo rating cao nhất)
+        $featuredDoctors = DoctorSite::with('user', 'department')
+            ->where('status', 1)
+            ->orderByDesc('rating') // Ưu tiên sao cao
+            ->orderByDesc('reviews_count') // Ưu tiên nhiều đánh giá
+            ->take(4)
+            ->get();
+
+        // 4. [MỚI] Đánh giá tiêu biểu (Lấy 5 review 5 sao mới nhất có nội dung)
+        $topReviews = \App\Models\Review::with(['user', 'doctor.user'])
+            ->where('rating', 5)
+            ->whereNotNull('comment')
+            ->latest()
+            ->take(5)
+            ->get();
+
+        return view('site.home', compact('categories','departments', 'featuredPosts', 'latestPosts', 'featuredDoctors', 'topReviews'));
     }
-
 public function showPost($id)
 {
     $post = Post::with(['author'])
@@ -211,13 +218,22 @@ public function showPost($id)
         // 1. Lấy danh sách Khoa (active)
         $departments = Department::where('status', 'active')->latest()->get();
 
-        // 2. Lấy TẤT CẢ bác sĩ (status=1) kèm user và department
-        // Ta lấy hết để JS ở Client tự lọc (ẩn/hiện) -> Trải nghiệm mượt hơn load lại trang
-        $doctors = DoctorSite::with('user', 'department')
+        // // 2. Lấy TẤT CẢ bác sĩ (status=1) kèm user và department
+        // // Ta lấy hết để JS ở Client tự lọc (ẩn/hiện) -> Trải nghiệm mượt hơn load lại trang
+        // $doctors = DoctorSite::with('user', 'department')
+        //     ->where('status', 1)
+        //     ->latest()
+        //     ->get();
+// --- CẬP NHẬT MỚI: Đếm số lịch hẹn của NGÀY HÔM NAY ---
+        $today = date('Y-m-d');
+        $doctors = DoctorSite::with(['user', 'department'])
+            ->withCount(['appointments' => function($query) use ($today) {
+                $query->where('date', $today)
+                      ->whereNotIn('status', ['Hủy', 'Đã hủy', 'Từ chối']);
+            }])
             ->where('status', 1)
             ->latest()
             ->get();
-
         // 3. Khung giờ khám
         $timeSlots = ['08:00', '08:30', '09:00', '09:30', '10:00', '14:00', '14:30', '15:00', '15:30'];
 
@@ -229,23 +245,38 @@ public function showPost($id)
 /**
      * API AJAX: Lấy danh sách các khung giờ ĐÃ BỊ ĐẶT của một bác sĩ vào ngày cụ thể
      */
-    public function getBookedSlots(Request $request)
+   public function getBookedSlots(Request $request)
     {
         $request->validate([
             'doctor_id' => 'required',
             'date' => 'required|date',
         ]);
 
-        // Tìm các lịch hẹn của bác sĩ này vào ngày này
-        // Loại trừ các lịch đã bị Hủy hoặc Từ chối
+        // 1. Lấy thông tin Quota
+        $doctorSite = DoctorSite::where('user_id', $request->doctor_id)->first();
+        $limit = $doctorSite ? ($doctorSite->max_patients ?? 20) : 20;
+
+        // 2. Đếm số lượng đã đặt (Active)
+        $currentCount = Appointment::where('doctor_id', $request->doctor_id)
+            ->where('date', $request->date)
+            ->whereNotIn('status', ['Hủy', 'Đã hủy', 'Từ chối'])
+            ->count();
+
+        // 3. Lấy giờ đã đặt
         $bookedTimes = Appointment::where('doctor_id', $request->doctor_id)
             ->where('date', $request->date)
-            ->whereNotIn('status', ['Hủy', 'Đã hủy', 'Từ chối']) // Chỉ lấy lịch đang active
-            ->pluck('time') // Chỉ lấy cột giờ
+            ->whereNotIn('status', ['Hủy', 'Đã hủy', 'Từ chối'])
+            ->pluck('time')
             ->toArray();
 
         return response()->json([
-            'booked_slots' => $bookedTimes
+            'booked_slots' => $bookedTimes,
+            // --- TRẢ VỀ THÊM THÔNG TIN NÀY ---
+            'is_full_day' => ($currentCount >= $limit),
+            'quota' => [
+                'current' => $currentCount,
+                'max' => $limit
+            ]
         ]);
     }
     // --- HÀM XỬ LÝ ĐẶT LỊCH (Tên chuẩn: storeFromSite) ---
@@ -489,7 +520,7 @@ public function showPost($id)
 
         // 1. Lấy Hồ sơ bệnh án
         $medicalRecords = MedicalRecord::where('user_id', $user->id)
-            ->with(['doctor', 'department','review']) // Load bác sĩ & khoa để hiển thị tên
+            ->with(['doctor', 'department','review','files']) // Load bác sĩ & khoa để hiển thị tên
             ->orderBy('date', 'desc')
             ->get();
 

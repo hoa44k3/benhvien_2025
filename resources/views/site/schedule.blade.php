@@ -73,8 +73,8 @@
                             @foreach($doctors as $doctor)
                                 <div class="doctor-card cursor-pointer group bg-white border border-slate-200 rounded-2xl p-4 hover:shadow-lg hover:border-primary transition-all duration-300 relative overflow-hidden"
                                      data-dept-id="{{ $doctor->department_id }}"
-                                     data-doctor-id="{{ $doctor->id }}">
-                                     
+                                     data-doctor-id="{{ $doctor->id }}"
+                                     data-user-id="{{ $doctor->user->id }}"> {{-- Thêm data-user-id vào đây để dùng cho JS --}}
                                     {{-- Selection Overlay --}}
                                     <div class="check-mark absolute inset-0 bg-primary/5 border-2 border-primary rounded-2xl opacity-0 scale-95 transition-all duration-200 z-0 pointer-events-none flex items-start justify-end p-3">
                                         <div class="bg-primary text-white rounded-full w-6 h-6 flex items-center justify-center shadow-sm"><i class="fas fa-check text-xs"></i></div>
@@ -86,6 +86,18 @@
                                             onclick="event.stopPropagation();"> {{-- Chặn sự kiện click vào card chọn --}}
                                             <i class="fas fa-info"></i>
                                         </a>
+                                        <div class="absolute top-2 left-2 z-20">
+        @php
+            $max = $doctor->max_patients ?? 20;
+            $current = $doctor->appointments_count ?? 0;
+            $percent = ($current / $max) * 100;
+            $colorClass = $percent >= 100 ? 'bg-red-100 text-red-600 border-red-200' : ($percent >= 80 ? 'bg-orange-100 text-orange-600 border-orange-200' : 'bg-blue-50 text-blue-600 border-blue-100');
+        @endphp
+        <span class="px-2 py-1 rounded-md text-[10px] font-bold border {{ $colorClass }} shadow-sm flex items-center gap-1">
+            <i class="fas fa-users"></i> 
+            <span class="quota-text">Hôm nay: {{ $current }}/{{ $max }}</span>
+        </span>
+    </div>
                                     <div class="relative z-10 flex items-center gap-4">
                                         <div class="relative">
                                             <img src="{{ $doctor->image ? asset('storage/'.$doctor->image) : 'https://ui-avatars.com/api/?name='.urlencode($doctor->user->name).'&background=random&size=128' }}"
@@ -115,38 +127,6 @@
                             <p>Không tìm thấy bác sĩ phù hợp trong chuyên khoa này.</p>
                         </div>
                     </div>
-
-                    {{-- BƯỚC 3: CHỌN THỜI GIAN --}}
-                    {{-- <div class="mb-14">
-                        <h2 class="text-xl font-bold text-slate-800 mb-6 flex items-center">
-                            <span class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold mr-3 shadow-md shadow-sky-200">3</span>
-                            Thời gian khám
-                        </h2>
-                        
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                            <div>
-                                <label class="block text-sm font-semibold text-slate-700 mb-2">Ngày dự kiến</label>
-                                <div class="relative">
-                                    <input type="date" name="date" 
-                                           class="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition bg-white"
-                                           value="{{ date('Y-m-d') }}" min="{{ date('Y-m-d') }}" required>
-                                    <i class="fas fa-calendar-alt absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-semibold text-slate-700 mb-2">Khung giờ còn trống</label>
-                                <div class="grid grid-cols-3 sm:grid-cols-4 gap-3">
-                                    @foreach($timeSlots as $time)
-                                        <div class="time-slot py-2.5 rounded-lg border border-slate-200 bg-white text-center cursor-pointer text-sm font-medium text-slate-600 hover:border-primary hover:text-primary transition-all select-none" 
-                                             data-time="{{ $time }}">
-                                            {{ $time }}
-                                        </div>
-                                    @endforeach
-                                </div>
-                            </div>
-                        </div>
-                    </div> --}}
                     <div class="mb-14">
                         <h2 class="text-xl font-bold text-slate-800 mb-6 flex items-center">
                             <span class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold mr-3 shadow-md shadow-sky-200">3</span>
@@ -173,7 +153,11 @@
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Giờ khám <span id="loading-slots" class="hidden text-primary text-xs ml-2"><i class="fas fa-spinner fa-spin"></i> Đang kiểm tra...</span></label>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Giờ khám <span id="loading-slots" class="hidden text-primary text-xs ml-2"><i class="fas fa-spinner fa-spin"></i> Đang kiểm tra...</span>
+                                    {{-- === THÊM MỚI: Hiển thị trạng thái chi tiết theo ngày === --}}
+    <span id="quota-display" class="ml-2 text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-md hidden">
+        </span>
+                                    </label>
                                     
                                     {{-- Grid giờ --}}
                                     <div class="grid grid-cols-3 sm:grid-cols-4 gap-3 relative" id="time-grid">
@@ -270,115 +254,6 @@
             @endif
         </div>
     </div>
-{{-- <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const specialties = document.querySelectorAll('.specialty-item');
-        const doctors = document.querySelectorAll('.doctor-card');
-        const times = document.querySelectorAll('.time-slot');
-        const noDocMsg = document.getElementById('no-doctor-msg');
-        
-        const inpDept = document.getElementById('department_id');
-        const inpDoc = document.getElementById('doctor_id');
-        const inpTime = document.getElementById('time_slot');
-
-        function filterDoctors(deptId) {
-            let visibleCount = 0;
-            doctors.forEach(doc => {
-                // Reset styles
-                doc.querySelector('.check-mark').style.opacity = '0';
-                doc.querySelector('.check-mark').style.transform = 'scale(0.95)';
-                doc.classList.remove('ring-2', 'ring-primary', 'border-primary');
-
-                if(deptId === 'all' || !deptId || doc.getAttribute('data-dept-id') == deptId) {
-                    doc.style.display = 'block';
-                    visibleCount++;
-                } else {
-                    doc.style.display = 'none';
-                }
-            });
-
-            if(visibleCount === 0) noDocMsg.classList.remove('hidden');
-            else noDocMsg.classList.add('hidden');
-        }
-
-        const currentDeptId = inpDept.value;
-        filterDoctors(currentDeptId ? currentDeptId : 'all');
-
-        specialties.forEach(item => {
-            item.addEventListener('click', () => {
-                specialties.forEach(i => i.classList.remove('active', 'ring-2', 'ring-primary', 'border-primary', 'bg-sky-50'));
-                item.classList.add('active', 'ring-2', 'ring-primary', 'border-primary', 'bg-sky-50');
-                
-                const deptId = item.getAttribute('data-dept-id');
-                inpDept.value = (deptId === 'all') ? '' : deptId;
-                filterDoctors(deptId);
-                inpDoc.value = "";
-            });
-        });
-
-        doctors.forEach(doc => {
-            doc.addEventListener('click', () => {
-                doctors.forEach(d => {
-                    d.querySelector('.check-mark').style.opacity = '0';
-                    d.querySelector('.check-mark').style.transform = 'scale(0.95)';
-                    d.classList.remove('ring-2', 'ring-primary', 'border-primary');
-                });
-
-                doc.classList.add('ring-2', 'ring-primary', 'border-primary');
-                doc.querySelector('.check-mark').style.opacity = '1';
-                doc.querySelector('.check-mark').style.transform = 'scale(1)';
-
-                inpDoc.value = doc.getAttribute('data-doctor-id');
-                
-                const docDeptId = doc.getAttribute('data-dept-id');
-                if(inpDept.value === '' || inpDept.value !== docDeptId) {
-                     inpDept.value = docDeptId;
-                     specialties.forEach(s => {
-                         s.classList.remove('active', 'ring-2', 'ring-primary', 'border-primary', 'bg-sky-50');
-                         if(s.getAttribute('data-dept-id') == docDeptId) {
-                             s.classList.add('active', 'ring-2', 'ring-primary', 'border-primary', 'bg-sky-50');
-                         }
-                     });
-                }
-            });
-        });
-
-      // ĐOẠN CODE MỚI (Đã sửa)
-        times.forEach(slot => {
-            slot.addEventListener('click', () => {
-                // 1. Reset tất cả về trạng thái chưa chọn (Nền trắng, chữ xám)
-                times.forEach(t => {
-                    t.classList.remove('bg-primary', 'text-white', 'border-primary'); // Bỏ class active
-                    t.classList.add('bg-white', 'text-slate-600', 'border-slate-200'); // Trả lại class mặc định
-                });
-
-                // 2. Set trạng thái Active cho ô được click (Nền xanh, chữ trắng)
-                slot.classList.remove('bg-white', 'text-slate-600', 'border-slate-200'); // Xóa class mặc định
-                slot.classList.add('bg-primary', 'text-white', 'border-primary'); // Thêm class active
-
-                // 3. Cập nhật giá trị vào input ẩn
-                inpTime.value = slot.getAttribute('data-time');
-            });
-        });
-
-        const form = document.getElementById('booking-form');
-        if(form) {
-            form.addEventListener('submit', function(e) {
-                if(!inpDoc.value) {
-                    alert("Vui lòng chọn Bác sĩ phụ trách!");
-                    e.preventDefault();
-                    document.getElementById('doctor-grid').scrollIntoView({behavior: 'smooth', block: 'center'});
-                    return;
-                }
-                if(!inpTime.value) {
-                    alert("Vui lòng chọn Khung giờ khám!");
-                    e.preventDefault();
-                    return;
-                }
-            });
-        }
-    });
-    </script> --}}
     <script>
     document.addEventListener("DOMContentLoaded", function() {
         const doctors = document.querySelectorAll('.doctor-card');
@@ -390,41 +265,64 @@
         
         const timeOverlay = document.getElementById('time-overlay');
         const loadingSlots = document.getElementById('loading-slots');
-
-        // Hàm kiểm tra giờ trống
+const quotaDisplay = document.getElementById('quota-display'); // Lấy element mới thêm
+       // Hàm kiểm tra giờ trống
         async function checkAvailability() {
-            const doctorUserId = inpDocUserId.value; // Lấy ID user của bác sĩ
+            const doctorUserId = inpDocUserId.value; 
             const date = inpDate.value;
 
-            // Chỉ check khi đã chọn đủ Bác sĩ và Ngày
             if (!doctorUserId || !date) return;
 
             // Reset UI
             loadingSlots.classList.remove('hidden');
+            quotaDisplay.classList.add('hidden'); // Ẩn tạm thời
+            // Reset thông báo lỗi nếu có trước đó (Bạn có thể thêm 1 thẻ div id="full-day-alert" vào HTML nếu muốn đẹp hơn)
+            const timeGrid = document.getElementById('time-grid');
+            
+            // Mở lại các slot để tính toán
             times.forEach(t => {
-                t.classList.remove('bg-gray-200', 'text-gray-400', 'pointer-events-none', 'line-through'); // Reset trạng thái disabled
-                t.classList.remove('bg-primary', 'text-white', 'border-primary'); // Reset trạng thái đang chọn
-                t.classList.add('bg-white', 'text-slate-600', 'border-slate-200'); // Về mặc định
+                t.classList.remove('bg-red-50', 'text-red-400', 'bg-gray-100', 'text-gray-400', 'pointer-events-none', 'line-through', 'cursor-not-allowed');
+                t.classList.remove('bg-primary', 'text-white', 'border-primary'); 
+                t.classList.add('bg-white', 'text-slate-600', 'border-slate-200'); 
+                t.innerHTML = t.getAttribute('data-time'); // Reset text gốc
             });
-            inpTime.value = ''; // Reset giá trị input
+            inpTime.value = ''; 
 
             try {
-                // Gọi API
                 const response = await fetch(`{{ route('get.booked.slots') }}?doctor_id=${doctorUserId}&date=${date}`);
                 const data = await response.json();
-                
-                // data.booked_slots là mảng các giờ ['08:00', '09:30', ...]
-                times.forEach(slot => {
-                    const timeValue = slot.getAttribute('data-time');
-                    if (data.booked_slots.includes(timeValue)) {
-                        // Nếu giờ đã bị đặt -> Disable nó
-                        slot.classList.remove('bg-white', 'text-slate-600', 'border-slate-200', 'hover:border-primary', 'hover:text-primary');
-                        slot.classList.add('bg-gray-100', 'text-gray-400', 'pointer-events-none', 'border-gray-200', 'cursor-not-allowed');
-                        slot.innerHTML = timeValue + ' <span class="text-[10px] block">(Đã kín)</span>';
+                if(data.quota) {
+                    quotaDisplay.classList.remove('hidden');
+                    // Format lại ngày cho đẹp (DD/MM)
+                    const dateObj = new Date(date);
+                    const dayStr = dateObj.getDate() + '/' + (dateObj.getMonth() + 1);
+                    
+                    quotaDisplay.innerHTML = `Ngày ${dayStr}: <span class="${data.quota.current >= data.quota.max ? 'text-red-600' : 'text-primary'}">${data.quota.current}/${data.quota.max} ca</span>`;
+                    
+                    if(data.is_full_day) {
+                        quotaDisplay.classList.add('bg-red-50', 'border', 'border-red-100');
+                        quotaDisplay.innerHTML += ' (Đã đầy)';
                     } else {
-                         slot.innerHTML = timeValue; // Trả lại text gốc
+                        quotaDisplay.classList.remove('bg-red-50', 'border', 'border-red-100');
                     }
-                });
+                }
+                // --- XỬ LÝ KHI FULL NGÀY (QUOTA) ---
+                if (data.is_full_day) {
+                     times.forEach(slot => {
+                        slot.classList.add('bg-red-50', 'text-red-300', 'pointer-events-none', 'cursor-not-allowed');
+                        slot.innerHTML = '<span class="text-xs">Full</span>';
+                    });
+                } else {
+                    times.forEach(slot => {
+                        const timeValue = slot.getAttribute('data-time');
+                        if (data.booked_slots.includes(timeValue)) {
+                             slot.classList.add('bg-gray-100', 'text-gray-400', 'pointer-events-none', 'cursor-not-allowed');
+                             slot.innerHTML = timeValue + ' <span class="text-[10px] block">(Kín)</span>';
+                        } else {
+                             slot.innerHTML = timeValue; // Reset lại
+                        }
+                    });
+                }
 
             } catch (error) {
                 console.error('Lỗi check lịch:', error);
@@ -432,7 +330,7 @@
                 loadingSlots.classList.add('hidden');
             }
         }
-
+        
         // Sự kiện chọn Bác sĩ
         doctors.forEach(doc => {
             doc.addEventListener('click', () => {

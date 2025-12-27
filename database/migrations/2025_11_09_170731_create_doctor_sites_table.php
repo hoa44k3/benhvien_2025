@@ -30,7 +30,7 @@ return new class extends Migration
         $table->float('commission_exam_percent')->default(0)->after('base_salary')->comment('% Hoa hồng phí khám');
         $table->float('commission_prescription_percent')->default(0)->after('commission_exam_percent')->comment('% Hoa hồng tiền thuốc');
         $table->float('commission_service_percent')->default(0)->after('commission_prescription_percent')->comment('% Hoa hồng dịch vụ CLS');
-
+$table->integer('max_patients')->default(20)->after('specialization'); // Số bệnh nhân tối đa mỗi ngày
         // Thông tin tài khoản nhận lương
     $table->string('bank_name')->nullable(); // Ví dụ: Vietcombank
     $table->string('bank_account_number')->nullable(); // STK: 0011...
